@@ -1,13 +1,13 @@
 import {CronJob, cronJob} from '@loopback/cron';
 import {repository} from '@loopback/repository';
-import {UsersRepository} from '../repositories';
-// import {generateUniqueId} from '../utils/constants';
+import {UserRepository} from '../repositories';
+import {generateUniqueId} from '../utils/constants';
 
 @cronJob()
 export class CheckDailyEntriesAtNoon extends CronJob {
   constructor(
-    @repository(UsersRepository)
-    public userRepository: UsersRepository,
+    @repository(UserRepository)
+    public userRepository: UserRepository,
   ) {
     super({
       cronTime: '0 12 * * *', // Every 30 seconds
@@ -26,8 +26,8 @@ export class CheckDailyEntriesAtNoon extends CronJob {
 @cronJob()
 export class CheckDailyEntriesAtEvening extends CronJob {
   constructor(
-    @repository(UsersRepository)
-    public userRepository: UsersRepository,
+    @repository(UserRepository)
+    public userRepository: UserRepository,
   ) {
     super({
       cronTime: '0 18 * * *', // At 6 PM daily
