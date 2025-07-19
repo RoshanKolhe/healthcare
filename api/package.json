@@ -14,13 +14,11 @@
   "scripts": {
     "build": "lb-tsc",
     "build:watch": "lb-tsc --watch",
-    "lint": "npm run eslint && npm run prettier:check",
-    "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+    "lint": "npm run prettier:check",
+    "lint:fix": "npm run prettier:fix",
     "prettier:cli": "lb-prettier \"**/*.ts\" \"**/*.js\"",
     "prettier:check": "npm run prettier:cli -- -l",
     "prettier:fix": "npm run prettier:cli -- --write",
-    "eslint": "lb-eslint --report-unused-disable-directives .",
-    "eslint:fix": "npm run eslint -- --fix",
     "pretest": "npm run rebuild",
     "test": "lb-mocha --allow-console-logs \"dist/__tests__\"",
     "posttest": "npm run lint",
@@ -35,13 +33,14 @@
     "start": "node -r source-map-support/register .",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
     "rebuild": "npm run clean && npm run build",
-    "start:watch": "tsc-watch --target es2017 --outDir ./dist --onSuccess \"node .\""
+    "start:watch": "tsc-watch --target es2017 --outDir ./dist --onSuccess \"node .\"",
+    "start:debug": "node --inspect ./dist/index.js"
   },
   "repository": {
     "type": "git",
     "url": ""
   },
-  "author": "RakhKaran <132744751+RakhKaran@users.noreply.github.com>",
+  "author": "Velocrafts",
   "license": "",
   "files": [
     "README.md",
@@ -68,12 +67,10 @@
   },
   "devDependencies": {
     "@loopback/build": "^12.0.2",
-    "@loopback/eslint-config": "^16.0.0",
     "@loopback/testlab": "^8.0.2",
     "@types/multer": "^2.0.0",
     "@types/node": "^16.18.126",
     "@types/nodemailer": "^6.4.17",
-    "eslint": "^8.57.1",
     "source-map-support": "^0.5.21",
     "tsc-watch": "^7.1.1",
     "typescript": "~5.2.2"
