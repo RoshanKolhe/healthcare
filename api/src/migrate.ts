@@ -1,4 +1,5 @@
 import {ApiApplication} from './application';
+import { Hospital } from './models';
 
 export async function migrate(args: string[]) {
   const existingSchema = args.includes('--rebuild') ? 'drop' : 'alter';
@@ -6,7 +7,7 @@ export async function migrate(args: string[]) {
 
   const app = new ApiApplication();
   await app.boot();
-  await app.migrateSchema({existingSchema, models: ['User']});
+  await app.migrateSchema({existingSchema, models: ['User','Hospital']});
 
   // Connectors usually keep a pool of opened connections,
   // this keeps the process running even after all work is done.
