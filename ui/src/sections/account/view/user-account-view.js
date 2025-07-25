@@ -90,6 +90,7 @@ export default function AccountView() {
       {currentTab === 'general' && <AccountGeneral />}
 
       {currentTab === 'billing' && (
+        
         <AccountBilling
           plans={_userPlans}
           cards={_userPayment}

@@ -2,6 +2,9 @@ import {ApplicationConfig, ApiApplication} from './application';
 
 export * from './application';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 export async function main(options: ApplicationConfig = {}) {
   const app = new ApiApplication(options);
   await app.boot();
