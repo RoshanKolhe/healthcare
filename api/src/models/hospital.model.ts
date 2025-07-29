@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasMany} from '@loopback/repository';
+import {Branch} from './branch.model';
 
 @model()
 export class Hospital extends Entity {
@@ -87,6 +88,29 @@ export class Hospital extends Entity {
   })
   isActive: boolean;
 
+  @property({
+    type: 'date',
+  })
+  createdAt?: Date;
+
+  @property({
+    type: 'date',
+  })
+  updatedAt?: Date;
+
+  @property({
+    type: 'date',
+  })
+  deletedAt?: Date;
+  
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  isDeleted?: boolean;
+
+  @hasMany(() => Branch)
+  branches: Branch[];
 
   constructor(data?: Partial<Hospital>) {
     super(data);

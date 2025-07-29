@@ -71,7 +71,7 @@ export class HospitalController {
   async find(
     @param.filter(Hospital) filter?: Filter<Hospital>,
   ): Promise<Hospital[]> {
-    return this.hospitalRepository.find(filter);
+    return this.hospitalRepository.find({...filter , include: [{relation: 'branches'}]});
   }
 
   @authenticate({
@@ -90,7 +90,7 @@ export class HospitalController {
     @param.path.number('id') id: number,
     @param.filter(Hospital, {exclude: 'where'}) filter?: FilterExcludingWhere<Hospital>
   ): Promise<Hospital> {
-    return this.hospitalRepository.findById(id, filter);
+    return this.hospitalRepository.findById(id, {...filter , include: [{relation: 'branches'}],});
   }
 
   @authenticate({
