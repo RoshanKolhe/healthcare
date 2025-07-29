@@ -5,18 +5,18 @@ import { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
 
-export function useGetProducts() {
-  const URL = endpoints.product.list;
+export function useGetHospitals() {
+  const URL = endpoints.hospital.list;
 
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
-      products: data || [],
-      productsLoading: isLoading,
-      productsError: error,
-      productsValidating: isValidating,
-      productsEmpty: !isLoading && !data?.products.length,
+      hospitals: Array.isArray(data) ? data : [],
+      hospitalsLoading: isLoading,
+      hospitalsError: error,
+      hospitalsValidating: isValidating,
+      hospitalsEmpty: !isLoading && !data?.hospitals?.length,
     }),
     [data, error, isLoading, isValidating]
   );
@@ -26,19 +26,18 @@ export function useGetProducts() {
 
 // ----------------------------------------------------------------------
 
-export function useGetProduct(productId) {
-  const URL = productId ? [endpoints.product.details, { params: { productId } }] : null;
-
+export function useGetHospital(hospitalId) {
+  const URL = hospitalId ? [endpoints.hospital.details(hospitalId)] : null;
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
-      product: data?.product,
-      productLoading: isLoading,
-      productError: error,
-      productValidating: isValidating,
+      hospital: data,
+      hospitalLoading: isLoading,
+      hospitalError: error,
+      hospitalValidating: isValidating,
     }),
-    [data?.product, error, isLoading, isValidating]
+    [data, error, isLoading, isValidating]
   );
 
   return memoizedValue;
@@ -46,8 +45,8 @@ export function useGetProduct(productId) {
 
 // ----------------------------------------------------------------------
 
-export function useSearchProducts(query) {
-  const URL = query ? [endpoints.product.search, { params: { query } }] : null;
+export function useSearchHospitals(query) {
+  const URL = query ? [endpoints.hospital.search, { params: { query } }] : null;
 
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher, {
     keepPreviousData: true,

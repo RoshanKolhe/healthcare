@@ -43,6 +43,7 @@ const ICONS = {
   ecommerce: icon('ic_ecommerce'),
   analytics: icon('ic_analytics'),
   dashboard: icon('ic_dashboard'),
+  hospital: icon('ic_hospital'),
 };
 
 // ----------------------------------------------------------------------
@@ -72,6 +73,15 @@ export function useNavData() {
             children: [
               { title: t('list'), path: paths.dashboard.user.list },
               { title: t('create'), path: paths.dashboard.user.new },
+            ],
+          },
+          {
+            title: t('hospital'),
+            path: paths.dashboard.hospital.root,
+            icon: ICONS.hospital,
+            children: [
+              { title: t('list'), path: paths.dashboard.hospital.list },
+              { title: t('create'), path: paths.dashboard.hospital.new },
             ],
           },
         ],
