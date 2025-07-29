@@ -81,6 +81,12 @@ export class Hospital extends Entity {
   })
   postalCode: number;
 
+  @property({
+    type: 'boolean',
+    required: true,
+  })
+  isActive: boolean;
+
 
   constructor(data?: Partial<Hospital>) {
     super(data);
