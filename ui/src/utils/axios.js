@@ -55,4 +55,9 @@ export const endpoints = {
     details: (id) => `/hospitals/${id}`,
     search: '/api/hospitals/search',
   },
+  branch: {
+    list: '/branches',
+    details: (id) => `/branches/${id}`,
+    search: '/api/branches/search',
+  },
 };

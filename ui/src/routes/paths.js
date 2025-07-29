@@ -127,6 +127,14 @@ export const paths = {
       edit: (id) => `${ROOTS.DASHBOARD}/hospitals/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/hospitals/${id}/view`,
     },
+    branch: {
+      root: `${ROOTS.DASHBOARD}/branches`,
+      new: `${ROOTS.DASHBOARD}/branches/new`,
+      list: `${ROOTS.DASHBOARD}/branches/list`,
+      profile: `${ROOTS.DASHBOARD}/branches/profile`,
+      edit: (id) => `${ROOTS.DASHBOARD}/branches/${id}/edit`,
+      view: (id) => `${ROOTS.DASHBOARD}/branches/${id}/view`,
+    },
     product: {
       root: `${ROOTS.DASHBOARD}/product`,
       new: `${ROOTS.DASHBOARD}/product/new`,
