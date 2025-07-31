@@ -18,7 +18,7 @@ export default function BranchCreateView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Create a new branch"
+        heading="Create a new Branch"
         links={[
           {
             name: 'Dashboard',

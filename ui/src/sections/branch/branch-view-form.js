@@ -241,77 +241,94 @@ export default function BranchViewForm({ currentBranch }) {
 
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
-      <Grid container spacing={3}>
-
-        <Grid xs={12} md={12}>
-          <Card sx={{ p: 3,pt: 10, }}>
-            <Box
-              rowGap={3}
-              columnGap={2}
-              display="grid"
-              gridTemplateColumns={{
-                xs: 'repeat(1, 1fr)',
-                sm: 'repeat(2, 1fr)',
-              }}
-            >
-              <RHFSelect name="isActive" label="Status" disabled>
-                {COMMON_STATUS_OPTIONS.map((status) => (
-                  <MenuItem key={status.value} value={status.value}>
-                    {status.label}
-                  </MenuItem>
-                ))}
-              </RHFSelect>
-              <RHFTextField name="hospitalName" label="Branch Name" disabled/>
-              <RHFTextField name="hospitalRegNum" label="Branch Register Number" disabled/>
-              <RHFTextField name="hospitalCategory" label="Branch Category" disabled/>
-              <RHFTextField name="hospitalType" label="Branch Type" disabled/>
-              <RHFTextField name="hospitalServices" label="Branch Services" disabled/>
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2">Branch Profile</Typography>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <Box sx={{ flex: 1 }}>
-                    <RHFUploadBox
-                      name="imageUpload"
-                      maxSize={3145728}
-                      onDrop={handleDrop}
-                      onDelete={handleRemoveFile}
-                      disabled
-                    />
-                  </Box>
-                  {values.imageUpload?.preview && (
-                    <Box>
-                      <a
-                        href={values.imageUpload.preview}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Box
-                          component="img"
-                          src={values.imageUpload.preview}
-                          alt="preview"
-                          sx={{
-                            width: 120,
-                            height: 120,
-                            borderRadius: 2,
-                            objectFit: 'cover',
-                            border: '1px solid #ccc',
-                            cursor: 'pointer',
-                          }}
-                        />
-                      </a>
+      <Grid xs={12} md={12}>
+        <Card sx={{ pb: 2 }}>
+          <Stack spacing={3} sx={{ p: 3 }}>
+            <Grid container spacing={2} xs={12} md={12}>
+              <Grid xs={12} md={6}>
+                <RHFSelect name="isActive" label="Status" disabled>
+                  {COMMON_STATUS_OPTIONS.map((status) => (
+                    <MenuItem key={status.value} value={status.value}>
+                      {status.label}
+                    </MenuItem>
+                  ))}
+                </RHFSelect>
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="hospitalName" label="Branch Name" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="hospitalRegNum" label="Branch Register Number" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="hospitalCategory" label="Branch Category" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="hospitalType" label="Branch Type" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="hospitalServices" label="Branch Services" disabled />
+              </Grid>
+              <Grid xs={12} md={12}>
+                <RHFTextField name="description" label="Description" multiline rows={3} disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle2">Branch Profile</Typography>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Box sx={{ flex: 1 }}>
+                      <RHFUploadBox
+                        name="imageUpload"
+                        maxSize={3145728}
+                        onDrop={handleDrop}
+                        onDelete={handleRemoveFile}
+                        disabled
+                      />
                     </Box>
-                  )}
-                </Box>
-              </Stack>
-              <RHFTextField name="description" label="Description" multiline rows={3} disabled/>
-              <RHFTextField name="address" label="Address" disabled/>
-              <RHFTextField name="city" label="City" disabled/>
-              <RHFTextField name="state" label="State" disabled/>
-              <RHFTextField name="country" label="Country" disabled/>
-              <RHFTextField name="postalCode" label="Postal Code" disabled/>
-            </Box>
-          </Card>
-        </Grid>
+                    {values.imageUpload?.preview && (
+                      <Box>
+                        <a
+                          href={values.imageUpload.preview}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Box
+                            component="img"
+                            src={values.imageUpload.preview}
+                            alt="preview"
+                            sx={{
+                              width: 120,
+                              height: 120,
+                              borderRadius: 2,
+                              objectFit: 'cover',
+                              border: '1px solid #ccc',
+                              cursor: 'pointer',
+                            }}
+                          />
+                        </a>
+                      </Box>
+                    )}
+                  </Box>
+                </Stack>
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="address" label="Address" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="city" label="City" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="state" label="State" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="country" label="Country" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="postalCode" label="Postal Code" disabled />
+              </Grid>
+            </Grid>
+          </Stack>
+        </Card>
       </Grid>
     </FormProvider>
   );

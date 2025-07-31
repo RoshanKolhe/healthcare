@@ -18,7 +18,7 @@ export default function HospitalCreateView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Create a new hospital"
+        heading="Create a new Hospital"
         links={[
           {
             name: 'Dashboard',

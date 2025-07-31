@@ -51,17 +51,13 @@ import HospitalQuickEditForm from '../hospital-quick-edit-form';
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
-  { id: 'hospitalName', label: 'Hospital Name' },
-  { id: 'hospitalRegNum', label: 'Hospital Register' },
-  { id: 'hospitalCategory', label: 'Hospital Category' },
-  { id: 'hospitalType', label: 'Hospital Type' },
-  { id: 'hospitalServices', label: 'Hospital Services' },
-  { id: 'description', label: 'Description' },
-  { id: 'address', label: 'Address' },
-  { id: 'city', label: 'City' },
-  { id: 'state', label: 'State' },
+  { id: 'hospitalName', label: 'Name' },
+  { id: 'hospitalRegNum', label: 'Register Number' },
+  { id: 'hospitalCategory', label: 'Category' },
+  { id: 'hospitalType', label: 'Type' },
+  { id: 'hospitalServices', label: 'Services' },
   { id: 'country', label: 'Country' },
-  { id: 'postalCode', label: 'Pin code', width: 180 },
+  { id: 'postalCode', label: 'Pin Code', width: 180 },
   { id: 'isActive', label: 'Status', width: 100 },
   { id: '', width: 88 },
 ];

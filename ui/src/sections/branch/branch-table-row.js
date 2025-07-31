@@ -43,9 +43,9 @@ export default function UserTableRow({
   return (
     <>
       <TableRow hover selected={selected}>
-        <TableCell padding="checkbox">
+        {/* <TableCell padding="checkbox">
           <Checkbox checked={selected} onClick={onSelectRow} />
-        </TableCell>
+        </TableCell> */}
         {/* <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
           <Avatar alt={imageUpload} src={imageUpload} sx={{ mr: 2 }} />
 

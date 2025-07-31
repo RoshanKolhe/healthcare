@@ -53,7 +53,7 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Branch Name' },
-  { id: 'fullAddress', label: 'Branch Full Address'},
+  { id: 'fullAddress', label: 'Full Address'},
   { id: 'state', label: 'State' },
   { id: 'city', label: 'City' },
   { id: 'hospitalName', label: 'Hospital Name'},

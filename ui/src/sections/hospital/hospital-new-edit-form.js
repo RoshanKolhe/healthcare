@@ -168,19 +168,19 @@ export default function HospitalNewEditForm({ currentHospital }) {
           <Stack spacing={3} sx={{ p: 3 }}>
             <Grid container spacing={2} xs={12} md={12}>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalName" label="Hospital Name" />
+                <RHFTextField name="hospitalName" label="Name" />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalRegNum" label="Hospital Register Number" />
+                <RHFTextField name="hospitalRegNum" label="Register Number" />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalCategory" label="Hospital Category" />
+                <RHFTextField name="hospitalCategory" label="Category" />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalType" label="Hospital Type" />
+                <RHFTextField name="hospitalType" label="Type" />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalServices" label="Hospital Services" />
+                <RHFTextField name="hospitalServices" label="Services" />
               </Grid>
               <Grid xs={12} md={6}>
                 <Stack spacing={1.5}>

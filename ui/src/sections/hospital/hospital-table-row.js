@@ -58,9 +58,9 @@ export default function UserTableRow({
   return (
     <>
       <TableRow hover selected={selected}>
-        <TableCell padding="checkbox">
+        {/* <TableCell padding="checkbox">
           <Checkbox checked={selected} onClick={onSelectRow} />
-        </TableCell>
+        </TableCell> */}
         {/* <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
           <Avatar alt={imageUpload} src={imageUpload} sx={{ mr: 2 }} />
 
@@ -84,10 +84,6 @@ export default function UserTableRow({
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalCategory}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalType}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalServices}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{description}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{address}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{city}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{state}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{country}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{postalCode}</TableCell>
         <TableCell>

@@ -124,7 +124,7 @@ export default function BranchNewEditForm({ currentBranch }) {
                 <RHFTextField name="name" label="Branch Name" />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="fullAddress" label="Branch Address Number" />
+                <RHFTextField name="fullAddress" label="Full Address" />
               </Grid>
               <Grid xs={12} md={6}>
                 <RHFTextField name="state" label="State" />
