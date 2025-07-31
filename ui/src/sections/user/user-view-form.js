@@ -7,6 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 // @mui
 import LoadingButton from '@mui/lab/LoadingButton';
 import Box from '@mui/material/Box';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -21,7 +22,6 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hook';
 // assets
 import { countries } from 'src/assets/data';
-import { useTheme } from '@mui/material/styles';
 // components
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
@@ -32,15 +32,17 @@ import FormProvider, {
   RHFUploadAvatar,
   RHFAutocomplete,
   RHFSelect,
+  RHFUploadBox,
 } from 'src/components/hook-form';
-import { useAuthContext } from 'src/auth/hooks';
 import { FormControl, FormHelperText, IconButton, InputAdornment, MenuItem } from '@mui/material';
-import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useTheme } from '@mui/material/styles';
 import axiosInstance from 'src/utils/axios';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
-import { DatePicker } from '@mui/x-date-pickers';
+import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
+import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -50,13 +52,13 @@ const allRoles = [
   { value: 'branch', name: 'Branch' },
 ];
 
-export default function UserNewEditForm({ currentUser }) {
+export default function UserViewForm({ currentUser }) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const router = useRouter();
 
   const { enqueueSnackbar } = useSnackbar();
-
+  const [departments, setDepartments] = useState([]);
   const [branchOptions, setBranchOptions] = useState([]);
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [validationSchema, setValidationSchema] = useState(() => Yup.object().shape({}));
@@ -106,7 +108,6 @@ export default function UserNewEditForm({ currentUser }) {
     [currentUser]
   );
 
-  // const mergedSchema = NewUserSchema.concat(validationSchema);
   const methods = useForm({
     resolver: yupResolver(validationSchema),
     defaultValues,
@@ -117,74 +118,39 @@ export default function UserNewEditForm({ currentUser }) {
     watch,
     control,
     setValue,
+    setError,
+    clearErrors,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
+
+  const branch = watch('branch');
+  const selectedDepartments = watch('departments');
   const values = watch();
   const role = watch('role');
 
-  const onSubmit = handleSubmit(async (formData) => {
-    try {
-      const inputData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        dob: formData.dob,
-        fullAddress: formData.fullAddress,
-        city: formData.city,
-        state: formData.state,
-        email: formData.email,
-        password: formData.password,
-        phoneNumber: formData.phoneNumber,
-        permissions: [formData.role],
-        isActive: currentUser ? formData.isActive : true,
-        hospitalId: formData.hospital?.id,
-        branchId: formData.branch?.id,
-        avatar: {
-          fileUrl: formData.avatar?.fileUrl,
-        },
-      };
-      if (!currentUser) {
-        await axiosInstance.post('/register', inputData);
-      } else {
-        console.log('here');
-        await axiosInstance.patch(`/api/users/${currentUser.id}`, inputData);
-      }
-      reset();
-      enqueueSnackbar(currentUser ? 'Update success!' : 'Create success!');
-      router.push(paths.dashboard.user.list);
-    } catch (error) {
-      console.error(error);
-      enqueueSnackbar(typeof error === 'string' ? error : error.error.message, {
-        variant: 'error',
-      });
-    }
-  });
-
-  const handleRemoveFile = useCallback(() => {
-    setValue('avatar', null);
-  }, [setValue]);
+  console.log(role);
 
   const handleDrop = useCallback(
     async (acceptedFiles) => {
       const file = acceptedFiles[0];
+
       if (file) {
         const formData = new FormData();
-        formData.append('avatar', file);
+        formData.append('file', file);
         const response = await axiosInstance.post('/files', formData);
         const { data } = response;
-        const fileUrl = data?.files?.[0]?.fileUrl;
-        setValue(
-          'avatar',
-          {
-            fileUrl, // for backend submission
-            preview: fileUrl, // ✅ use backend URL for UI preview
-          },
-          { shouldValidate: true }
-        );
+        console.log(data);
+        setValue('avatarUrl', data?.files[0].fileUrl, {
+          shouldValidate: true,
+        });
       }
     },
     [setValue]
   );
+  const handleRemoveFile = useCallback(() => {
+    setValue('imageUpload', null);
+  }, [setValue]);
   useEffect(() => {
     if (role === 'hospital') {
       setValidationSchema((prev) =>
@@ -236,7 +202,7 @@ export default function UserNewEditForm({ currentUser }) {
       avatar: Yup.object().shape({
         fileUrl: Yup.string().required('Image is required'),
       }),
-      // not required
+      isActive: Yup.boolean(),
       status: Yup.string(),
       isVerified: Yup.boolean(),
     };
@@ -280,11 +246,12 @@ export default function UserNewEditForm({ currentUser }) {
       reset(defaultValues);
     }
   }, [currentUser, defaultValues, reset]);
+
   return (
-    <FormProvider methods={methods} onSubmit={onSubmit}>
+    <FormProvider methods={methods}>
       <Grid container spacing={3}>
         <Grid xs={12} md={4}>
-          <Card sx={{ pt: 10, pb: 5, px: 3 }}>
+          <Card sx={{ p: 3, pt: 10 }}>
             {currentUser && (
               <Label
                 color={(values.isActive && 'success') || (!values.isActive && 'error') || 'warning'}
@@ -315,6 +282,7 @@ export default function UserNewEditForm({ currentUser }) {
                     <br /> max size of {fData(3145728)}
                   </Typography>
                 }
+                disabled
               />
             </Box>
           </Card>
@@ -331,8 +299,8 @@ export default function UserNewEditForm({ currentUser }) {
                 sm: 'repeat(2, 1fr)',
               }}
             >
-              <RHFTextField name="firstName" label="First Name" />
-              <RHFTextField name="lastName" label="Last Name" />
+              <RHFTextField name="firstName" label="First Name" disabled />
+              <RHFTextField name="lastName" label="Last Name" disabled />
               <Controller
                 name="dob"
                 control={control}
@@ -350,13 +318,14 @@ export default function UserNewEditForm({ currentUser }) {
                         helperText: error?.message,
                       },
                     }}
+                    disabled
                   />
                 )}
               />
-              <RHFTextField name="fullAddress" label="Full Address" />
-              <RHFTextField name="city" label="City" />
-              <RHFTextField name="state" label="State" />
-              <RHFTextField name="email" label="Email Address" />
+              <RHFTextField name="fullAddress" label="Full Address " disabled />
+              <RHFTextField name="city" label="City" disabled />
+              <RHFTextField name="state" label="State" disabled />
+              <RHFTextField name="email" label="Email Address" disabled />
               {!currentUser ? (
                 <RHFTextField
                   name="password"
@@ -374,6 +343,7 @@ export default function UserNewEditForm({ currentUser }) {
                       </InputAdornment>
                     ),
                   }}
+                  disabled
                 />
               ) : null}
               <Controller
@@ -421,13 +391,14 @@ export default function UserNewEditForm({ currentUser }) {
                         name: field.name,
                         required: true,
                       }}
+                      disabled
                     />
 
                     {error && <FormHelperText>{error.message}</FormHelperText>}
                   </FormControl>
                 )}
               />
-              <RHFSelect fullWidth name="role" label="Role">
+              <RHFSelect fullWidth name="role" label="Role" disabled>
                 {roleOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.name}
@@ -445,6 +416,7 @@ export default function UserNewEditForm({ currentUser }) {
                     setValue('hospital', value);
                     setSelectedHospital(value);
                   }}
+                  disabled
                 />
               )}
 
@@ -462,6 +434,7 @@ export default function UserNewEditForm({ currentUser }) {
                       // Extract branches from selected hospital
                       setBranchOptions(value?.branches || []);
                     }}
+                    disabled
                   />
 
                   <RHFAutocomplete
@@ -470,15 +443,11 @@ export default function UserNewEditForm({ currentUser }) {
                     options={branchOptions}
                     getOptionLabel={(option) => option?.name || ''}
                     isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                    disabled
                   />
                 </>
               )}
             </Box>
-            <Stack alignItems="flex-end" sx={{ mt: 3 }}>
-              <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                {!currentUser ? 'Create User' : 'Save Changes'}
-              </LoadingButton>
-            </Stack>
           </Card>
         </Grid>
       </Grid>
@@ -486,6 +455,6 @@ export default function UserNewEditForm({ currentUser }) {
   );
 }
 
-UserNewEditForm.propTypes = {
+UserViewForm.propTypes = {
   currentUser: PropTypes.object,
 };

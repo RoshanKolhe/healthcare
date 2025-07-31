@@ -17,6 +17,7 @@ import { useRouter } from 'src/routes/hook';
 // components
 import { useSnackbar } from 'src/components/snackbar';
 import FormProvider, {
+  RHFAutocomplete,
   RHFSelect,
   RHFTextField,
   RHFUploadBox,
@@ -26,6 +27,8 @@ import { CardHeader, Chip, MenuItem } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import axiosInstance from 'src/utils/axios';
 import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
+import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import Label from 'src/components/label';
 
 // ----------------------------------------------------------------------
 
@@ -37,6 +40,13 @@ export default function BranchNewEditForm({ currentBranch }) {
   const { enqueueSnackbar } = useSnackbar();
 
   const preview = useBoolean();
+  const rawFilter = {
+    where: {
+      isActive: true,
+    },
+  };
+  const encodedFilter = `filter=${encodeURIComponent(JSON.stringify(rawFilter))}`;
+  const { filteredhospitals: hospitals } = useGetHospitalsWithFilter(encodedFilter);
 
   const NewBranchSchema = Yup.object().shape({
     name: Yup.string().required('Branch Name is required'),
@@ -53,6 +63,7 @@ export default function BranchNewEditForm({ currentBranch }) {
       city: currentBranch?.city || '',
       state: currentBranch?.state || '',
       isActive: currentBranch ? (currentBranch?.isActive ? '1' : '0') : '1',
+      hospital: currentBranch?.hospital || null,
     }),
     [currentBranch]
   );
@@ -79,7 +90,8 @@ export default function BranchNewEditForm({ currentBranch }) {
         fullAddress: formData.fullAddress,
         city: formData.city,
         state: formData.state,
-        isActive: currentBranch ? formData.isActive : true,        
+        isActive: currentBranch ? formData.isActive : true,
+        hospitalId: formData.hospital?.id,
       };
       if (!currentBranch) {
         await axiosInstance.post('/branches', inputData);
@@ -104,32 +116,10 @@ export default function BranchNewEditForm({ currentBranch }) {
   }, [currentBranch, defaultValues, reset]);
 
   const renderDetails = (
-    <>
-      {mdUp && (
-        <Grid md={12}>
-          <Typography variant="h6" sx={{ mb: 0.5 }}>
-            Branch
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Title, short description, image...
-          </Typography>
-        </Grid>
-      )}
-
       <Grid xs={12} md={12}>
-        <Card>
-          {!mdUp && <CardHeader title="Details" />}
+        <Card sx={{ pb: 2 }}>
           <Stack spacing={3} sx={{ p: 3 }}>
             <Grid container spacing={2} xs={12} md={12}>
-              <Grid xs={12} md={6}>
-                <RHFSelect name="isActive" label="Status">
-                  {COMMON_STATUS_OPTIONS.map((status) => (
-                    <MenuItem key={status.value} value={status.value}>
-                      {status.label}
-                    </MenuItem>
-                  ))}
-                </RHFSelect>
-              </Grid>
               <Grid xs={12} md={6}>
                 <RHFTextField name="name" label="Branch Name" />
               </Grid>
@@ -142,35 +132,50 @@ export default function BranchNewEditForm({ currentBranch }) {
               <Grid xs={12} md={6}>
                 <RHFTextField name="city" label="City" />
               </Grid>
+              <Grid xs={12} md={6}>
+                <RHFAutocomplete
+                  name="hospital"
+                  label="Hospital"
+                  options={hospitals || []}
+                  getOptionLabel={(option) => `${option?.hospitalName}` || ''}
+                  filterOptions={(x) => x}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  renderOption={(props, option) => (
+                    <li {...props}>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {option?.hospitalName}
+                      </Typography>
+                    </li>
+                  )}
+                  renderTags={(selected, getTagProps) =>
+                    selected.map((option, tagIndex) => (
+                      <Chip
+                        {...getTagProps({ index: tagIndex })}
+                        key={option.id}
+                        label={option.hospitalName}
+                        size="small"
+                        color="info"
+                        variant="soft"
+                      />
+                    ))
+                  }
+                />
+              </Grid>
             </Grid>
+            <Stack alignItems="flex-end" sx={{ mt: 3 }}>
+              <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
+                {!currentBranch ? 'Create User' : 'Save Changes'}
+              </LoadingButton>
+            </Stack>
           </Stack>
         </Card>
       </Grid>
-    </>
-  );
-
-  const renderActions = (
-    <>
-      {mdUp && <Grid md={12} />}
-      <Grid xs={12} md={12} sx={{ display: 'flex', alignItems: 'center' }}>
-        <LoadingButton
-          type="submit"
-          variant="contained"
-          size="large"
-          loading={isSubmitting}
-          sx={{ ml: 2 }}
-        >
-          {!currentBranch ? 'Create Branch' : 'Save Changes'}
-        </LoadingButton>
-      </Grid>
-    </>
   );
 
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
       <Grid container spacing={3}>
         {renderDetails}
-        {renderActions}
       </Grid>
     </FormProvider>
   );

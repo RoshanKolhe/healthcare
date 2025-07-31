@@ -1,7 +1,7 @@
 'use client';
 
 import isEqual from 'lodash/isEqual';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 // @mui
 import { alpha } from '@mui/material/styles';
 import Tab from '@mui/material/Tab';
@@ -40,9 +40,11 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 //
+import { useGetUsers } from 'src/api/user';
 import UserTableRow from '../user-table-row';
 import UserTableToolbar from '../user-table-toolbar';
 import UserTableFiltersResult from '../user-table-filters-result';
+import UserQuickEditForm from '../user-quick-edit-form';
 
 // ----------------------------------------------------------------------
 
@@ -51,7 +53,8 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 const TABLE_HEAD = [
   { id: 'name', label: 'Name' },
   { id: 'phoneNumber', label: 'Phone Number', width: 180 },
-  { id: 'company', label: 'Company', width: 220 },
+  { id: 'hospitalName', label: 'Hospital Name', width: 180 },
+  { id: 'branchName', label: 'Branch Name', width: 180 },
   { id: 'role', label: 'Role', width: 180 },
   { id: 'status', label: 'Status', width: 100 },
   { id: '', width: 88 },
@@ -74,9 +77,14 @@ export default function UserListView() {
 
   const confirm = useBoolean();
 
-  const [tableData, setTableData] = useState(_userList);
+  const [tableData, setTableData] = useState([]);
 
   const [filters, setFilters] = useState(defaultFilters);
+
+  const [quickEditRow, setQuickEditRow] = useState();
+  const quickEdit = useBoolean();
+
+  const { users, refreshUsers } = useGetUsers();
 
   const dataFiltered = applyFilter({
     inputData: tableData,
@@ -134,6 +142,21 @@ export default function UserListView() {
     [router]
   );
 
+  const handleViewRow = useCallback(
+    (id) => {
+      router.push(paths.dashboard.user.view(id));
+    },
+    [router]
+  );
+
+  const handleQuickEditRow = useCallback(
+    (row) => {
+      setQuickEditRow(row);
+      quickEdit.onTrue();
+    },
+    [quickEdit]
+  );
+
   const handleFilterStatus = useCallback(
     (event, newValue) => {
       handleFilters('status', newValue);
@@ -145,6 +168,26 @@ export default function UserListView() {
     setFilters(defaultFilters);
   }, []);
 
+  useEffect(() => {
+    if (users) {
+      const updatedUsers = users.filter((obj) => !obj.permissions.includes('super_admin'));
+      setTableData(updatedUsers);
+    }
+  }, [users]);
+
+  useEffect(() => {
+    if (users) {
+      const updatedUsers = users
+        .filter((user) => !user.permissions.includes('super_admin'))
+        .map((user) => ({
+          ...user,
+          hospitalName: user.hospital?.hospitalName || 'N/A',
+          name: user.branch?.name || 'N/A',
+        }));
+      setTableData(updatedUsers);
+    }
+  }, [users]);
+
   return (
     <>
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
@@ -152,7 +195,7 @@ export default function UserListView() {
           heading="List"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'User', href: paths.dashboard.user.root },
+            { name: 'User', href: paths.dashboard.user.list },
             { name: 'List' },
           ]}
           action={
@@ -283,6 +326,11 @@ export default function UserListView() {
                         onSelectRow={() => table.onSelectRow(row.id)}
                         onDeleteRow={() => handleDeleteRow(row.id)}
                         onEditRow={() => handleEditRow(row.id)}
+                        onViewRow={() => handleViewRow(row.id)}
+                        handleQuickEditRow={(user) => {
+                          handleQuickEditRow(user);
+                        }}
+                        quickEdit={quickEdit}
                       />
                     ))}
 
@@ -332,6 +380,17 @@ export default function UserListView() {
           </Button>
         }
       />
+      {quickEdit.value && quickEditRow && (
+        <UserQuickEditForm
+          currentUser={quickEditRow}
+          open={quickEdit.value}
+          onClose={() => {
+            setQuickEditRow(null);
+            quickEdit.onFalse();
+          }}
+          refreshUsers={refreshUsers}
+        />
+      )}
     </>
   );
 }

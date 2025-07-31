@@ -36,7 +36,7 @@ export default function BranchEditView() {
           },
           {
             name: 'Branch',
-            href: paths.dashboard.branch.root,
+            href: paths.dashboard.branch.list,
           },
           {
             name: currentBranch?.memberName || 'Branch Detail',

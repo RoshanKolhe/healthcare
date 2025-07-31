@@ -41,6 +41,7 @@ import {
 import { useGetBranchs } from 'src/api/branch';
 import { _roles, USER_STATUS_OPTIONS } from 'src/utils/constants';
 import { useAuthContext } from 'src/auth/hooks';
+import { useGetHospitalsWithFilter } from 'src/api/hospital';
 import BranchTableRow from '../branch-table-row';
 import BranchTableToolbar from '../branch-table-toolbar';
 import BranchTableFiltersResult from '../branch-table-filters-result';
@@ -55,6 +56,7 @@ const TABLE_HEAD = [
   { id: 'fullAddress', label: 'Branch Full Address'},
   { id: 'state', label: 'State' },
   { id: 'city', label: 'City' },
+  { id: 'hospitalName', label: 'Hospital Name'},
   { id: 'isActive', label: 'Status', width: 100 },
   { id: '', width: 88 },
 ];
@@ -88,6 +90,11 @@ export default function BranchListView() {
   const [filters, setFilters] = useState(defaultFilters);
 
   const { branchs, branchsLoading, branchsEmpty, refreshBranchs } = useGetBranchs();
+  const hospitalFilter = `filter=${encodeURIComponent(
+  JSON.stringify({ where: { isActive: true } })
+)}`;
+
+const { filteredhospitals: hospitals = [] } = useGetHospitalsWithFilter(hospitalFilter);
 
   const dataFiltered = applyFilter({
     inputData: tableData,
@@ -172,11 +179,23 @@ export default function BranchListView() {
     [quickEdit]
   );
 
+  // useEffect(() => {
+  //   if (branchs) {
+  //     setTableData(branchs);
+  //   }
+  // }, [branchs]);
   useEffect(() => {
-    if (branchs) {
-      setTableData(branchs);
-    }
-  }, [branchs]);
+  if (branchs && hospitals.length) {
+    const enrichedBranches = branchs.map((branch) => {
+      const matchedHospital = hospitals.find((h) => h.id === branch.hospitalId);
+      return {
+        ...branch,
+        hospitalName: matchedHospital?.hospitalName || 'N/A',
+      };
+    });
+    setTableData(enrichedBranches);
+  }
+}, [branchs, hospitals]);
 
   return (
     <>
@@ -185,7 +204,7 @@ export default function BranchListView() {
           heading="List"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Branch', href: paths.dashboard.branch.root },
+            { name: 'Branch', href: paths.dashboard.branch.list },
             { name: 'List' },
           ]}
           action={

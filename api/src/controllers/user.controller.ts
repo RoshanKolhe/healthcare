@@ -150,9 +150,7 @@ export class UserController {
       where: {
         id: currnetUser.id,
       },
-      include: [
-        {relation: 'hospital'},
-      ]
+      include: [{relation: 'hospital'}],
     });
     const userData = _.omit(user, 'password');
     return Promise.resolve({
@@ -193,7 +191,7 @@ export class UserController {
         isDeleted: false,
       },
       fields: {password: false, otp: false, otpExpireAt: false},
-      include: [{relation: 'hospital'}],
+      include: [{relation: 'hospital'}, {relation: 'branch'}],
     };
     return this.userRepository.find(filter);
   }
@@ -224,7 +222,7 @@ export class UserController {
         otp: false,
         otpExpireAt: false,
       },
-      include: [{relation:'hospital'}]
+      include: [{relation: 'hospital'},{relation: 'branch'}],
     });
     return Promise.resolve({
       ...user,

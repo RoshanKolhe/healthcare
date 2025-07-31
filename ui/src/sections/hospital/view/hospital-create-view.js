@@ -26,7 +26,7 @@ export default function HospitalCreateView() {
           },
           {
             name: 'Hospital',
-            href: paths.dashboard.hospital.root,
+            href: paths.dashboard.hospital.list,
           },
           { name: 'New Hospital' },
         ]}

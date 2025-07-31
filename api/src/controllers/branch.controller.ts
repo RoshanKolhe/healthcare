@@ -3,6 +3,7 @@ import {
   CountSchema,
   Filter,
   FilterExcludingWhere,
+  relation,
   repository,
   Where,
 } from '@loopback/repository';
@@ -23,7 +24,7 @@ import {BranchRepository} from '../repositories';
 export class BranchController {
   constructor(
     @repository(BranchRepository)
-    public branchRepository : BranchRepository,
+    public branchRepository: BranchRepository,
   ) {}
 
   @post('/branches')
@@ -52,9 +53,7 @@ export class BranchController {
     description: 'Branch model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Branch) where?: Where<Branch>,
-  ): Promise<Count> {
+  async count(@param.where(Branch) where?: Where<Branch>): Promise<Count> {
     return this.branchRepository.count(where);
   }
 
@@ -70,9 +69,7 @@ export class BranchController {
       },
     },
   })
-  async find(
-    @param.filter(Branch) filter?: Filter<Branch>,
-  ): Promise<Branch[]> {
+  async find(@param.filter(Branch) filter?: Filter<Branch>): Promise<Branch[]> {
     return this.branchRepository.find(filter);
   }
 
@@ -106,9 +103,13 @@ export class BranchController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Branch, {exclude: 'where'}) filter?: FilterExcludingWhere<Branch>
+    @param.filter(Branch, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Branch>,
   ): Promise<Branch> {
-    return this.branchRepository.findById(id, filter);
+    return this.branchRepository.findById(id, {
+      ...filter,
+      include: [{relation: 'hospital'}],
+    });
   }
 
   @patch('/branches/{id}')

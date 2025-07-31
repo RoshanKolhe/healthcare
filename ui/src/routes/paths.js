@@ -115,9 +115,7 @@ export const paths = {
       profile: `${ROOTS.DASHBOARD}/profile`,
       account: `${ROOTS.DASHBOARD}/user/account`,
       edit: (id) => `${ROOTS.DASHBOARD}/user/${id}/edit`,
-      demo: {
-        edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit`,
-      },
+      view: (id) => `${ROOTS.DASHBOARD}/user/${id}/view`,
     },
     hospital: {
       root: `${ROOTS.DASHBOARD}/hospitals`,

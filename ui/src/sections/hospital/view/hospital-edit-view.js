@@ -36,7 +36,7 @@ export default function HospitalEditView() {
           },
           {
             name: 'Hospital',
-            href: paths.dashboard.hospital.root,
+            href: paths.dashboard.hospital.list,
           },
           {
             name: currentHospital?.memberName || 'Hospital Detail',

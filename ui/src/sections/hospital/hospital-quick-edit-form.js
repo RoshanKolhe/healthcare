@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 // @mui
@@ -21,6 +21,7 @@ import FormProvider, { RHFSelect, RHFTextField } from 'src/components/hook-form'
 import axiosInstance from 'src/utils/axios';
 import { useRouter } from 'src/routes/hook';
 import { USER_STATUS_OPTIONS } from 'src/utils/constants';
+import { paths } from 'src/routes/paths';
 
 // ----------------------------------------------------------------------
 
@@ -30,10 +31,11 @@ export default function HospitalQuickEditForm({
   onClose,
   refreshHospitals,
 }) {
-  console.log('currentHospital',currentHospital);
-  console.log('currentHospital',open);
+  console.log('currentHospital', currentHospital);
+  console.log('currentHospital', open);
 
   const { enqueueSnackbar } = useSnackbar();
+  const router = useRouter();
 
   const NewHospitalSchema = Yup.object().shape({
     hospitalName: Yup.string().required('Hospital Name is required'),
@@ -47,23 +49,22 @@ export default function HospitalQuickEditForm({
   });
 
   const defaultValues = useMemo(
-  () => ({
-    hospitalName: currentHospital?.hospitalName || '',
-    hospitalRegNum: currentHospital?.hospitalRegNum || '',
-    hospitalCategory: currentHospital?.hospitalCategory || '',
-    hospitalType: currentHospital?.hospitalType || '',
-    hospitalServices: currentHospital?.hospitalServices || '',
-    isActive: currentHospital?.isActive ? '1' : '0' || '',
-    // imageUpload: currentHospital?.imageUpload
-    //   ? {
-    //       fileUrl: currentHospital.imageUpload.fileUrl,
-    //       preview: currentHospital.imageUpload.fileUrl,
-    //     }
-    //   : '',
-  }),
-  [currentHospital]
-);
-
+    () => ({
+      hospitalName: currentHospital?.hospitalName || '',
+      hospitalRegNum: currentHospital?.hospitalRegNum || '',
+      hospitalCategory: currentHospital?.hospitalCategory || '',
+      hospitalType: currentHospital?.hospitalType || '',
+      hospitalServices: currentHospital?.hospitalServices || '',
+      isActive: currentHospital?.isActive ? '1' : '0' || '',
+      // imageUpload: currentHospital?.imageUpload
+      //   ? {
+      //       fileUrl: currentHospital.imageUpload.fileUrl,
+      //       preview: currentHospital.imageUpload.fileUrl,
+      //     }
+      //   : '',
+    }),
+    [currentHospital]
+  );
 
   const methods = useForm({
     resolver: yupResolver(NewHospitalSchema),
@@ -80,7 +81,7 @@ export default function HospitalQuickEditForm({
 
   const values = watch();
 
-    const onSubmit = handleSubmit(async (formData) => {
+  const onSubmit = handleSubmit(async (formData) => {
     try {
       const inputData = {
         hospitalName: formData.hospitalName,
@@ -98,7 +99,7 @@ export default function HospitalQuickEditForm({
       reset();
       onClose();
       enqueueSnackbar('Update success!');
-      console.info('DATA', formData);
+      router.push(paths.dashboard.hospital.list);
     } catch (error) {
       console.error(error);
     }
@@ -116,8 +117,8 @@ export default function HospitalQuickEditForm({
         setValue(
           'imageUpload',
           {
-            fileUrl, 
-            preview: fileUrl, 
+            fileUrl,
+            preview: fileUrl,
           },
           { shouldValidate: true }
         );
@@ -125,9 +126,12 @@ export default function HospitalQuickEditForm({
     },
     [setValue]
   );
-  const handleRemoveFile = useCallback(() => {
-    setValue('coverUrl', null);
-  }, [setValue]);
+
+  useEffect(() => {
+    if (currentHospital) {
+      reset(defaultValues);
+    }
+  }, [currentHospital, defaultValues, reset]);
 
   return (
     <Dialog
@@ -172,7 +176,7 @@ export default function HospitalQuickEditForm({
             <RHFTextField name="hospitalRegNum" label="Hospital Register Number" />
             <RHFTextField name="hospitalCategory" label="Hospital Category" />
             <RHFTextField name="hospitalType" label="Hospital Type" />
-            <RHFTextField name="hospitalServices" label="Hospital Services" />            
+            <RHFTextField name="hospitalServices" label="Hospital Services" />
           </Box>
         </DialogContent>
 

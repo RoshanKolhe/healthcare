@@ -35,10 +35,10 @@ export default function BranchView() {
           },
           {
             name: 'Branch',
-            href: paths.dashboard.branch.root,
+            href: paths.dashboard.branch.list,
           },
           {
-            name: `${currentBranch?.firstName} ${currentBranch?.lastName ? currentBranch?.lastName : ''}`,
+            name: `${currentBranch?.name}`,
           },
         ]}
         sx={{

@@ -46,7 +46,7 @@ export class Hospital extends Entity {
   })
   imageUpload: object;
 
-  @property({
+  @property({ 
     type: 'string',
     required: true,
   })

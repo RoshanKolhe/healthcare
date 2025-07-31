@@ -1,7 +1,8 @@
+/* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
-import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 // @mui
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -14,44 +15,46 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 // _mock
-import { USER_STATUS_OPTIONS } from 'src/_mock';
+import { USER_STATUS_OPTIONS } from 'src/utils/constants';
 // assets
 import { countries } from 'src/assets/data';
+import { useTheme } from '@mui/material/styles';
 // components
 import Iconify from 'src/components/iconify';
 import { useSnackbar } from 'src/components/snackbar';
 import FormProvider, { RHFSelect, RHFTextField, RHFAutocomplete } from 'src/components/hook-form';
+import { FormControl, FormHelperText } from '@mui/material';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/material.css';
+import { paths } from 'src/routes/paths';
+import axiosInstance from 'src/utils/axios';
+import { useRouter } from 'src/routes/hook';
 
 // ----------------------------------------------------------------------
 
-export default function UserQuickEditForm({ currentUser, open, onClose }) {
+export default function UserQuickEditForm({ currentUser, open, onClose, refreshUsers }) {
   const { enqueueSnackbar } = useSnackbar();
+  const router = useRouter();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
   const NewUserSchema = Yup.object().shape({
-    name: Yup.string().required('Name is required'),
+    firstName: Yup.string().required('First Name is required'),
+    lastName: Yup.string().required('Last Name is required'),
     email: Yup.string().required('Email is required').email('Email must be a valid email address'),
-    phoneNumber: Yup.string().required('Phone number is required'),
-    address: Yup.string().required('Address is required'),
-    country: Yup.string().required('Country is required'),
-    company: Yup.string().required('Company is required'),
-    state: Yup.string().required('State is required'),
-    city: Yup.string().required('City is required'),
-    role: Yup.string().required('Role is required'),
+    phoneNumber: Yup.string()
+      .required('Phone number is required')
+      .matches(/^[0-9]{8,15}$/, 'Phone number must be between 8 and 15 digits'),
+    isActive: Yup.boolean(),
   });
 
   const defaultValues = useMemo(
     () => ({
-      name: currentUser?.name || '',
+      firstName: currentUser?.firstName || '',
+      lastName: currentUser?.lastName || '',
       email: currentUser?.email || '',
       phoneNumber: currentUser?.phoneNumber || '',
-      address: currentUser?.address || '',
-      country: currentUser?.country || '',
-      state: currentUser?.state || '',
-      city: currentUser?.city || '',
-      zipCode: currentUser?.zipCode || '',
-      status: currentUser?.status,
-      company: currentUser?.company || '',
-      role: currentUser?.role || '',
+      isActive: currentUser?.isActive ? '1' : '0' || '',
     }),
     [currentUser]
   );
@@ -64,20 +67,40 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
   const {
     reset,
     handleSubmit,
+    control,
     formState: { isSubmitting },
   } = methods;
 
-  const onSubmit = handleSubmit(async (data) => {
+  const onSubmit = handleSubmit(async (formData) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const inputData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        isActive: formData.isActive,
+      };
+      await axiosInstance.patch(`/api/users/${currentUser.id}`, inputData);
+      refreshUsers();
       reset();
       onClose();
       enqueueSnackbar('Update success!');
-      console.info('DATA', data);
+      router.push(paths.dashboard.user.list);
     } catch (error) {
       console.error(error);
     }
   });
+
+  useEffect(() => {
+    document.body.classList.remove('light-mode', 'dark-mode');
+    document.body.classList.add(isDark ? 'dark-mode' : 'light-mode');
+  }, [isDark]);
+
+  useEffect(() => {
+    if (currentUser) {
+      reset(defaultValues);
+    }
+  }, [currentUser, defaultValues, reset]);
 
   return (
     <Dialog
@@ -93,10 +116,11 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
         <DialogTitle>Quick Update</DialogTitle>
 
         <DialogContent>
-          <Alert variant="outlined" severity="info" sx={{ mb: 3 }}>
-            Account is waiting for confirmation
-          </Alert>
-
+          {!currentUser?.isActive && (
+            <Alert variant="outlined" severity="error" sx={{ mb: 3 }}>
+              Account is In-Active
+            </Alert>
+          )}
           <Box
             rowGap={3}
             columnGap={2}
@@ -106,7 +130,7 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
               sm: 'repeat(2, 1fr)',
             }}
           >
-            <RHFSelect name="status" label="Status">
+            <RHFSelect name="isActive" label="Status">
               {USER_STATUS_OPTIONS.map((status) => (
                 <MenuItem key={status.value} value={status.value}>
                   {status.label}
@@ -116,44 +140,56 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
 
             <Box sx={{ display: { xs: 'none', sm: 'block' } }} />
 
-            <RHFTextField name="name" label="Full Name" />
+            <RHFTextField name="firstName" label="First Name" />
+            <RHFTextField name="lastName" label="Last Name" />
             <RHFTextField name="email" label="Email Address" />
-            <RHFTextField name="phoneNumber" label="Phone Number" />
+            <Controller
+              name="phoneNumber"
+              control={control}
+              defaultValue=""
+              rules={{ required: 'Phone number is required' }}
+              render={({ field, fieldState: { error } }) => (
+                <FormControl fullWidth error={!!error}>
+                  <PhoneInput
+                    {...field}
+                    value={field.value}
+                    country="ae"
+                    enableSearch
+                    specialLabel={
+                      <span
+                        style={{
+                          backgroundColor: 'transparent',
+                          color: error ? '#f44336' : isDark ? '#fff' : theme.palette.text.secondary,
+                          fontSize: 12,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Phone Number
+                      </span>
+                    }
+                    inputStyle={{
+                      width: '100%',
+                      height: '56px',
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      borderColor: error ? '#f44336' : '#c4c4c4',
+                      borderRadius: '8px',
+                      color: isDark ? '#fff' : undefined,
+                      paddingLeft: '48px',
+                      paddingRight: '40px',
+                    }}
+                    containerStyle={{ width: '100%' }}
+                    onChange={(value) => field.onChange(value)}
+                    inputProps={{
+                      name: field.name,
+                      required: true,
+                    }}
+                  />
 
-            <RHFAutocomplete
-              name="country"
-              label="Country"
-              options={countries.map((country) => country.label)}
-              getOptionLabel={(option) => option}
-              renderOption={(props, option) => {
-                const { code, label, phone } = countries.filter(
-                  (country) => country.label === option
-                )[0];
-
-                if (!label) {
-                  return null;
-                }
-
-                return (
-                  <li {...props} key={label}>
-                    <Iconify
-                      key={label}
-                      icon={`circle-flags:${code.toLowerCase()}`}
-                      width={28}
-                      sx={{ mr: 1 }}
-                    />
-                    {label} ({code}) +{phone}
-                  </li>
-                );
-              }}
+                  {error && <FormHelperText>{error.message}</FormHelperText>}
+                </FormControl>
+              )}
             />
-
-            <RHFTextField name="state" label="State/Region" />
-            <RHFTextField name="city" label="City" />
-            <RHFTextField name="address" label="Address" />
-            <RHFTextField name="zipCode" label="Zip/Code" />
-            <RHFTextField name="company" label="Company" />
-            <RHFTextField name="role" label="Role" />
           </Box>
         </DialogContent>
 
@@ -175,4 +211,5 @@ UserQuickEditForm.propTypes = {
   currentUser: PropTypes.object,
   onClose: PropTypes.func,
   open: PropTypes.bool,
+  refreshUsers: PropTypes.func,
 };

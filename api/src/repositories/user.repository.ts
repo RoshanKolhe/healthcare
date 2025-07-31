@@ -7,9 +7,10 @@ import {
   HasManyRepositoryFactory,
 } from '@loopback/repository';
 import {HealthcareDataSource} from '../datasources';
-import {User, UserRelations, Hospital} from '../models';
+import {User, UserRelations, Hospital, Branch} from '../models';
 import {TimeStampRepositoryMixin} from '../mixins/timestamp-repository-mixin';
 import {HospitalRepository} from './hospital.repository';
+import {BranchRepository} from './branch.repository';
 
 export type Credentials = {
   email?: string;
@@ -26,10 +27,14 @@ export class UserRepository extends TimeStampRepositoryMixin<
 
   public readonly hospital: BelongsToAccessor<Hospital, typeof User.prototype.id>;
 
+  public readonly branch: BelongsToAccessor<Branch, typeof User.prototype.id>;
+
   constructor(
-    @inject('datasources.healthcare') dataSource: HealthcareDataSource, @repository.getter('HospitalRepository') protected hospitalRepositoryGetter: Getter<HospitalRepository>,
+    @inject('datasources.healthcare') dataSource: HealthcareDataSource, @repository.getter('HospitalRepository') protected hospitalRepositoryGetter: Getter<HospitalRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
   ) {
     super(User, dataSource);
+    this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);
+    this.registerInclusionResolver('branch', this.branch.inclusionResolver);
     this.hospital = this.createBelongsToAccessorFor('hospital', hospitalRepositoryGetter,);
     this.registerInclusionResolver('hospital', this.hospital.inclusionResolver);
   }

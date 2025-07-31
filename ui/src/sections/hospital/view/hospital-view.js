@@ -35,10 +35,10 @@ export default function HospitalView() {
           },
           {
             name: 'Hospital',
-            href: paths.dashboard.hospital.root,
+            href: paths.dashboard.hospital.list,
           },
           {
-            name: `${currentHospital?.firstName} ${currentHospital?.lastName ? currentHospital?.lastName : ''}`,
+            name: `${currentHospital?.hospitalName}`,
           },
         ]}
         sx={{

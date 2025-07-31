@@ -19,13 +19,13 @@ import {
 } from '@loopback/rest';
 import {Hospital} from '../models';
 import {HospitalRepository} from '../repositories';
-import { authenticate } from '@loopback/authentication';
+import {authenticate} from '@loopback/authentication';
 import {PermissionKeys} from '../authorization/permission-keys';
 
 export class HospitalController {
   constructor(
     @repository(HospitalRepository)
-    public hospitalRepository : HospitalRepository,
+    public hospitalRepository: HospitalRepository,
   ) {}
 
   @authenticate({
@@ -71,7 +71,10 @@ export class HospitalController {
   async find(
     @param.filter(Hospital) filter?: Filter<Hospital>,
   ): Promise<Hospital[]> {
-    return this.hospitalRepository.find({...filter , include: [{relation: 'branches'}]});
+    return this.hospitalRepository.find({
+      ...filter,
+      include: [{relation: 'branches'}],
+    });
   }
 
   @authenticate({
@@ -88,9 +91,13 @@ export class HospitalController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Hospital, {exclude: 'where'}) filter?: FilterExcludingWhere<Hospital>
+    @param.filter(Hospital, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Hospital>,
   ): Promise<Hospital> {
-    return this.hospitalRepository.findById(id, {...filter , include: [{relation: 'branches'}],});
+    return this.hospitalRepository.findById(id, {
+      ...filter,
+      include: [{relation: 'branches'}],
+    });
   }
 
   @authenticate({
@@ -112,6 +119,7 @@ export class HospitalController {
     })
     hospital: Hospital,
   ): Promise<void> {
+    console.log(hospital);
     await this.hospitalRepository.updateById(id, hospital);
   }
 

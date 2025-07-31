@@ -16,16 +16,13 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hook';
 // components
 import { useSnackbar } from 'src/components/snackbar';
-import FormProvider, {
-  RHFSelect,
-  RHFTextField,
-  RHFUploadBox,
-} from 'src/components/hook-form';
+import FormProvider, { RHFSelect, RHFTextField, RHFUploadBox } from 'src/components/hook-form';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { CardHeader, Chip, MenuItem } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import axiosInstance from 'src/utils/axios';
 import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
+import Label from 'src/components/label';
 
 // ----------------------------------------------------------------------
 
@@ -166,32 +163,10 @@ export default function HospitalNewEditForm({ currentHospital }) {
   }, [currentHospital, defaultValues, reset]);
 
   const renderDetails = (
-    <>
-      {mdUp && (
-        <Grid md={12}>
-          <Typography variant="h6" sx={{ mb: 0.5 }}>
-            Hospital
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Title, short description, image...
-          </Typography>
-        </Grid>
-      )}
-
       <Grid xs={12} md={12}>
-        <Card>
-          {!mdUp && <CardHeader title="Details" />}
+        <Card sx={{ pb: 2 }}>
           <Stack spacing={3} sx={{ p: 3 }}>
             <Grid container spacing={2} xs={12} md={12}>
-              <Grid xs={12} md={6}>
-                <RHFSelect name="isActive" label="Status">
-                  {COMMON_STATUS_OPTIONS.map((status) => (
-                    <MenuItem key={status.value} value={status.value}>
-                      {status.label}
-                    </MenuItem>
-                  ))}
-                </RHFSelect>
-              </Grid>
               <Grid xs={12} md={6}>
                 <RHFTextField name="hospitalName" label="Hospital Name" />
               </Grid>
@@ -266,34 +241,20 @@ export default function HospitalNewEditForm({ currentHospital }) {
                 <RHFTextField name="postalCode" label="Postal Code" />
               </Grid>
             </Grid>
+            <Stack alignItems="flex-end" sx={{ mt: 3 }}>
+              <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
+                {!currentHospital ? 'Create User' : 'Save Changes'}
+              </LoadingButton>
+            </Stack>
           </Stack>
         </Card>
       </Grid>
-    </>
-  );
-
-  const renderActions = (
-    <>
-      {mdUp && <Grid md={12} />}
-      <Grid xs={12} md={12} sx={{ display: 'flex', alignItems: 'center' }}>
-        <LoadingButton
-          type="submit"
-          variant="contained"
-          size="large"
-          loading={isSubmitting}
-          sx={{ ml: 2 }}
-        >
-          {!currentHospital ? 'Create Hospital' : 'Save Changes'}
-        </LoadingButton>
-      </Grid>
-    </>
   );
 
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
       <Grid container spacing={3}>
         {renderDetails}
-        {renderActions}
       </Grid>
     </FormProvider>
   );

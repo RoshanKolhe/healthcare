@@ -192,7 +192,7 @@ export default function HospitalListView() {
           heading="List"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Hospital', href: paths.dashboard.hospital.root },
+            { name: 'Hospital', href: paths.dashboard.hospital.list },
             { name: 'List' },
           ]}
           action={

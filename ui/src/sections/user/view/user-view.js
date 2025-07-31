@@ -4,38 +4,49 @@
 import Container from '@mui/material/Container';
 // routes
 import { paths } from 'src/routes/paths';
+import { useParams } from 'src/routes/hook';
 // components
 import { useSettingsContext } from 'src/components/settings';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 //
-import BranchNewEditForm from '../branch-new-edit-form';
+import { useGetUser } from 'src/api/user';
+
+import UserViewForm from '../user-view-form';
 
 // ----------------------------------------------------------------------
 
-export default function BranchCreateView() {
+export default function UserView() {
   const settings = useSettingsContext();
+
+  const params = useParams();
+
+  const { id } = params;
+
+  const { user: currentUser } = useGetUser(id);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Create a new branch"
+        heading="Edit"
         links={[
           {
             name: 'Dashboard',
             href: paths.dashboard.root,
           },
           {
-            name: 'Branch',
-            href: paths.dashboard.branch.list,
+            name: 'User',
+            href: paths.dashboard.user.list,
           },
-          { name: 'New Branch' },
+          {
+            name: `${currentUser?.name}`,
+          },
         ]}
         sx={{
           mb: { xs: 3, md: 5 },
         }}
       />
 
-      <BranchNewEditForm />
+      <UserViewForm currentUser={currentUser} />
     </Container>
   );
 }

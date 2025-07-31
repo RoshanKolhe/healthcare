@@ -45,6 +45,34 @@ export function useGetBranch(branchId) {
 
 // ----------------------------------------------------------------------
 
+export function useGetBranchesWithFilter(filter) {
+  let URL;
+  if (filter) {
+    URL = endpoints.branch.filterList(filter);
+  } else {
+    URL = endpoints.branch.list;
+  }
+
+  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
+
+  const refreshFilterbranches = () => {
+    // Use the `mutate` function to trigger a revalidation
+    mutate();
+  };
+
+  return {
+    filteredbranches: data || [],
+    filteredbranchesLoading: isLoading,
+    filteredbranchesError: error,
+    filteredbranchesValidating: isValidating,
+    filteredbranchesEmpty: !isLoading && !data?.length,
+    refreshFilterbranches, // Include the refresh function separately
+  };
+}
+
+// ----------------------------------------------------------------------
+
+
 export function useSearchBranchs(query) {
   const URL = query ? [endpoints.branch.search, { params: { query } }] : null;
 
@@ -64,4 +92,23 @@ export function useSearchBranchs(query) {
   );
 
   return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+
+export function useGetBranchesByHospitalId(hospitalId) {
+  const filter = hospitalId
+    ? `filter=${encodeURIComponent(JSON.stringify({ where: { hospitalId, isActive: true } }))}`
+    : null;
+
+  const URL = filter ? endpoints.branch.filterList(filter) : null;
+
+  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+
+  return {
+    branches: data || [],
+    branchesLoading: isLoading,
+    branchesError: error,
+    branchesValidating: isValidating,
+  };
 }
