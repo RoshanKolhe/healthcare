@@ -20,6 +20,16 @@ export class Specialization extends Entity {
   })
   description?: string;
 
+  @property({
+    type: 'date',
+  })
+  createdAt?: Date;
+
+  @property({
+    type: 'date',
+  })
+  updatedAt?: Date;
+
 
   constructor(data?: Partial<Specialization>) {
     super(data);
