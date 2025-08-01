@@ -4,3 +4,4 @@ export * from './user.controller';
 export * from './hospital.controller';
 export * from './branch.controller';
 export * from './user-branch.controller';
+export * from './doctor.controller';

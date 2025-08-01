@@ -133,7 +133,20 @@ export class UserController {
     const userProfile = this.userService.convertToUserProfile(user);
     const userData = _.omit(user, 'password');
     const token = await this.jwtService.generateToken(userProfile);
-    const allUserData = await this.userRepository.findById(userData.id);
+    const allUserData = await this.userRepository.findById(userData.id,{
+      include: [
+        {
+          relation: 'hospital',
+          scope: {
+            include: [
+              {
+                relation: 'branches',
+              },
+            ],
+          },
+        },
+      ]
+    });
     return Promise.resolve({
       accessToken: token,
       user: allUserData,

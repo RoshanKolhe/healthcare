@@ -13,7 +13,7 @@ export class JWTService {
     }
     let token = '';
     try {
-      token = await signAsync(userProfile, 'mushroom', {
+      token = await signAsync(userProfile, 'healthcare', {
         expiresIn: '7h',
       });
     } catch (err) {
@@ -30,7 +30,7 @@ export class JWTService {
     }
     let token = '';
     try {
-      token = await signAsync(userProfile, 'mushroom', {
+      token = await signAsync(userProfile, 'healthcare', {
         expiresIn: '10m',
       });
     } catch (err) {
@@ -48,7 +48,7 @@ export class JWTService {
 
     let userProfile: UserProfile;
     try {
-      const decryptedToken = await verifyAsync(token, 'mushroom');
+      const decryptedToken = await verifyAsync(token, 'healthcare');
       userProfile = Object.assign(
         {
           id: '',
