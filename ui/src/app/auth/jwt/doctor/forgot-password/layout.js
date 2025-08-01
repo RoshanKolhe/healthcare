@@ -9,7 +9,6 @@ import AuthClassicLayout from 'src/layouts/auth/classic';
 // ----------------------------------------------------------------------
 
 export default function Layout({ children }) {
-  console.log('children',children);
   return (
     <GuestGuard>
       <AuthClassicLayout>{children}</AuthClassicLayout>

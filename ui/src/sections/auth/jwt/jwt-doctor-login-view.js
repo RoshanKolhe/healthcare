@@ -30,7 +30,7 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import { useSnackbar } from 'notistack';
 
 // ----------------------------------------------------------------------
-export default function JwtLoginView() {
+export default function JwtDoctorLoginView() {
   const { login } = useAuthContext();
 
   const router = useRouter();
@@ -94,9 +94,9 @@ export default function JwtLoginView() {
     <Stack spacing={2} sx={{ mb: 5 }}>
       <Typography variant="h4">Sign in</Typography>
       {/* <Stack direction="row" spacing={0.5}>
-        <Typography variant="body2">New user?</Typography>
+        <Typography variant="body2">New Doctor?</Typography>
 
-        <Link component={RouterLink} href={paths.auth.jwt.register} variant="subtitle2">
+        <Link component={RouterLink} href={paths.auth.jwt.hospitalRegister} variant="subtitle2">
           Create an account
         </Link>
       </Stack> */}
@@ -124,7 +124,7 @@ export default function JwtLoginView() {
 
       <Link
         component={RouterLink}
-        href={paths.auth.jwt.forgotPassword}
+        href={paths.auth.jwt.hospitalForgotPassword}
         variant="body2"
         color="inherit"
         underline="always"
