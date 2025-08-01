@@ -48,14 +48,6 @@ export class BranchController {
     return this.branchRepository.create(branch);
   }
 
-  @get('/branches/count')
-  @response(200, {
-    description: 'Branch model count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async count(@param.where(Branch) where?: Where<Branch>): Promise<Count> {
-    return this.branchRepository.count(where);
-  }
 
   @get('/branches')
   @response(200, {
@@ -73,24 +65,6 @@ export class BranchController {
     return this.branchRepository.find(filter);
   }
 
-  @patch('/branches')
-  @response(200, {
-    description: 'Branch PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Branch, {partial: true}),
-        },
-      },
-    })
-    branch: Branch,
-    @param.where(Branch) where?: Where<Branch>,
-  ): Promise<Count> {
-    return this.branchRepository.updateAll(branch, where);
-  }
 
   @get('/branches/{id}')
   @response(200, {
@@ -128,17 +102,6 @@ export class BranchController {
     branch: Branch,
   ): Promise<void> {
     await this.branchRepository.updateById(id, branch);
-  }
-
-  @put('/branches/{id}')
-  @response(204, {
-    description: 'Branch PUT success',
-  })
-  async replaceById(
-    @param.path.number('id') id: number,
-    @requestBody() branch: Branch,
-  ): Promise<void> {
-    await this.branchRepository.replaceById(id, branch);
   }
 
   @del('/branches/{id}')

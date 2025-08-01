@@ -161,12 +161,7 @@ export class DoctorController {
     });
   }
 
-  @authenticate({
-    strategy: 'jwt',
-    options: {
-      required: [PermissionKeys.DOCTOR],
-    },
-  })
+
   @get('/doctors/list')
   @response(200, {
     description: 'Array of Doctors model instances',
@@ -198,10 +193,6 @@ export class DoctorController {
     return this.doctorRepository.find(filter);
   }
 
-  @authenticate({
-    strategy: 'jwt',
-    options: {required: [PermissionKeys.DOCTOR]},
-  })
   @get('/doctors/{id}', {
     responses: {
       '200': {

@@ -53,9 +53,6 @@ export class HospitalController {
     return this.hospitalRepository.create(hospital);
   }
 
-  @authenticate({
-    strategy: 'jwt',
-  })
   @get('/hospitals')
   @response(200, {
     description: 'Array of Hospital model instances',
@@ -77,9 +74,6 @@ export class HospitalController {
     });
   }
 
-  @authenticate({
-    strategy: 'jwt',
-  })
   @get('/hospitals/{id}')
   @response(200, {
     description: 'Hospital model instance',
