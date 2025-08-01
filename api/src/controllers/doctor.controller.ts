@@ -167,7 +167,7 @@ export class DoctorController {
       required: [PermissionKeys.DOCTOR],
     },
   })
-  @get('/api/doctors/list')
+  @get('/doctors/list')
   @response(200, {
     description: 'Array of Doctors model instances',
     content: {
@@ -202,7 +202,7 @@ export class DoctorController {
     strategy: 'jwt',
     options: {required: [PermissionKeys.DOCTOR]},
   })
-  @get('/api/doctors/{id}', {
+  @get('/doctors/{id}', {
     responses: {
       '200': {
         description: 'Doctor Details',
@@ -234,7 +234,7 @@ export class DoctorController {
   @authenticate({
     strategy: 'jwt',
   })
-  @patch('/api/doctors/{id}')
+  @patch('/doctors/{id}')
   @response(204, {
     description: 'Doctor PATCH success',
   })
