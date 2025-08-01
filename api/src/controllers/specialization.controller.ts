@@ -47,17 +47,6 @@ export class SpecializationController {
     return this.specializationRepository.create(specialization);
   }
 
-  @get('/specializations/count')
-  @response(200, {
-    description: 'Specialization model count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async count(
-    @param.where(Specialization) where?: Where<Specialization>,
-  ): Promise<Count> {
-    return this.specializationRepository.count(where);
-  }
-
   @get('/specializations')
   @response(200, {
     description: 'Array of Specialization model instances',
@@ -74,25 +63,6 @@ export class SpecializationController {
     @param.filter(Specialization) filter?: Filter<Specialization>,
   ): Promise<Specialization[]> {
     return this.specializationRepository.find(filter);
-  }
-
-  @patch('/specializations')
-  @response(200, {
-    description: 'Specialization PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Specialization, {partial: true}),
-        },
-      },
-    })
-    specialization: Specialization,
-    @param.where(Specialization) where?: Where<Specialization>,
-  ): Promise<Count> {
-    return this.specializationRepository.updateAll(specialization, where);
   }
 
   @get('/specializations/{id}')
@@ -127,17 +97,6 @@ export class SpecializationController {
     specialization: Specialization,
   ): Promise<void> {
     await this.specializationRepository.updateById(id, specialization);
-  }
-
-  @put('/specializations/{id}')
-  @response(204, {
-    description: 'Specialization PUT success',
-  })
-  async replaceById(
-    @param.path.number('id') id: number,
-    @requestBody() specialization: Specialization,
-  ): Promise<void> {
-    await this.specializationRepository.replaceById(id, specialization);
   }
 
   @del('/specializations/{id}')
