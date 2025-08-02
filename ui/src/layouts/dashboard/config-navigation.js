@@ -45,6 +45,7 @@ const ICONS = {
   dashboard: icon('ic_dashboard'),
   hospital: icon('ic_hospital'),
   branch: icon('ic_branch'),
+  doctor: icon('ic_doctor'),
 };
 
 // ----------------------------------------------------------------------
@@ -92,6 +93,15 @@ export function useNavData() {
             children: [
               { title: t('list'), path: paths.dashboard.branch.list },
               { title: t('create'), path: paths.dashboard.branch.new },
+            ],
+          },
+          {
+            title: t('doctor'),
+            path: paths.dashboard.doctor.root,
+            icon: ICONS.doctor,
+            children: [
+              { title: t('list'), path: paths.dashboard.doctor.list },
+              { title: t('create'), path: paths.dashboard.doctor.new },
             ],
           },
         ],

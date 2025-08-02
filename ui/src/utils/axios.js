@@ -55,6 +55,11 @@ export const endpoints = {
     filterList: (filter) => `/api/users/list?${filter}`,
     details: (id) => `/api/users/${id}`,
   },
+  doctor: {
+    list: '/doctors/list',
+    filterList: (filter) => `/doctors/list?${filter}`,
+    details: (id) => `/doctors/${id}`,
+  },
   hospital: {
     list: '/hospitals',
     details: (id) => `/hospitals/${id}`,
@@ -66,5 +71,9 @@ export const endpoints = {
     details: (id) => `/branches/${id}`,
     filterList: (filter) => `/branches?${filter}`,
     search: '/api/branches/search',
+  },
+  specialization: {
+    list: '/specializations',
+    filterList: (filter) => `/specializations?${filter}`,
   },
 };

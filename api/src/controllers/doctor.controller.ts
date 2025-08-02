@@ -161,7 +161,12 @@ export class DoctorController {
     });
   }
 
-
+  @authenticate({
+    strategy: 'jwt',
+    options: {
+      required: [PermissionKeys.SUPER_ADMIN],
+    },
+  })
   @get('/doctors/list')
   @response(200, {
     description: 'Array of Doctors model instances',
@@ -188,7 +193,7 @@ export class DoctorController {
         isDeleted: false,
       },
       fields: {password: false, otp: false, otpExpireAt: false},
-      include: [{relation: 'hospital'}, {relation: 'branch'}],
+      include: [{relation: 'hospital'}, {relation: 'branch'},{relation: 'specialization'}],
     };
     return this.doctorRepository.find(filter);
   }
@@ -215,7 +220,7 @@ export class DoctorController {
         otp: false,
         otpExpireAt: false,
       },
-      include: [{relation: 'hospital'},{relation: 'branch'}],
+      include: [{relation: 'hospital'},{relation: 'branch'},{relation: 'specialization'}],
     });
     return Promise.resolve({
       ...doctor,

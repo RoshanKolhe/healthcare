@@ -1,6 +1,7 @@
 import {Entity, model, property, belongsTo} from '@loopback/repository';
 import {Hospital} from './hospital.model';
 import {Branch} from './branch.model';
+import {Specialization} from './specialization.model';
 
 @model()
 export class Doctor extends Entity {
@@ -43,7 +44,7 @@ export class Doctor extends Entity {
   })
   state: string;
 
- @property({
+  @property({
     type: 'string',
   })
   email: string;
@@ -63,10 +64,10 @@ export class Doctor extends Entity {
   })
   avatar?: object;
 
-  @property({
-    type: 'string',
+  @property.array(String, {
+    name: 'permissions',
   })
-  permissions?: string;
+  permissions: String[];
 
   @property({
     type: 'boolean',
@@ -115,6 +116,9 @@ export class Doctor extends Entity {
 
   @belongsTo(() => Branch)
   branchId: number;
+
+  @belongsTo(() => Specialization)
+  specializationId: number;
 
   constructor(data?: Partial<Doctor>) {
     super(data);
