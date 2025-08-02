@@ -69,7 +69,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
   const encodedFilter = `filter=${encodeURIComponent(JSON.stringify(rawFilter))}`;
   const { filteredhospitals: hospitals } = useGetHospitalsWithFilter(encodedFilter);
 
-  const {  specializations } = useGetSpecializations();
+  const { specializations } = useGetSpecializations();
 
   const { doctor } = useAuthContext();
   const doctorRole = doctor?.permissions?.[0];
@@ -87,6 +87,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
       state: currentDoctor?.state || '',
       email: currentDoctor?.email || '',
       password: '',
+      confirmPassword: '',
       phoneNumber: currentDoctor?.phoneNumber || '',
       hospital: currentDoctor?.hospital || null,
       branch: currentDoctor?.branch || null,
@@ -346,8 +347,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
                 )}
               />
               <RHFTextField name="email" label="Email Address" />
-              <RHFTextField name="fullAddress" label="Full Address" />
-              {!currentDoctor ? (
+              {/* {!currentDoctor ? (
                 <RHFTextField
                   name="password"
                   label="Password"
@@ -365,6 +365,43 @@ export default function DoctorNewEditForm({ currentDoctor }) {
                     ),
                   }}
                 />
+              ) : null} */}
+              {!currentDoctor ? (
+                <>
+                  <RHFTextField
+                    name="password"
+                    label="Password"
+                    type={password.value ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={password.onToggle} edge="end">
+                            <Iconify
+                              icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                            />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  <RHFTextField
+                    name="confirmPassword"
+                    label="Confirm New Password"
+                    type={password.value ? 'text' : 'password'}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={password.onToggle} edge="end">
+                            <Iconify
+                              icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                            />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </>
               ) : null}
               <Controller
                 name="phoneNumber"
@@ -417,6 +454,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
                   </FormControl>
                 )}
               />
+              <RHFTextField name="fullAddress" label="Full Address" />
               <RHFTextField name="city" label="City" />
               <RHFTextField name="state" label="State" />
               <RHFAutocomplete

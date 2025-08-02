@@ -122,6 +122,7 @@ export default function DoctorQuickEditForm({ currentDoctor, open, onClose, refr
             </Alert>
           )}
           <Box
+            mt={2}
             rowGap={3}
             columnGap={2}
             display="grid"

@@ -38,7 +38,7 @@ export default function UserView() {
             href: paths.dashboard.user.list,
           },
           {
-            name: `${currentUser?.name}`,
+            name: `${currentUser?.firstName} ${currentUser?.lastName ? currentUser?.lastName : ''}`,
           },
         ]}
         sx={{

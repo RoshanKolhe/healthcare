@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable no-nested-ternary */
+
 import isEqual from 'lodash/isEqual';
 import { useState, useCallback, useEffect } from 'react';
 // @mui
@@ -19,7 +21,7 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hook';
 import { RouterLink } from 'src/routes/components';
 // _mock
-import { _userList, _roles, USER_STATUS_OPTIONS } from 'src/_mock';
+import { _userList, _roles } from 'src/_mock';
 // hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 // components
@@ -41,6 +43,8 @@ import {
 } from 'src/components/table';
 //
 import { useGetUsers } from 'src/api/user';
+import { USER_STATUS_OPTIONS } from 'src/utils/constants';
+import { useAuthContext } from 'src/auth/hooks';
 import UserTableRow from '../user-table-row';
 import UserTableToolbar from '../user-table-toolbar';
 import UserTableFiltersResult from '../user-table-filters-result';
@@ -66,9 +70,25 @@ const defaultFilters = {
   status: 'all',
 };
 
+const roleLabels = {
+  super_admin: 'Super Admin',
+  hospital: 'Hospital',
+  branch: 'Branch',
+};
+
 // ----------------------------------------------------------------------
 
 export default function UserListView() {
+  const { user: currentUser } = useAuthContext();
+  const userRole = currentUser?.permissions?.[0];
+  const roleOptions =
+    userRole === 'hospital'
+      ? _roles.filter((r) => r === roleLabels.hospital)
+      : userRole === 'branch'
+      ? _roles.filter((r) => r === roleLabels.branch)
+      : _roles;
+
+      console.log(roleOptions);
   const table = useTable();
 
   const settings = useSettingsContext();
@@ -234,22 +254,15 @@ export default function UserListView() {
                       ((tab.value === 'all' || tab.value === filters.status) && 'filled') || 'soft'
                     }
                     color={
-                      (tab.value === 'active' && 'success') ||
-                      (tab.value === 'pending' && 'warning') ||
-                      (tab.value === 'banned' && 'error') ||
+                      (tab.value === '1' && 'success') ||
+                      (tab.value === '0' && 'error') ||
                       'default'
                     }
                   >
-                    {tab.value === 'all' && _userList.length}
-                    {tab.value === 'active' &&
-                      _userList.filter((user) => user.status === 'active').length}
+                    {tab.value === 'all' && tableData.length}
+                    {tab.value === '1' && tableData.filter((user) => user.isActive).length}
 
-                    {tab.value === 'pending' &&
-                      _userList.filter((user) => user.status === 'pending').length}
-                    {tab.value === 'banned' &&
-                      _userList.filter((user) => user.status === 'banned').length}
-                    {tab.value === 'rejected' &&
-                      _userList.filter((user) => user.status === 'rejected').length}
+                    {tab.value === '0' && tableData.filter((user) => !user.isActive).length}
                   </Label>
                 }
               />
@@ -260,7 +273,7 @@ export default function UserListView() {
             filters={filters}
             onFilters={handleFilters}
             //
-            roleOptions={_roles}
+            roleOptions={roleOptions}
           />
 
           {canReset && (
@@ -398,11 +411,61 @@ export default function UserListView() {
 
 // ----------------------------------------------------------------------
 
+// function applyFilter({ inputData, comparator, filters }) {
+//   const { name, status, role } = filters;
+//   const roleMapping = {
+//     super_admin: 'Super Admin',
+//     hospital: 'Hospital',
+//     branch: 'Branch',
+//   };
+
+//   const stabilizedThis = inputData.map((el, index) => [el, index]);
+
+//   stabilizedThis.sort((a, b) => {
+//     const order = comparator(a[0], b[0]);
+//     if (order !== 0) return order;
+//     return a[1] - b[1];
+//   });
+
+//   inputData = stabilizedThis.map((el) => el[0]);
+
+//   if (name) {
+//     inputData = inputData.filter(
+//       (user) => user.name.toLowerCase().indexOf(name.toLowerCase()) !== -1
+//     );
+//   }
+
+//   if (status !== 'all') {
+//     inputData = inputData.filter((user) => (status === '1' ? user.isActive : !user.isActive));
+//   }
+
+//   // if (role.length) {
+//   //   inputData = inputData.filter((user) => role.includes(user.role));
+//   // }
+//   if (role.length) {
+//     inputData = inputData.filter(
+//       (user) =>
+//         user.permissions &&
+//         user.permissions.some((userRole) => {
+//           console.log(userRole);
+//           const mappedRole = roleMapping[userRole];
+//           console.log('Mapped Role:', mappedRole); // Check the mapped role
+//           return mappedRole && role.includes(mappedRole);
+//         })
+//     );
+//   }
+
+//   return inputData;
+// }
+
 function applyFilter({ inputData, comparator, filters }) {
   const { name, status, role } = filters;
-
   const stabilizedThis = inputData.map((el, index) => [el, index]);
-
+  const roleMapping = {
+    super_admin: 'Super Admin',
+    hospital: 'Hospital',
+    branch: 'Branch',
+  };
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
     if (order !== 0) return order;
@@ -412,17 +475,26 @@ function applyFilter({ inputData, comparator, filters }) {
   inputData = stabilizedThis.map((el) => el[0]);
 
   if (name) {
-    inputData = inputData.filter(
-      (user) => user.name.toLowerCase().indexOf(name.toLowerCase()) !== -1
+    inputData = inputData.filter((user) =>
+      Object.values(user).some((value) => String(value).toLowerCase().includes(name.toLowerCase()))
     );
   }
 
   if (status !== 'all') {
-    inputData = inputData.filter((user) => user.status === status);
+    inputData = inputData.filter((user) => (status === '1' ? user.isActive : !user.isActive));
   }
 
   if (role.length) {
-    inputData = inputData.filter((user) => role.includes(user.role));
+    inputData = inputData.filter(
+      (user) =>
+        user.permissions &&
+        user.permissions.some((userRole) => {
+          console.log(userRole);
+          const mappedRole = roleMapping[userRole];
+          console.log('Mapped Role:', mappedRole); // Check the mapped role
+          return mappedRole && role.includes(mappedRole);
+        })
+    );
   }
 
   return inputData;

@@ -19,7 +19,7 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hook';
 import { RouterLink } from 'src/routes/components';
 // _mock
-import { _userList, _roles, USER_STATUS_OPTIONS } from 'src/_mock';
+import { _userList, _roles, } from 'src/_mock';
 // hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 // components
@@ -41,6 +41,7 @@ import {
 } from 'src/components/table';
 //
 import { useGetDoctors } from 'src/api/doctor';
+import { USER_STATUS_OPTIONS } from 'src/utils/constants';
 import DoctorTableRow from '../doctor-table-row';
 import DoctorTableToolbar from '../doctor-table-toolbar';
 import DoctorTableFiltersResult from '../doctor-table-filters-result';
@@ -235,22 +236,15 @@ export default function DoctorListView() {
                       ((tab.value === 'all' || tab.value === filters.status) && 'filled') || 'soft'
                     }
                     color={
-                      (tab.value === 'active' && 'success') ||
-                      (tab.value === 'pending' && 'warning') ||
-                      (tab.value === 'banned' && 'error') ||
+                      (tab.value === '1' && 'success') ||
+                      (tab.value === '0' && 'error') ||
                       'default'
                     }
                   >
-                    {tab.value === 'all' && _userList.length}
-                    {tab.value === 'active' &&
-                      _userList.filter((doctor) => doctor.status === 'active').length}
+                    {tab.value === 'all' && tableData.length}
+                    {tab.value === '1' && tableData.filter((doctor) => doctor.isActive).length}
 
-                    {tab.value === 'pending' &&
-                      _userList.filter((doctor) => doctor.status === 'pending').length}
-                    {tab.value === 'banned' &&
-                      _userList.filter((doctor) => doctor.status === 'banned').length}
-                    {tab.value === 'rejected' &&
-                      _userList.filter((doctor) => doctor.status === 'rejected').length}
+                    {tab.value === '0' && tableData.filter((doctor) => !doctor.isActive).length}
                   </Label>
                 }
               />
@@ -419,7 +413,7 @@ function applyFilter({ inputData, comparator, filters }) {
   }
 
   if (status !== 'all') {
-    inputData = inputData.filter((doctor) => doctor.status === status);
+    inputData = inputData.filter((user) => (status === '1' ? user.isActive : !user.isActive));
   }
 
   if (role.length) {

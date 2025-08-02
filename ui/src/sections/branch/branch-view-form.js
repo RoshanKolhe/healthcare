@@ -34,13 +34,14 @@ import FormProvider, {
   RHFSelect,
   RHFUploadBox,
 } from 'src/components/hook-form';
-import { FormControl, FormHelperText, MenuItem } from '@mui/material';
+import { Chip, FormControl, FormHelperText, MenuItem } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import axiosInstance from 'src/utils/axios';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
 import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
+import { useGetHospitalsWithFilter } from 'src/api/hospital';
 
 // ----------------------------------------------------------------------
 
@@ -54,49 +55,31 @@ export default function BranchViewForm({ currentBranch }) {
   const password = useBoolean();
 
   const [departments, setDepartments] = useState([]);
+  const rawFilter = {
+    where: {
+      isActive: true,
+    },
+  };
+  const encodedFilter = `filter=${encodeURIComponent(JSON.stringify(rawFilter))}`;
+  const { filteredhospitals: hospitals } = useGetHospitalsWithFilter(encodedFilter);
 
   const [validationSchema, setValidationSchema] = useState(
     Yup.object().shape({
-      hospitalName: Yup.string().required('Branch Name is required'),
-      hospitalRegNum: Yup.number().required('Branch Register Number is required'),
-      hospitalCategory: Yup.string().required('Branch Category is required'),
-      hospitalType: Yup.string().required('Branch Services is required'),
-      hospitalServices: Yup.string().required('Branch Type is required'),
-      description: Yup.string().required('Description is required'),
-      imageUpload: Yup.object().shape({
-        fileUrl: Yup.string().required('Image is required'),
-      }),
-      address: Yup.string().required('Address is required'),
+      name: Yup.string().required('Branch Name is required'),
+      fullAddress: Yup.string().required('Address is required'),
       city: Yup.string().required('City is required'),
       state: Yup.string().required('State is required'),
-      country: Yup.string().required('Country is required'),
-      postalCode: Yup.string().required('Pin code is required'),
       isActive: Yup.boolean(),
-      isVerified: Yup.boolean(),
     })
   );
   const defaultValues = useMemo(
     () => ({
-      hospitalName: currentBranch?.hospitalName || '',
-      hospitalRegNum: currentBranch?.hospitalRegNum || '',
-      hospitalCategory: currentBranch?.hospitalCategory || '',
-      hospitalType: currentBranch?.hospitalType || '',
-      hospitalServices: currentBranch?.hospitalServices || '',
-      description: currentBranch?.description || '',
-      // imageUpload: currentBranch?.imageUpload || '',
-      imageUpload: currentBranch?.imageUpload
-        ? {
-            fileUrl: currentBranch.imageUpload.fileUrl,
-            preview: currentBranch.imageUpload.fileUrl,
-          }
-        : '',
-      address: currentBranch?.address || '',
+      name: currentBranch?.name || '',
+      fullAddress: currentBranch?.fullAddress || '',
       city: currentBranch?.city || '',
       state: currentBranch?.state || '',
-      country: currentBranch?.country || '',
-      postalCode: currentBranch?.postalCode || '',
       isActive: currentBranch ? (currentBranch?.isActive ? '1' : '0') : '1',
-      isVerified: currentBranch?.isVerified || true,
+      hospital: currentBranch?.hospital || null,
     }),
     [currentBranch]
   );
@@ -123,41 +106,6 @@ export default function BranchViewForm({ currentBranch }) {
   const role = watch('role');
 
   console.log(role);
-
-  const onSubmit = handleSubmit(async (formData) => {
-    try {
-      const inputData = {
-        hospitalName: formData.hospitalName,
-        hospitalRegNum: Number(formData.hospitalRegNum),
-        hospitalCategory: formData.hospitalCategory,
-        hospitalType: formData.hospitalType,
-        hospitalServices: formData.hospitalServices,
-        description: formData.description,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        country: formData.country,
-        postalCode: Number(formData.postalCode),
-        imageUpload: {
-          fileUrl: formData.imageUpload?.fileUrl,
-        },
-      };
-      if (!currentBranch) {
-        await axiosInstance.post('/hospitals', inputData);
-      } else {
-        console.log('here');
-        await axiosInstance.patch(`/hospitals/${currentBranch.id}`, inputData);
-      }
-      reset();
-      enqueueSnackbar(currentBranch ? 'Update success!' : 'Create success!');
-      router.push(paths.dashboard.hospital.list);
-    } catch (error) {
-      console.error(error);
-      enqueueSnackbar(typeof error === 'string' ? error : error.error.message, {
-        variant: 'error',
-      });
-    }
-  });
 
   const handleDrop = useCallback(
     async (acceptedFiles) => {
@@ -240,7 +188,7 @@ export default function BranchViewForm({ currentBranch }) {
   }, [isDark]);
 
   return (
-    <FormProvider methods={methods} onSubmit={onSubmit}>
+    <FormProvider methods={methods}>
       <Grid xs={12} md={12}>
         <Card sx={{ pb: 2 }}>
           <Stack spacing={3} sx={{ p: 3 }}>
@@ -255,76 +203,46 @@ export default function BranchViewForm({ currentBranch }) {
                 </RHFSelect>
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalName" label="Branch Name" disabled />
+                <RHFTextField name="name" label="Branch Name" disabled />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalRegNum" label="Branch Register Number" disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalCategory" label="Branch Category" disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalType" label="Branch Type" disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalServices" label="Branch Services" disabled />
-              </Grid>
-              <Grid xs={12} md={12}>
-                <RHFTextField name="description" label="Description" multiline rows={3} disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <Stack spacing={1.5}>
-                  <Typography variant="subtitle2">Branch Profile</Typography>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Box sx={{ flex: 1 }}>
-                      <RHFUploadBox
-                        name="imageUpload"
-                        maxSize={3145728}
-                        onDrop={handleDrop}
-                        onDelete={handleRemoveFile}
-                        disabled
-                      />
-                    </Box>
-                    {values.imageUpload?.preview && (
-                      <Box>
-                        <a
-                          href={values.imageUpload.preview}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Box
-                            component="img"
-                            src={values.imageUpload.preview}
-                            alt="preview"
-                            sx={{
-                              width: 120,
-                              height: 120,
-                              borderRadius: 2,
-                              objectFit: 'cover',
-                              border: '1px solid #ccc',
-                              cursor: 'pointer',
-                            }}
-                          />
-                        </a>
-                      </Box>
-                    )}
-                  </Box>
-                </Stack>
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="address" label="Address" disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="city" label="City" disabled />
+                <RHFTextField name="fullAddress" label="Full Address" disabled />
               </Grid>
               <Grid xs={12} md={6}>
                 <RHFTextField name="state" label="State" disabled />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="country" label="Country" disabled />
+                <RHFTextField name="city" label="City" disabled />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="postalCode" label="Postal Code" disabled />
+                <RHFAutocomplete
+                  name="hospital"
+                  label="Hospital"
+                  options={hospitals || []}
+                  getOptionLabel={(option) => `${option?.hospitalName}` || ''}
+                  filterOptions={(x) => x}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  renderOption={(props, option) => (
+                    <li {...props}>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {option?.hospitalName}
+                      </Typography>
+                    </li>
+                  )}
+                  renderTags={(selected, getTagProps) =>
+                    selected.map((option, tagIndex) => (
+                      <Chip
+                        {...getTagProps({ index: tagIndex })}
+                        key={option.id}
+                        label={option.hospitalName}
+                        size="small"
+                        color="info"
+                        variant="soft"
+                      />
+                    ))
+                  }
+                  disabled
+                />
               </Grid>
             </Grid>
           </Stack>

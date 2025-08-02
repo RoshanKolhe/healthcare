@@ -43,11 +43,7 @@ export default function BranchTableFiltersResult({
           <Block label="Status:">
             <Chip
               size="small"
-              label={
-                (filters.status === '1' && 'Approved') ||
-                (filters.status === '2' && 'Change Request') ||
-                (filters.status === '0' && 'Pending')
-              }
+              label={filters.status === '1' ? 'Active' : 'In-Active'}
               onDelete={handleRemoveStatus}
             />
           </Block>

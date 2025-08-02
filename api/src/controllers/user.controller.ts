@@ -178,7 +178,7 @@ export class UserController {
       required: [PermissionKeys.SUPER_ADMIN],
     },
   })
-  @get('/api/users/list')
+  @get('/users/list')
   @response(200, {
     description: 'Array of Users model instances',
     content: {
@@ -213,7 +213,7 @@ export class UserController {
     strategy: 'jwt',
     options: {required: [PermissionKeys.SUPER_ADMIN]},
   })
-  @get('/api/users/{id}', {
+  @get('/users/{id}', {
     responses: {
       '200': {
         description: 'User Details',
@@ -245,7 +245,7 @@ export class UserController {
   @authenticate({
     strategy: 'jwt',
   })
-  @patch('/api/users/{id}')
+  @patch('/users/{id}')
   @response(204, {
     description: 'User PATCH success',
   })

@@ -38,7 +38,7 @@ export default function DoctorView() {
             href: paths.dashboard.doctor.list,
           },
           {
-            name: `${currentDoctor?.name}`,
+            name: `${currentDoctor?.firstName} ${currentDoctor?.lastName ? currentDoctor?.lastName : ''}`,
           },
         ]}
         sx={{

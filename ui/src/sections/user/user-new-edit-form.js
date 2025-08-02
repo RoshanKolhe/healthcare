@@ -90,6 +90,7 @@ export default function UserNewEditForm({ currentUser }) {
       state: currentUser?.state || '',
       email: currentUser?.email || '',
       password: '',
+      confirmPassword: '',
       phoneNumber: currentUser?.phoneNumber || '',
       hospital: currentUser?.hospital || null,
       branch: currentUser?.branch || null,
@@ -147,7 +148,7 @@ export default function UserNewEditForm({ currentUser }) {
         await axiosInstance.post('/register', inputData);
       } else {
         console.log('here');
-        await axiosInstance.patch(`/api/users/${currentUser.id}`, inputData);
+        await axiosInstance.patch(`/users/${currentUser.id}`, inputData);
       }
       reset();
       enqueueSnackbar(currentUser ? 'Update success!' : 'Create success!');
@@ -353,11 +354,8 @@ export default function UserNewEditForm({ currentUser }) {
                   />
                 )}
               />
-              <RHFTextField name="fullAddress" label="Full Address" />
-              <RHFTextField name="city" label="City" />
-              <RHFTextField name="state" label="State" />
               <RHFTextField name="email" label="Email Address" />
-              {!currentUser ? (
+              {/* {!currentUser ? (
                 <RHFTextField
                   name="password"
                   label="Password"
@@ -375,6 +373,43 @@ export default function UserNewEditForm({ currentUser }) {
                     ),
                   }}
                 />
+              ) : null} */}
+              {!currentUser ? (
+                <>
+                  <RHFTextField
+                    name="password"
+                    label="Password"
+                    type={password.value ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={password.onToggle} edge="end">
+                            <Iconify
+                              icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                            />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  <RHFTextField
+                    name="confirmPassword"
+                    label="Confirm New Password"
+                    type={password.value ? 'text' : 'password'}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={password.onToggle} edge="end">
+                            <Iconify
+                              icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                            />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </>
               ) : null}
               <Controller
                 name="phoneNumber"
@@ -427,6 +462,9 @@ export default function UserNewEditForm({ currentUser }) {
                   </FormControl>
                 )}
               />
+              <RHFTextField name="fullAddress" label="Full Address" />
+              <RHFTextField name="city" label="City" />
+              <RHFTextField name="state" label="State" />
               <RHFSelect fullWidth name="role" label="Role">
                 {roleOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>

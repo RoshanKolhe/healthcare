@@ -12,12 +12,35 @@ import { useSettingsContext } from 'src/components/settings';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 //
 import { useGetDoctor } from 'src/api/doctor';
+import { useCallback, useState } from 'react';
+import { Tab, Tabs } from '@mui/material';
+import Iconify from 'src/components/iconify';
 import DoctorNewEditForm from '../doctor-new-edit-form';
+import DoctorAccountChangePassword from '../doctor-account-change-password';
 
 // ----------------------------------------------------------------------
 
+const TABS = [
+  {
+    value: 'general',
+    label: 'General',
+    icon: <Iconify icon="solar:user-id-bold" width={24} />,
+  },
+  {
+    value: 'security',
+    label: 'Security',
+    icon: <Iconify icon="ic:round-vpn-key" width={24} />,
+  },
+];
+
 export default function DoctorEditView() {
   const settings = useSettingsContext();
+
+  const [currentTab, setCurrentTab] = useState('general');
+
+  const handleChangeTab = useCallback((event, newValue) => {
+    setCurrentTab(newValue);
+  }, []);
 
   const params = useParams();
 
@@ -46,7 +69,23 @@ export default function DoctorEditView() {
         }}
       />
 
-      <DoctorNewEditForm currentDoctor={currentDoctor} />
+      <Tabs
+        value={currentTab}
+        onChange={handleChangeTab}
+        sx={{
+          mb: { xs: 3, md: 5 },
+        }}
+      >
+        {TABS.map((tab) => (
+          <Tab key={tab.value} label={tab.label} icon={tab.icon} value={tab.value} />
+        ))}
+      </Tabs>
+
+      {currentTab === 'general' && <DoctorNewEditForm currentDoctor={currentDoctor} />}
+
+      {currentTab === 'security' && <DoctorAccountChangePassword currentDoctor={currentDoctor} />}
+
+      {/* <DoctorNewEditForm currentDoctor={currentDoctor} /> */}
     </Container>
   );
 }

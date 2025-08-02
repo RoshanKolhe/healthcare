@@ -80,7 +80,7 @@ export default function UserQuickEditForm({ currentUser, open, onClose, refreshU
         phoneNumber: formData.phoneNumber,
         isActive: formData.isActive,
       };
-      await axiosInstance.patch(`/api/users/${currentUser.id}`, inputData);
+      await axiosInstance.patch(`/users/${currentUser.id}`, inputData);
       refreshUsers();
       reset();
       onClose();
@@ -122,6 +122,7 @@ export default function UserQuickEditForm({ currentUser, open, onClose, refreshU
             </Alert>
           )}
           <Box
+            mt={2}
             rowGap={3}
             columnGap={2}
             display="grid"
