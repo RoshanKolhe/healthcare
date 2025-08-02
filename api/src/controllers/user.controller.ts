@@ -324,7 +324,7 @@ export class UserController {
     if (user) {
       const userProfile = this.userService.convertToUserProfile(user);
       const token = await this.jwtService.generate10MinToken(userProfile);
-      const resetPasswordLink = `${process.env.REACT_APP_ENDPOINT}/auth/admin/new-password?token=${token}`;
+      const resetPasswordLink = `${process.env.REACT_APP_ENDPOINT}/auth/jwt/new-password?token=${token}`;
       const template = generateResetPasswordTemplate({
         userData: userProfile,
         resetLink: resetPasswordLink,
