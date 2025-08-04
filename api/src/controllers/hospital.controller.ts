@@ -1,8 +1,10 @@
 import {
   Count,
   CountSchema,
+  DefaultTransactionalRepository,
   Filter,
   FilterExcludingWhere,
+  IsolationLevel,
   repository,
   Where,
 } from '@loopback/repository';
@@ -21,9 +23,13 @@ import {Hospital} from '../models';
 import {HospitalRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
 import {PermissionKeys} from '../authorization/permission-keys';
+import {HealthcareDataSource} from '../datasources';
+import {inject} from '@loopback/core';
 
 export class HospitalController {
   constructor(
+    @inject('datasources.healthcare')
+    public dataSource: HealthcareDataSource,
     @repository(HospitalRepository)
     public hospitalRepository: HospitalRepository,
   ) {}
@@ -50,9 +56,35 @@ export class HospitalController {
     })
     hospital: Omit<Hospital, 'id'>,
   ): Promise<Hospital> {
-    return this.hospitalRepository.create(hospital);
-  }
+    const repo = new DefaultTransactionalRepository(Hospital, this.dataSource);
+    const tx = await repo.beginTransaction(IsolationLevel.READ_COMMITTED);
 
+    try {
+      const createdHospital = await this.hospitalRepository.create(hospital, {
+        transaction: tx,
+      });
+
+      const branchName = `${hospital.hospitalName} - ${hospital.city || 'City'}`;
+      await this.hospitalRepository.branches(createdHospital.id).create(
+        {
+          name: branchName,
+          fullAddress: hospital.address,
+          city: hospital.city,
+          state: hospital.state,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {transaction: tx},
+      );
+
+      await tx.commit();
+      return createdHospital;
+    } catch (err) {
+      await tx.rollback();
+      throw err;
+    }
+  }
   @get('/hospitals')
   @response(200, {
     description: 'Array of Hospital model instances',
