@@ -217,7 +217,7 @@ export default function UserNewEditForm({ currentUser }) {
       );
     }
   }, [currentUser, role]);
-
+  
   useEffect(() => {
     const baseSchema = {
       firstName: Yup.string().required('First Name is required'),
@@ -241,6 +241,8 @@ export default function UserNewEditForm({ currentUser }) {
       status: Yup.string(),
       isVerified: Yup.boolean(),
     };
+
+    // 👇 Add password rules only if creating a new user
     if (!currentUser) {
       baseSchema.password = Yup.string()
         .min(6, 'Password must be at least 6 characters')
@@ -253,7 +255,9 @@ export default function UserNewEditForm({ currentUser }) {
       baseSchema.password = Yup.string().notRequired();
       baseSchema.confirmPassword = Yup.string().notRequired();
     }
-  }, [currentUser, role]);
+
+    setValidationSchema(Yup.object().shape(baseSchema));
+  }, [currentUser]);
 
   useEffect(() => {
     if (selectedHospital && selectedHospital.branches) {
@@ -355,25 +359,6 @@ export default function UserNewEditForm({ currentUser }) {
                 )}
               />
               <RHFTextField name="email" label="Email Address" />
-              {/* {!currentUser ? (
-                <RHFTextField
-                  name="password"
-                  label="Password"
-                  type={password.value ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={password.onToggle} edge="end">
-                          <Iconify
-                            icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
-                          />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              ) : null} */}
               {!currentUser ? (
                 <>
                   <RHFTextField

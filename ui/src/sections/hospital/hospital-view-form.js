@@ -41,6 +41,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
 import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
+import { useGetCategorys } from 'src/api/categorys';
+import { useGetHospitalServices } from 'src/api/hospital-service';
+import { useGetHospitalTypes } from 'src/api/hospital-type';
 
 // ----------------------------------------------------------------------
 
@@ -48,6 +51,10 @@ export default function HospitalViewForm({ currentHospital }) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const router = useRouter();
+
+  const { categorys } = useGetCategorys();
+  const { hospitalServices } = useGetHospitalServices();
+  const { hospitalTypes } = useGetHospitalTypes();
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -59,9 +66,9 @@ export default function HospitalViewForm({ currentHospital }) {
     Yup.object().shape({
       hospitalName: Yup.string().required('Hospital Name is required'),
       hospitalRegNum: Yup.number().required('Hospital Register Number is required'),
-      hospitalCategory: Yup.string().required('Hospital Category is required'),
+      category: Yup.string().required('Hospital Category is required'),
       hospitalType: Yup.string().required('Hospital Services is required'),
-      hospitalServices: Yup.string().required('Hospital Type is required'),
+      hospitalService: Yup.string().required('Hospital Type is required'),
       description: Yup.string().required('Description is required'),
       imageUpload: Yup.object().shape({
         fileUrl: Yup.string().required('Image is required'),
@@ -79,9 +86,9 @@ export default function HospitalViewForm({ currentHospital }) {
     () => ({
       hospitalName: currentHospital?.hospitalName || '',
       hospitalRegNum: currentHospital?.hospitalRegNum || '',
-      hospitalCategory: currentHospital?.hospitalCategory || '',
-      hospitalType: currentHospital?.hospitalType || '',
-      hospitalServices: currentHospital?.hospitalServices || '',
+      category: currentHospital?.category || null,
+      hospitalType: currentHospital?.hospitalType || null,
+      hospitalService: currentHospital?.hospitalService || null,
       description: currentHospital?.description || '',
       // imageUpload: currentHospital?.imageUpload || '',
       imageUpload: currentHospital?.imageUpload
@@ -124,41 +131,6 @@ export default function HospitalViewForm({ currentHospital }) {
 
   console.log(role);
 
-  const onSubmit = handleSubmit(async (formData) => {
-    try {
-      const inputData = {
-        hospitalName: formData.hospitalName,
-        hospitalRegNum: Number(formData.hospitalRegNum),
-        hospitalCategory: formData.hospitalCategory,
-        hospitalType: formData.hospitalType,
-        hospitalServices: formData.hospitalServices,
-        description: formData.description,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        country: formData.country,
-        postalCode: Number(formData.postalCode),
-        imageUpload: {
-          fileUrl: formData.imageUpload?.fileUrl,
-        },
-      };
-      if (!currentHospital) {
-        await axiosInstance.post('/hospitals', inputData);
-      } else {
-        console.log('here');
-        await axiosInstance.patch(`/hospitals/${currentHospital.id}`, inputData);
-      }
-      reset();
-      enqueueSnackbar(currentHospital ? 'Update success!' : 'Create success!');
-      router.push(paths.dashboard.hospital.list);
-    } catch (error) {
-      console.error(error);
-      enqueueSnackbar(typeof error === 'string' ? error : error.error.message, {
-        variant: 'error',
-      });
-    }
-  });
-
   const handleDrop = useCallback(
     async (acceptedFiles) => {
       const file = acceptedFiles[0];
@@ -181,53 +153,6 @@ export default function HospitalViewForm({ currentHospital }) {
   }, [setValue]);
 
   useEffect(() => {
-    if (role && role !== 'admin' && role !== 'super_admin') {
-      setValidationSchema((prev) =>
-        prev.concat(
-          Yup.object().shape({
-            branch: Yup.object().required('Branch is required'),
-            departments: Yup.array()
-              .min(1, 'At least one department must be selected')
-              .required('Departments are required'),
-          })
-        )
-      );
-    } else {
-      setValidationSchema((prev) =>
-        prev.concat(
-          Yup.object().shape({
-            branch: Yup.mixed().notRequired(),
-            departments: Yup.array().notRequired(),
-          })
-        )
-      );
-    }
-  }, [role]);
-
-  useEffect(() => {
-    if (!branch) {
-      setDepartments([]);
-      setValue('departments', []);
-      return;
-    }
-
-    const fetchedDepartments = branch?.departments || [];
-
-    setDepartments(fetchedDepartments);
-
-    if (!currentHospital) {
-      setValue('departments', []);
-    }
-  }, [branch, currentHospital, setValue]);
-
-  useEffect(() => {
-    if (role === 'admin') {
-      setValue('branch', null);
-      setValue('departments', []);
-    }
-  }, [role, setValue]);
-
-  useEffect(() => {
     if (currentHospital) {
       reset(defaultValues);
     }
@@ -240,7 +165,7 @@ export default function HospitalViewForm({ currentHospital }) {
   }, [isDark]);
 
   return (
-    <FormProvider methods={methods} onSubmit={onSubmit}>
+    <FormProvider methods={methods}>
       <Grid xs={12} md={12}>
         <Card sx={{ pb: 2 }}>
           <Stack spacing={3} sx={{ p: 3 }}>
@@ -261,13 +186,34 @@ export default function HospitalViewForm({ currentHospital }) {
                 <RHFTextField name="hospitalRegNum" label="Register Number" disabled />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalCategory" label="Category" disabled />
+                <RHFAutocomplete
+                  name="category"
+                  label="Category"
+                  options={categorys}
+                  getOptionLabel={(option) => option?.category || ''}
+                  isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                  disabled
+                />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalType" label="Type" disabled />
+                <RHFAutocomplete
+                  name="hospitalType"
+                  label="Type"
+                  options={hospitalTypes}
+                  getOptionLabel={(option) => option?.hospitalType || ''}
+                  isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                  disabled
+                />
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalServices" label="Services" disabled />
+                <RHFAutocomplete
+                  name="hospitalService"
+                  label="Services"
+                  options={hospitalServices}
+                  getOptionLabel={(option) => option?.hospitalService || ''}
+                  isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                  disabled
+                />
               </Grid>
               <Grid xs={12} md={12}>
                 <RHFTextField name="description" label="Description" multiline rows={3} disabled />

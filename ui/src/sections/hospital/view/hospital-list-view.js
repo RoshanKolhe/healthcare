@@ -53,9 +53,9 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 const TABLE_HEAD = [
   { id: 'hospitalName', label: 'Name' },
   { id: 'hospitalRegNum', label: 'Register Number' },
-  { id: 'hospitalCategory', label: 'Category' },
+  { id: 'category', label: 'Category' },
   { id: 'hospitalType', label: 'Type' },
-  { id: 'hospitalServices', label: 'Services' },
+  { id: 'hospitalService', label: 'Services' },
   { id: 'country', label: 'Country' },
   { id: 'postalCode', label: 'Pin Code', width: 180 },
   { id: 'isActive', label: 'Status', width: 100 },

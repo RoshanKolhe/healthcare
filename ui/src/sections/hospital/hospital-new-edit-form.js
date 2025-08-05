@@ -16,13 +16,21 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hook';
 // components
 import { useSnackbar } from 'src/components/snackbar';
-import FormProvider, { RHFSelect, RHFTextField, RHFUploadBox } from 'src/components/hook-form';
+import FormProvider, {
+  RHFAutocomplete,
+  RHFSelect,
+  RHFTextField,
+  RHFUploadBox,
+} from 'src/components/hook-form';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { CardHeader, Chip, MenuItem } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import axiosInstance from 'src/utils/axios';
 import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
 import Label from 'src/components/label';
+import { useGetCategorys } from 'src/api/categorys';
+import { useGetHospitalServices } from 'src/api/hospital-service';
+import { useGetHospitalTypes } from 'src/api/hospital-type';
 
 // ----------------------------------------------------------------------
 
@@ -31,6 +39,10 @@ export default function HospitalNewEditForm({ currentHospital }) {
 
   const mdUp = useResponsive('up', 'md');
 
+  const { categorys } = useGetCategorys();
+  const { hospitalServices } = useGetHospitalServices();
+  const { hospitalTypes } = useGetHospitalTypes();
+
   const { enqueueSnackbar } = useSnackbar();
 
   const preview = useBoolean();
@@ -38,9 +50,9 @@ export default function HospitalNewEditForm({ currentHospital }) {
   const NewHospitalSchema = Yup.object().shape({
     hospitalName: Yup.string().required('Hospital Name is required'),
     hospitalRegNum: Yup.number().required('Hospital Register Number is required'),
-    hospitalCategory: Yup.string().required('Hospital Category is required'),
-    hospitalType: Yup.string().required('Hospital Services is required'),
-    hospitalServices: Yup.string().required('Hospital Type is required'),
+    category: Yup.object().required('Hospital Category is required'),
+    hospitalType: Yup.object().required('Hospital Services is required'),
+    hospitalService: Yup.object().required('Hospital Type is required'),
     description: Yup.string().required('Description is required'),
     imageUpload: Yup.object().shape({
       fileUrl: Yup.string().required('Image is required'),
@@ -57,11 +69,10 @@ export default function HospitalNewEditForm({ currentHospital }) {
     () => ({
       hospitalName: currentHospital?.hospitalName || '',
       hospitalRegNum: currentHospital?.hospitalRegNum || '',
-      hospitalCategory: currentHospital?.hospitalCategory || '',
-      hospitalType: currentHospital?.hospitalType || '',
-      hospitalServices: currentHospital?.hospitalServices || '',
+      category: currentHospital?.category || null,
+      hospitalType: currentHospital?.hospitalType || null,
+      hospitalService: currentHospital?.hospitalService || null,
       description: currentHospital?.description || '',
-      // imageUpload: currentHospital?.imageUpload || '',
       imageUpload: currentHospital?.imageUpload
         ? {
             fileUrl: currentHospital.imageUpload.fileUrl,
@@ -100,9 +111,9 @@ export default function HospitalNewEditForm({ currentHospital }) {
       const inputData = {
         hospitalName: formData.hospitalName,
         hospitalRegNum: Number(formData.hospitalRegNum),
-        hospitalCategory: formData.hospitalCategory,
-        hospitalType: formData.hospitalType,
-        hospitalServices: formData.hospitalServices,
+        categoryId: formData.category?.id,
+        hospitalServiceId: formData.hospitalService?.id,
+        hospitalTypeId: formData.hospitalType?.id,
         description: formData.description,
         address: formData.address,
         city: formData.city,
@@ -163,92 +174,109 @@ export default function HospitalNewEditForm({ currentHospital }) {
   }, [currentHospital, defaultValues, reset]);
 
   const renderDetails = (
-      <Grid xs={12} md={12}>
-        <Card sx={{ pb: 2 }}>
-          <Stack spacing={3} sx={{ p: 3 }}>
-            <Grid container spacing={2} xs={12} md={12}>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalName" label="Name" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalRegNum" label="Register Number" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalCategory" label="Category" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalType" label="Type" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="hospitalServices" label="Services" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <Stack spacing={1.5}>
-                  <Typography variant="subtitle2">Hospital Profile</Typography>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Box sx={{ flex: 1 }}>
-                      <RHFUploadBox
-                        name="imageUpload"
-                        maxSize={3145728}
-                        onDrop={handleDrop}
-                        onDelete={handleRemoveFile}
-                      />
-                    </Box>
-                    {values.imageUpload?.preview && (
-                      <Box>
-                        <a
-                          href={values.imageUpload.preview}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Box
-                            component="img"
-                            src={values.imageUpload.preview}
-                            alt="preview"
-                            sx={{
-                              width: 120,
-                              height: 120,
-                              borderRadius: 2,
-                              objectFit: 'cover',
-                              border: '1px solid #ccc',
-                              cursor: 'pointer',
-                            }}
-                          />
-                        </a>
-                      </Box>
-                    )}
-                  </Box>
-                </Stack>
-              </Grid>
-
-              <Grid xs={12} md={12}>
-                <RHFTextField name="description" label="Description" multiline rows={3} />
-              </Grid>
-
-              <Grid xs={12} md={6}>
-                <RHFTextField name="address" label="Address" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="city" label="City" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="state" label="State" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="country" label="Country" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="postalCode" label="Postal Code" />
-              </Grid>
+    <Grid xs={12} md={12}>
+      <Card sx={{ pb: 2 }}>
+        <Stack spacing={3} sx={{ p: 3 }}>
+          <Grid container spacing={2} xs={12} md={12}>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="hospitalName" label="Name" />
             </Grid>
-            <Stack alignItems="flex-end" sx={{ mt: 3 }}>
-              <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                {!currentHospital ? 'Create User' : 'Save Changes'}
-              </LoadingButton>
-            </Stack>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="hospitalRegNum" label="Register Number" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFAutocomplete
+                name="category"
+                label="Category"
+                options={categorys}
+                getOptionLabel={(option) => option?.category || ''}
+                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+              />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFAutocomplete
+                name="hospitalType"
+                label="Type"
+                options={hospitalTypes}
+                getOptionLabel={(option) => option?.hospitalType || ''}
+                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+              />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFAutocomplete
+                name="hospitalService"
+                label="Services"
+                options={hospitalServices}
+                getOptionLabel={(option) => option?.hospitalService || ''}
+                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+              />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2">Hospital Profile</Typography>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <Box sx={{ flex: 1 }}>
+                    <RHFUploadBox
+                      name="imageUpload"
+                      maxSize={3145728}
+                      onDrop={handleDrop}
+                      onDelete={handleRemoveFile}
+                    />
+                  </Box>
+                  {values.imageUpload?.preview && (
+                    <Box>
+                      <a
+                        href={values.imageUpload.preview}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Box
+                          component="img"
+                          src={values.imageUpload.preview}
+                          alt="preview"
+                          sx={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: 2,
+                            objectFit: 'cover',
+                            border: '1px solid #ccc',
+                            cursor: 'pointer',
+                          }}
+                        />
+                      </a>
+                    </Box>
+                  )}
+                </Box>
+              </Stack>
+            </Grid>
+            <Grid xs={12} md={12}>
+              <RHFTextField name="description" label="Description" multiline rows={3} />
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <RHFTextField name="address" label="Address" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="city" label="City" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="state" label="State" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="country" label="Country" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="postalCode" label="Postal Code" />
+            </Grid>
+          </Grid>
+          <Stack alignItems="flex-end" sx={{ mt: 3 }}>
+            <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
+              {!currentHospital ? 'Create User' : 'Save Changes'}
+            </LoadingButton>
           </Stack>
-        </Card>
-      </Grid>
+        </Stack>
+      </Card>
+    </Grid>
   );
 
   return (

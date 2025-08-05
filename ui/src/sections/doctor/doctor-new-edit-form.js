@@ -233,6 +233,8 @@ export default function DoctorNewEditForm({ currentDoctor }) {
       status: Yup.string(),
       isVerified: Yup.boolean(),
     };
+
+    // 👇 Add password rules only if creating a new user
     if (!currentDoctor) {
       baseSchema.password = Yup.string()
         .min(6, 'Password must be at least 6 characters')
@@ -245,7 +247,9 @@ export default function DoctorNewEditForm({ currentDoctor }) {
       baseSchema.password = Yup.string().notRequired();
       baseSchema.confirmPassword = Yup.string().notRequired();
     }
-  }, [currentDoctor, role]);
+
+    setValidationSchema(Yup.object().shape(baseSchema));
+  }, [currentDoctor]);
 
   useEffect(() => {
     if (selectedHospital && selectedHospital.branches) {

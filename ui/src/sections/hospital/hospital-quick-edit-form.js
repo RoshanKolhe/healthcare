@@ -16,12 +16,15 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 // components
 import { useSnackbar } from 'src/components/snackbar';
-import FormProvider, { RHFSelect, RHFTextField } from 'src/components/hook-form';
+import FormProvider, { RHFAutocomplete, RHFSelect, RHFTextField } from 'src/components/hook-form';
 // import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
 import axiosInstance from 'src/utils/axios';
 import { useRouter } from 'src/routes/hook';
 import { USER_STATUS_OPTIONS } from 'src/utils/constants';
 import { paths } from 'src/routes/paths';
+import { useGetCategorys } from 'src/api/categorys';
+import { useGetHospitalServices } from 'src/api/hospital-service';
+import { useGetHospitalTypes } from 'src/api/hospital-type';
 
 // ----------------------------------------------------------------------
 
@@ -34,15 +37,19 @@ export default function HospitalQuickEditForm({
   console.log('currentHospital', currentHospital);
   console.log('currentHospital', open);
 
+  const { categorys } = useGetCategorys();
+  const { hospitalServices } = useGetHospitalServices();
+  const { hospitalTypes } = useGetHospitalTypes();
+
   const { enqueueSnackbar } = useSnackbar();
   const router = useRouter();
 
   const NewHospitalSchema = Yup.object().shape({
     hospitalName: Yup.string().required('Hospital Name is required'),
     hospitalRegNum: Yup.number().required('Hospital Register Number is required'),
-    hospitalCategory: Yup.string().required('Hospital Category is required'),
-    hospitalType: Yup.string().required('Hospital Type is required'),
-    hospitalServices: Yup.string().required('Hospital Services is required'),
+    category: Yup.object().required('Hospital Category is required'),
+    hospitalType: Yup.object().required('Hospital Type is required'),
+    hospitalService: Yup.object().required('Hospital Services is required'),
     status: Yup.string(),
     isVerified: Yup.boolean(),
     isActive: Yup.boolean(),
@@ -52,9 +59,9 @@ export default function HospitalQuickEditForm({
     () => ({
       hospitalName: currentHospital?.hospitalName || '',
       hospitalRegNum: currentHospital?.hospitalRegNum || '',
-      hospitalCategory: currentHospital?.hospitalCategory || '',
+      category: currentHospital?.category || '',
       hospitalType: currentHospital?.hospitalType || '',
-      hospitalServices: currentHospital?.hospitalServices || '',
+      hospitalService: currentHospital?.hospitalService || '',
       isActive: currentHospital?.isActive ? '1' : '0' || '',
       // imageUpload: currentHospital?.imageUpload
       //   ? {
@@ -86,9 +93,9 @@ export default function HospitalQuickEditForm({
       const inputData = {
         hospitalName: formData.hospitalName,
         hospitalRegNum: Number(formData.hospitalRegNum),
-        hospitalCategory: formData.hospitalCategory,
-        hospitalType: formData.hospitalType,
-        hospitalServices: formData.hospitalServices,
+        categoryId: formData.category?.id,
+        hospitalServiceId: formData.hospitalService?.id,
+        hospitalTypeId: formData.hospitalType?.id,
         isActive: formData.isActive,
         // imageUpload: {
         //   fileUrl: formData.imageUpload?.fileUrl,
@@ -174,9 +181,27 @@ export default function HospitalQuickEditForm({
 
             <RHFTextField name="hospitalName" label="Hospital Name" />
             <RHFTextField name="hospitalRegNum" label="Hospital Register Number" />
-            <RHFTextField name="hospitalCategory" label="Hospital Category" />
-            <RHFTextField name="hospitalType" label="Hospital Type" />
-            <RHFTextField name="hospitalServices" label="Hospital Services" />
+            <RHFAutocomplete
+              name="category"
+              label="Category"
+              options={categorys}
+              getOptionLabel={(option) => option?.category || ''}
+              isOptionEqualToValue={(option, value) => option?.id === value?.id}
+            />
+            <RHFAutocomplete
+              name="hospitalType"
+              label="Type"
+              options={hospitalTypes}
+              getOptionLabel={(option) => option?.hospitalType || ''}
+              isOptionEqualToValue={(option, value) => option?.id === value?.id}
+            />
+            <RHFAutocomplete
+              name="hospitalService"
+              label="Services"
+              options={hospitalServices}
+              getOptionLabel={(option) => option?.hospitalService || ''}
+              isOptionEqualToValue={(option, value) => option?.id === value?.id}
+            />
           </Box>
         </DialogContent>
 

@@ -34,9 +34,9 @@ export default function UserTableRow({
   const {
     hospitalName,
     hospitalRegNum,
-    hospitalCategory,
+    category,
     hospitalType,
-    hospitalServices,
+    hospitalService,
     description,
     imageUpload,
     address,
@@ -81,9 +81,9 @@ export default function UserTableRow({
           </Stack>
         </TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalRegNum}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalCategory}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalType}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalServices}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{category?.category || 'N/A'}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalType?.hospitalType || 'N/A'}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalService?.hospitalService || 'N/A'}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{country}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{postalCode}</TableCell>
         <TableCell>

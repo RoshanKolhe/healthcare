@@ -26,24 +26,6 @@ export class Hospital extends Entity {
   hospitalRegNum: number;
 
   @property({
-    type: 'string',
-    required: true,
-  })
-  hospitalCategory: string;
-
-  @property({
-    type: 'string',
-    required: true,
-  })
-  hospitalType: string;
-
-  @property({
-    type: 'string',
-    required: true,
-  })
-  hospitalServices: string;
-
-  @property({
     type: 'object',
     required: true,
   })

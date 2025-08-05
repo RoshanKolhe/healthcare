@@ -102,7 +102,8 @@ export class HospitalController {
   ): Promise<Hospital[]> {
     return this.hospitalRepository.find({
       ...filter,
-      include: [{relation: 'branches'}],
+      include: [{relation: 'branches'},{relation: 'category'}, {relation: 'hospitalType'}, {relation: 'hospitalService'}],
+      order: ['createdAt DESC'],
     });
   }
 
@@ -122,7 +123,7 @@ export class HospitalController {
   ): Promise<Hospital> {
     return this.hospitalRepository.findById(id, {
       ...filter,
-      include: [{relation: 'branches'}],
+      include: [{relation: 'branches'},{relation: 'category'}, {relation: 'hospitalType'}, {relation: 'hospitalService'}],
     });
   }
 
