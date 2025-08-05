@@ -1,5 +1,8 @@
-import {Entity, model, property, hasMany} from '@loopback/repository';
+import {Entity, model, property, hasMany, belongsTo} from '@loopback/repository';
 import {Branch} from './branch.model';
+import {Category} from './category.model';
+import {HospitalService} from './hospital-service.model';
+import {HospitalType} from './hospital-type.model';
 
 @model()
 export class Hospital extends Entity {
@@ -46,7 +49,7 @@ export class Hospital extends Entity {
   })
   imageUpload: object;
 
-  @property({ 
+  @property({
     type: 'string',
     required: true,
   })
@@ -102,7 +105,7 @@ export class Hospital extends Entity {
     type: 'date',
   })
   deletedAt?: Date;
-  
+
   @property({
     type: 'boolean',
     default: false,
@@ -111,6 +114,15 @@ export class Hospital extends Entity {
 
   @hasMany(() => Branch)
   branches: Branch[];
+
+  @belongsTo(() => Category)
+  categoryId: number;
+
+  @belongsTo(() => HospitalService)
+  hospitalServiceId: number;
+
+  @belongsTo(() => HospitalType)
+  hospitalTypeId: number;
 
   constructor(data?: Partial<Hospital>) {
     super(data);
