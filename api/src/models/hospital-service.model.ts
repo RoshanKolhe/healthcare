@@ -1,7 +1,7 @@
 import {Entity, model, property} from '@loopback/repository';
 
 @model()
-export class HospitalType extends Entity {
+export class HospitalService extends Entity {
   @property({
     type: 'number',
     id: true,
@@ -13,7 +13,7 @@ export class HospitalType extends Entity {
     type: 'string',
     required: true,
   })
-  hospitalType: string;
+  hospitalService: string;
 
   @property({
     type: 'string',
@@ -41,13 +41,14 @@ export class HospitalType extends Entity {
   })
   deletedAt?: Date;
 
-  constructor(data?: Partial<HospitalType>) {
+  constructor(data?: Partial<HospitalService>) {
     super(data);
   }
 }
 
-export interface HospitalTypeRelations {
+export interface HospitalServiceRelations {
   // describe navigational properties here
 }
 
-export type HospitalTypeWithRelations = HospitalType & HospitalTypeRelations;
+export type HospitalServiceWithRelations = HospitalService &
+  HospitalServiceRelations;

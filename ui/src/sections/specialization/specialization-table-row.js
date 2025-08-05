@@ -43,7 +43,18 @@ export default function UserTableRow({
     <>
       <TableRow hover selected={selected}>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{specialization}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{description || 'N/A'}</TableCell>
+        <Tooltip title={description || 'N/A'} placement="top" arrow>
+          <TableCell
+            sx={{
+              whiteSpace: 'nowrap',
+              maxWidth: 200,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {description || 'N/A'}
+          </TableCell>
+        </Tooltip>
         <TableCell>
           <Label
             variant="soft"

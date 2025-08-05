@@ -159,6 +159,21 @@ export function useNavData() {
               },
             ],
           },
+          {
+            title: t('hospital service'),
+            path: paths.dashboard.hospitalService.root,
+            icon: ICONS.label,
+            children: [
+              {
+                title: t('list'),
+                path: paths.dashboard.hospitalService.list,
+              },
+              {
+                title: t('create'),
+                path: paths.dashboard.hospitalService.new,
+              },
+            ],
+          },
         ]
 
       }

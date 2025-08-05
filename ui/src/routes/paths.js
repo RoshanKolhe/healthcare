@@ -229,5 +229,13 @@ export const paths = {
       edit: (id) => `${ROOTS.DASHBOARD}/hospital-types/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/hospital-types/${id}/view`,
     },
+    hospitalService: {
+      root: `${ROOTS.DASHBOARD}/hospital-services`,
+      new: `${ROOTS.DASHBOARD}/hospital-services/new`,
+      list: `${ROOTS.DASHBOARD}/hospital-services/list`,
+      profile: `${ROOTS.DASHBOARD}/hospital-services/profile`,
+      edit: (id) => `${ROOTS.DASHBOARD}/hospital-services/${id}/edit`,
+      view: (id) => `${ROOTS.DASHBOARD}/hospital-services/${id}/view`,
+    },
   },
 };

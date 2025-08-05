@@ -30,7 +30,7 @@ export default function UserTableRow({
   onViewRow,
   handleQuickEditRow,
 }) {
-  const { category, description, isActive } = row;
+  const { hospitalService, description, isActive } = row;
   console.log('row data', row);
 
   const confirm = useBoolean();
@@ -42,7 +42,7 @@ export default function UserTableRow({
   return (
     <>
       <TableRow hover selected={selected}>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{category}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalService}</TableCell>
         <Tooltip title={description || 'N/A'} placement="top" arrow>
           <TableCell
             sx={{
@@ -85,7 +85,7 @@ export default function UserTableRow({
               <Iconify icon="solar:eye-bold" />
             </IconButton>
           </Tooltip>
-          {/* <Tooltip title="Edit Category" placement="top" arrow>
+          {/* <Tooltip title="Edit HospitalService" placement="top" arrow>
             <MenuItem
               onClick={() => {
                 onEditRow();

@@ -7,3 +7,4 @@ export * from './doctor.controller';
 export * from './specialization.controller';
 export * from './category.controller';
 export * from './hospital-type.controller';
+export * from './hospital-service.controller';
