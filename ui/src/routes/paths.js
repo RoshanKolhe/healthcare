@@ -213,5 +213,13 @@ export const paths = {
       edit: (id) => `${ROOTS.DASHBOARD}/specializations/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/specializations/${id}/view`,
     },
+    category: {
+      root: `${ROOTS.DASHBOARD}/categorys`,
+      new: `${ROOTS.DASHBOARD}/categorys/new`,
+      list: `${ROOTS.DASHBOARD}/categorys/list`,
+      profile: `${ROOTS.DASHBOARD}/categorys/profile`,
+      edit: (id) => `${ROOTS.DASHBOARD}/categorys/${id}/edit`,
+      view: (id) => `${ROOTS.DASHBOARD}/categorys/${id}/view`,
+    },
   },
 };

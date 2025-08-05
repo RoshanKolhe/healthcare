@@ -5,3 +5,4 @@ export * from './hospital.controller';
 export * from './branch.controller';
 export * from './doctor.controller';
 export * from './specialization.controller';
+export * from './category.controller';

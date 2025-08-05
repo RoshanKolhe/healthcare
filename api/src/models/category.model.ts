@@ -1,7 +1,7 @@
 import {Entity, model, property} from '@loopback/repository';
 
 @model()
-export class Specialization extends Entity {
+export class Category extends Entity {
   @property({
     type: 'number',
     id: true,
@@ -13,7 +13,7 @@ export class Specialization extends Entity {
     type: 'string',
     required: true,
   })
-  specialization: string;
+  category: string;
 
   @property({
     type: 'string',
@@ -41,14 +41,13 @@ export class Specialization extends Entity {
   })
   deletedAt?: Date;
 
-
-  constructor(data?: Partial<Specialization>) {
+  constructor(data?: Partial<Category>) {
     super(data);
   }
 }
 
-export interface SpecializationRelations {
+export interface CategoryRelations {
   // describe navigational properties here
 }
 
-export type SpecializationWithRelations = Specialization & SpecializationRelations;
+export type CategoryWithRelations = Category & CategoryRelations;

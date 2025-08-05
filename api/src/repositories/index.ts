@@ -3,3 +3,4 @@ export * from './hospital.repository';
 export * from './branch.repository';
 export * from './doctor.repository';
 export * from './specialization.repository';
+export * from './category.repository';

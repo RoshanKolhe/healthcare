@@ -77,4 +77,9 @@ export const endpoints = {
     details: (id) => `/specializations/${id}`,
     filterList: (filter) => `/specializations?${filter}`,
   },
+  category: {
+    list: '/categories',
+    details: (id) => `/categories/${id}`,
+    filterList: (filter) => `/categories?${filter}`,
+  },
 };

@@ -129,6 +129,21 @@ export function useNavData() {
               },
             ],
           },
+          {
+            title: t('category'),
+            path: paths.dashboard.category.root,
+            icon: ICONS.label,
+            children: [
+              {
+                title: t('list'),
+                path: paths.dashboard.category.list,
+              },
+              {
+                title: t('create'),
+                path: paths.dashboard.category.new,
+              },
+            ],
+          },
         ]
       }
     ],
