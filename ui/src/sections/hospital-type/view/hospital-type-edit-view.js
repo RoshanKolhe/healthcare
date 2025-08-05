@@ -33,11 +33,11 @@ export default function HospitalTypeEditView() {
             href: paths.dashboard.root,
           },
           {
-            name: 'HospitalType',
+            name: 'Hospital Type',
             href: paths.dashboard.hospitalType.list,
           },
           {
-            name: currentHospitalType?.hospitalType || 'HospitalType Detail',
+            name: currentHospitalType?.hospitalType || 'Hospital Type Detail',
           },
         ]}
         sx={{

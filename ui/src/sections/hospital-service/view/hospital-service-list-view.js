@@ -51,7 +51,7 @@ import HospitalServiceQuickEditForm from '../hospital-service-quick-edit-form';
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
-  { id: 'hospitalService', label: 'HospitalService' },
+  { id: 'hospitalService', label: 'Hospital Service' },
   { id: 'description', label: 'Description'},
   { id: 'isActive', label: 'Status', width: 100 },
   { id: '', width: 88 },
@@ -183,7 +183,7 @@ useEffect(() => {
           heading="List"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'HospitalService', href: paths.dashboard.hospitalService.list },
+            { name: 'Hospital Service', href: paths.dashboard.hospitalService.list },
             { name: 'List' },
           ]}
           action={
@@ -194,7 +194,7 @@ useEffect(() => {
                 variant="contained"
                 startIcon={<Iconify icon="mingcute:add-line" />}
               >
-                New HospitalService
+                New Service
               </Button>
             ) : null
           }

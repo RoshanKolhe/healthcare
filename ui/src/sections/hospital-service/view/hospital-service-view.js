@@ -34,7 +34,7 @@ export default function HospitalServiceView() {
             href: paths.dashboard.root,
           },
           {
-            name: 'HospitalService',
+            name: 'Hospital Service',
             href: paths.dashboard.hospitalService.list,
           },
           {

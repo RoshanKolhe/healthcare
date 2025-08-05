@@ -18,14 +18,14 @@ export default function HospitalTypeCreateView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Create a new HospitalType"
+        heading="Create a new Hospital Type"
         links={[
           {
             name: 'Dashboard',
             href: paths.dashboard.root,
           },
           {
-            name: 'HospitalType',
+            name: 'Hospital Type',
             href: paths.dashboard.hospitalType.list,
           },
           { name: 'New HospitalType' },

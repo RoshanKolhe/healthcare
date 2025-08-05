@@ -46,6 +46,9 @@ const ICONS = {
   hospital: icon('ic_hospital'),
   branch: icon('ic_branch'),
   doctor: icon('ic_doctor'),
+  service: icon('ic_services'),
+  type: icon('ic_type'),
+  category: icon('ic_category'),  
 };
 
 // ----------------------------------------------------------------------
@@ -132,7 +135,7 @@ export function useNavData() {
           {
             title: t('category'),
             path: paths.dashboard.category.root,
-            icon: ICONS.label,
+            icon: ICONS.category,
             children: [
               {
                 title: t('list'),
@@ -147,7 +150,7 @@ export function useNavData() {
           {
             title: t('hospital type'),
             path: paths.dashboard.hospitalType.root,
-            icon: ICONS.label,
+            icon: ICONS.type,
             children: [
               {
                 title: t('list'),
@@ -162,7 +165,7 @@ export function useNavData() {
           {
             title: t('hospital service'),
             path: paths.dashboard.hospitalService.root,
-            icon: ICONS.label,
+            icon: ICONS.service,
             children: [
               {
                 title: t('list'),

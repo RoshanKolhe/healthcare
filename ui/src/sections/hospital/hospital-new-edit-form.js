@@ -252,22 +252,31 @@ export default function HospitalNewEditForm({ currentHospital }) {
             <Grid xs={12} md={12}>
               <RHFTextField name="description" label="Description" multiline rows={3} />
             </Grid>
-
-            <Grid xs={12} md={6}>
-              <RHFTextField name="address" label="Address" />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField name="city" label="City" />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField name="state" label="State" />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField name="country" label="Country" />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField name="postalCode" label="Postal Code" />
-            </Grid>
+            {!currentHospital ? (
+              <Grid xs={12} md={6}>
+                <RHFTextField name="address" label="Address" />
+              </Grid>
+            ) : null}
+            {!currentHospital ? (
+              <Grid xs={12} md={6}>
+                <RHFTextField name="city" label="City" />
+              </Grid>
+            ) : null}
+            {!currentHospital ? (
+              <Grid xs={12} md={6}>
+                <RHFTextField name="state" label="State" />
+              </Grid>
+            ) : null}
+            {!currentHospital ? (
+              <Grid xs={12} md={6}>
+                <RHFTextField name="country" label="Country" />
+              </Grid>
+            ) : null}
+            {!currentHospital ? (
+              <Grid xs={12} md={6}>
+                <RHFTextField name="postalCode" label="Postal Code" />
+              </Grid>
+            ) : null}
           </Grid>
           <Stack alignItems="flex-end" sx={{ mt: 3 }}>
             <LoadingButton type="submit" variant="contained" loading={isSubmitting}>

@@ -125,7 +125,7 @@ export default function HospitalTypeQuickEditForm({
             </RHFSelect>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }} />
 
-            <RHFTextField name="hospitalType" label="HospitalType" />
+            <RHFTextField name="hospitalType" label="Hospital Type" />
             <RHFTextField name="description" label="Description" />          
           </Box>
         </DialogContent>

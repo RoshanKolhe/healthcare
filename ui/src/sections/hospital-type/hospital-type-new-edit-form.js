@@ -109,7 +109,7 @@ export default function HospitalTypeNewEditForm({ currentHospitalType }) {
                 </Grid>
             ) : null}
             <Grid xs={12} md={6}>
-              <RHFTextField name="hospitalType" label="HospitalType" />
+              <RHFTextField name="hospitalType" label="Hospital Type" />
             </Grid>
             <Grid xs={12} md={6}>
               <RHFTextField name="description" label="Description" />
@@ -117,7 +117,7 @@ export default function HospitalTypeNewEditForm({ currentHospitalType }) {
           </Grid>
           <Stack alignItems="flex-end" sx={{ mt: 3 }}>
             <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-              {!currentHospitalType ? 'Create HospitalType' : 'Save Changes'}
+              {!currentHospitalType ? 'Create Type' : 'Save Changes'}
             </LoadingButton>
           </Stack>
         </Stack>

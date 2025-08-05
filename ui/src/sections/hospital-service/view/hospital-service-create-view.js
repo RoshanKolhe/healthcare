@@ -18,17 +18,17 @@ export default function HospitalServiceCreateView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Create a new HospitalService"
+        heading="Create a new Hospital Service"
         links={[
           {
             name: 'Dashboard',
             href: paths.dashboard.root,
           },
           {
-            name: 'HospitalService',
+            name: 'Hospital Service',
             href: paths.dashboard.hospitalService.list,
           },
-          { name: 'New HospitalService' },
+          { name: 'New Hospital Service' },
         ]}
         sx={{
           mb: { xs: 3, md: 5 },

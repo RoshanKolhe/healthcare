@@ -34,7 +34,7 @@ export default function HospitalTypeView() {
             href: paths.dashboard.root,
           },
           {
-            name: 'HospitalType',
+            name: 'Hospital Type',
             href: paths.dashboard.hospitalType.list,
           },
           {
