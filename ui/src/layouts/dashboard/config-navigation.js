@@ -106,6 +106,31 @@ export function useNavData() {
           },
         ],
       },
+       // MASTERS
+      {
+        subheader: t('masters'),
+        items: [
+          // Department
+          {
+            title: t('specializations'),
+            path: paths.dashboard.specialization.root,
+            icon: ICONS.label,
+            // roles: [ 'doctor'],
+            children: [
+              {
+                title: t('list'),
+                path: paths.dashboard.specialization.list,
+                // roles: [ 'doctor'],
+              },
+              {
+                title: t('create'),
+                path: paths.dashboard.specialization.new,
+                // roles: ['doctor'],
+              },
+            ],
+          },
+        ]
+      }
     ],
     [t]
   );

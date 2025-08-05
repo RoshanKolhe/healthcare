@@ -204,5 +204,14 @@ export const paths = {
         edit: `${ROOTS.DASHBOARD}/tour/${MOCK_ID}/edit`,
       },
     },
+    // master
+    specialization: {
+      root: `${ROOTS.DASHBOARD}/specializations`,
+      new: `${ROOTS.DASHBOARD}/specializations/new`,
+      list: `${ROOTS.DASHBOARD}/specializations/list`,
+      profile: `${ROOTS.DASHBOARD}/specializations/profile`,
+      edit: (id) => `${ROOTS.DASHBOARD}/specializations/${id}/edit`,
+      view: (id) => `${ROOTS.DASHBOARD}/specializations/${id}/view`,
+    },
   },
 };

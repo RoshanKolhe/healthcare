@@ -74,6 +74,7 @@ export const endpoints = {
   },
   specialization: {
     list: '/specializations',
+    details: (id) => `/specializations/${id}`,
     filterList: (filter) => `/specializations?${filter}`,
   },
 };

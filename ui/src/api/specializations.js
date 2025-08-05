@@ -56,7 +56,7 @@ export function useGetNotifications(filter) {
 // ----------------------------------------------------------------------
 
 export function useGetSpecialization(specializationId) {
-  const URL = specializationId ? [endpoints.specialization.details(specializationId)] : null;
+  const URL = specializationId ? endpoints.specialization.details(specializationId) : null;
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
 
   const memoizedValue = useMemo(
