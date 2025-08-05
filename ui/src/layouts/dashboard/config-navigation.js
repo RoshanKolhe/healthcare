@@ -144,7 +144,23 @@ export function useNavData() {
               },
             ],
           },
+          {
+            title: t('hospital type'),
+            path: paths.dashboard.hospitalType.root,
+            icon: ICONS.label,
+            children: [
+              {
+                title: t('list'),
+                path: paths.dashboard.hospitalType.list,
+              },
+              {
+                title: t('create'),
+                path: paths.dashboard.hospitalType.new,
+              },
+            ],
+          },
         ]
+
       }
     ],
     [t]

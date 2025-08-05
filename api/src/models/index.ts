@@ -4,3 +4,4 @@ export * from './branch.model';
 export * from './doctor.model';
 export * from './specialization.model';
 export * from './category.model';
+export * from './hospital-type.model';

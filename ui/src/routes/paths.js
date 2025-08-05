@@ -221,5 +221,13 @@ export const paths = {
       edit: (id) => `${ROOTS.DASHBOARD}/categorys/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/categorys/${id}/view`,
     },
+    hospitalType: {
+      root: `${ROOTS.DASHBOARD}/hospital-types`,
+      new: `${ROOTS.DASHBOARD}/hospital-types/new`,
+      list: `${ROOTS.DASHBOARD}/hospital-types/list`,
+      profile: `${ROOTS.DASHBOARD}/hospital-types/profile`,
+      edit: (id) => `${ROOTS.DASHBOARD}/hospital-types/${id}/edit`,
+      view: (id) => `${ROOTS.DASHBOARD}/hospital-types/${id}/view`,
+    },
   },
 };

@@ -82,4 +82,10 @@ export const endpoints = {
     details: (id) => `/categories/${id}`,
     filterList: (filter) => `/categories?${filter}`,
   },
+  hospitalType: 
+  {
+    list: '/hospital-types',
+    details: (id) => `/hospital-types/${id}`,
+    filterList: (filter) => `/hospital-types?${filter}`,
+  },
 };
