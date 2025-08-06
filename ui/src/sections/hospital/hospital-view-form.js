@@ -258,19 +258,7 @@ export default function HospitalViewForm({ currentHospital }) {
                 </Stack>
               </Grid>
               <Grid xs={12} md={6}>
-                <RHFTextField name="address" label="Address" disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="city" label="City" disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="state" label="State" disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="country" label="Country" disabled />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="postalCode" label="Postal Code" disabled />
+                <RHFTextField name="country" label="Country" />
               </Grid>
             </Grid>
           </Stack>
