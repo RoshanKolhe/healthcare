@@ -47,7 +47,7 @@ export default function HospitalEditView() {
         }}
       />
 
-      <HospitalNewEditForm currentHospital={currentHospital} />
+      <HospitalNewEditForm currentHospital={currentHospital} isEditForm />
     </Container>
   );
 }

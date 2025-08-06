@@ -41,31 +41,7 @@ export class Hospital extends Entity {
     type: 'string',
     required: true,
   })
-  address: string;
-
-  @property({
-    type: 'string',
-    required: true,
-  })
-  city: string;
-
-  @property({
-    type: 'string',
-    required: true,
-  })
-  state: string;
-
-  @property({
-    type: 'string',
-    required: true,
-  })
   country: string;
-
-  @property({
-    type: 'number',
-    required: true,
-  })
-  postalCode: number;
 
   @property({
     type: 'boolean',

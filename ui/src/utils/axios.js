@@ -80,7 +80,7 @@ export const endpoints = {
   category: {
     list: '/categories',
     details: (id) => `/categories/${id}`,
-    filterList: (filter) => `/categories?${filter}`,
+    filterList: (filter) => `/categories?filter=${filter}`,
   },
   hospitalType: {
     list: '/hospital-types',

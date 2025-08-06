@@ -26,28 +26,35 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import { CardHeader, Chip, MenuItem } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import axiosInstance from 'src/utils/axios';
-import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
-import Label from 'src/components/label';
-import { useGetCategorys } from 'src/api/categorys';
-import { useGetHospitalServices } from 'src/api/hospital-service';
-import { useGetHospitalTypes } from 'src/api/hospital-type';
+import { useGetCategorysWithFilter } from 'src/api/categorys';
+import { useGetHospitalServicesWithFilter } from 'src/api/hospital-service';
+import { useGetHospitalTypesWithFilter } from 'src/api/hospital-type';
 
 // ----------------------------------------------------------------------
 
-export default function HospitalNewEditForm({ currentHospital }) {
+export default function HospitalNewEditForm({ currentHospital, isEditForm }) {
   const router = useRouter();
 
   const mdUp = useResponsive('up', 'md');
 
-  const { categorys } = useGetCategorys();
-  const { hospitalServices } = useGetHospitalServices();
-  const { hospitalTypes } = useGetHospitalTypes();
+  const filter = {
+    where: {
+      isActive: true,
+    },
+  };
+  const fillterString = encodeURIComponent(JSON.stringify(filter));
+
+  const { filteredCategorys: categorys } = useGetCategorysWithFilter(fillterString);
+  const { filteredHospitalServices: hospitalServices } =
+    useGetHospitalServicesWithFilter(fillterString);
+  const { filteredHospitalTypes: hospitalTypes } = useGetHospitalTypesWithFilter(fillterString);
 
   const { enqueueSnackbar } = useSnackbar();
 
   const preview = useBoolean();
 
   const NewHospitalSchema = Yup.object().shape({
+    isEditForm: Yup.boolean(),
     hospitalName: Yup.string().required('Hospital Name is required'),
     hospitalRegNum: Yup.number().required('Hospital Register Number is required'),
     category: Yup.object().required('Hospital Category is required'),
@@ -57,16 +64,37 @@ export default function HospitalNewEditForm({ currentHospital }) {
     imageUpload: Yup.object().shape({
       fileUrl: Yup.string().required('Image is required'),
     }),
-    address: Yup.string().required('Address is required'),
-    city: Yup.string().required('City is required'),
-    state: Yup.string().required('State is required'),
-    country: Yup.string().required('Country is required'),
-    postalCode: Yup.string().required('Pin code is required'),
+    fullAddress: Yup.string().when('isEditForm', {
+      is: false,
+      then: (schema) => schema.required('Address is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+    city: Yup.string().when('isEditForm', {
+      is: false,
+      then: (schema) => schema.required('City is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+    state: Yup.string().when('isEditForm', {
+      is: false,
+      then: (schema) => schema.required('State is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+    country: Yup.string().when('isEditForm', {
+      is: false,
+      then: (schema) => schema.required('Country is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+    postalCode: Yup.string().when('isEditForm', {
+      is: false,
+      then: (schema) => schema.required('Pin code is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
     isActive: Yup.boolean(),
   });
 
   const defaultValues = useMemo(
     () => ({
+      isEditForm: isEditForm || false,
       hospitalName: currentHospital?.hospitalName || '',
       hospitalRegNum: currentHospital?.hospitalRegNum || '',
       category: currentHospital?.category || null,
@@ -79,7 +107,7 @@ export default function HospitalNewEditForm({ currentHospital }) {
             preview: currentHospital.imageUpload.fileUrl,
           }
         : '',
-      address: currentHospital?.address || '',
+      fullAddress: currentHospital?.fullAddress || '',
       city: currentHospital?.city || '',
       state: currentHospital?.state || '',
       country: currentHospital?.country || '',
@@ -88,7 +116,7 @@ export default function HospitalNewEditForm({ currentHospital }) {
       isVerified: currentHospital?.isVerified || true,
       isActive: currentHospital ? (currentHospital?.isActive ? '1' : '0') : '1',
     }),
-    [currentHospital]
+    [currentHospital, isEditForm]
   );
 
   const methods = useForm({
@@ -101,35 +129,43 @@ export default function HospitalNewEditForm({ currentHospital }) {
     watch,
     setValue,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = methods;
 
+  console.log('errors', errors);
   const values = watch();
 
   const onSubmit = handleSubmit(async (formData) => {
+    console.log('Submitting data:', formData);
     try {
-      const inputData = {
+      const hospitalPayload = {
         hospitalName: formData.hospitalName,
         hospitalRegNum: Number(formData.hospitalRegNum),
         categoryId: formData.category?.id,
         hospitalServiceId: formData.hospitalService?.id,
         hospitalTypeId: formData.hospitalType?.id,
         description: formData.description,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
         country: formData.country,
-        postalCode: Number(formData.postalCode),
         isActive: currentHospital ? formData.isActive : true,
         imageUpload: {
           fileUrl: formData.imageUpload?.fileUrl,
         },
       };
+
+      const branchPayload = {
+        city: formData.city,
+        state: formData.state,
+        fullAddress: formData.fullAddress,
+        country: formData.country,
+        postalCode: Number(formData.postalCode),
+      };
       if (!currentHospital) {
-        await axiosInstance.post('/hospitals', inputData);
+        await axiosInstance.post('/hospitals', {
+          hospital: hospitalPayload,
+          branch: branchPayload,
+        });
       } else {
-        console.log('here');
-        await axiosInstance.patch(`/hospitals/${currentHospital.id}`, inputData);
+        await axiosInstance.patch(`/hospitals/${currentHospital.id}`, hospitalPayload);
       }
       reset();
       enqueueSnackbar(currentHospital ? 'Update success!' : 'Create success!');
@@ -252,30 +288,24 @@ export default function HospitalNewEditForm({ currentHospital }) {
             <Grid xs={12} md={12}>
               <RHFTextField name="description" label="Description" multiline rows={3} />
             </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="country" label="Country" />
+            </Grid>
             {!currentHospital ? (
-              <Grid xs={12} md={6}>
-                <RHFTextField name="address" label="Address" />
-              </Grid>
-            ) : null}
-            {!currentHospital ? (
-              <Grid xs={12} md={6}>
-                <RHFTextField name="city" label="City" />
-              </Grid>
-            ) : null}
-            {!currentHospital ? (
-              <Grid xs={12} md={6}>
-                <RHFTextField name="state" label="State" />
-              </Grid>
-            ) : null}
-            {!currentHospital ? (
-              <Grid xs={12} md={6}>
-                <RHFTextField name="country" label="Country" />
-              </Grid>
-            ) : null}
-            {!currentHospital ? (
-              <Grid xs={12} md={6}>
-                <RHFTextField name="postalCode" label="Postal Code" />
-              </Grid>
+              <>
+                <Grid xs={12} md={6}>
+                  <RHFTextField name="fullAddress" label="Address" />
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField name="city" label="City" />
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField name="state" label="State" />
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField name="postalCode" label="Postal Code" />
+                </Grid>
+              </>
             ) : null}
           </Grid>
           <Stack alignItems="flex-end" sx={{ mt: 3 }}>
@@ -299,4 +329,5 @@ export default function HospitalNewEditForm({ currentHospital }) {
 
 HospitalNewEditForm.propTypes = {
   currentHospital: PropTypes.object,
+  isEditForm: PropTypes.bool,
 };

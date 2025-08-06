@@ -47,15 +47,41 @@ export class HospitalController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Hospital, {
-            title: 'NewHospital',
-            exclude: ['id'],
-          }),
+          schema: {
+            type: 'object',
+            required: ['hospital', 'branch'],
+            properties: {
+              hospital: getModelSchemaRef(Hospital, {
+                title: 'NewHospital',
+                exclude: ['id'],
+              }),
+              branch: {
+                type: 'object',
+                required: ['city', 'state', 'fullAddress' , 'postalCode'],
+                properties: {
+                  city: {type: 'string'},
+                  state: {type: 'string'},
+                  fullAddress: {type: 'string'},
+                  postalCode: {type: 'number'},
+                },
+              },
+            },
+          },
         },
       },
     })
-    hospital: Omit<Hospital, 'id'>,
+    requestBody: {
+      hospital: Omit<Hospital, 'id'>;
+      branch: {
+        city: string;
+        state: string;
+        fullAddress: string;
+        postalCode: number;
+      };
+    },
   ): Promise<Hospital> {
+    const {hospital, branch} = requestBody;
+
     const repo = new DefaultTransactionalRepository(Hospital, this.dataSource);
     const tx = await repo.beginTransaction(IsolationLevel.READ_COMMITTED);
 
@@ -64,13 +90,16 @@ export class HospitalController {
         transaction: tx,
       });
 
-      const branchName = `${hospital.hospitalName} - ${hospital.city || 'City'}`;
+      const branchName = `${hospital.hospitalName} - ${branch.city || 'City'}`;
+
       await this.hospitalRepository.branches(createdHospital.id).create(
         {
           name: branchName,
-          fullAddress: hospital.address,
-          city: hospital.city,
-          state: hospital.state,
+          city: branch.city,
+          state: branch.state,
+          fullAddress: branch.fullAddress,
+          country: hospital.country,
+          postalCode: branch.postalCode,  
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -85,6 +114,7 @@ export class HospitalController {
       throw err;
     }
   }
+
   @get('/hospitals')
   @response(200, {
     description: 'Array of Hospital model instances',
@@ -102,7 +132,12 @@ export class HospitalController {
   ): Promise<Hospital[]> {
     return this.hospitalRepository.find({
       ...filter,
-      include: [{relation: 'branches'},{relation: 'category'}, {relation: 'hospitalType'}, {relation: 'hospitalService'}],
+      include: [
+        {relation: 'branches'},
+        {relation: 'category'},
+        {relation: 'hospitalType'},
+        {relation: 'hospitalService'},
+      ],
       order: ['createdAt DESC'],
     });
   }
@@ -123,7 +158,12 @@ export class HospitalController {
   ): Promise<Hospital> {
     return this.hospitalRepository.findById(id, {
       ...filter,
-      include: [{relation: 'branches'},{relation: 'category'}, {relation: 'hospitalType'}, {relation: 'hospitalService'}],
+      include: [
+        {relation: 'branches'},
+        {relation: 'category'},
+        {relation: 'hospitalType'},
+        {relation: 'hospitalService'},
+      ],
     });
   }
 

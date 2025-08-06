@@ -35,6 +35,18 @@ export class Branch extends Entity {
   city: string;
 
   @property({
+    type: 'string',
+    required: true,
+  })
+  country: string;
+
+  @property({
+    type: 'number',
+    required: true,
+  })
+  postalCode: number;
+
+  @property({
     type: 'boolean',
     required: true,
   })

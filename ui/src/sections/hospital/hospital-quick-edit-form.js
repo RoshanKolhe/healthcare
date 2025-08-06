@@ -22,9 +22,9 @@ import axiosInstance from 'src/utils/axios';
 import { useRouter } from 'src/routes/hook';
 import { USER_STATUS_OPTIONS } from 'src/utils/constants';
 import { paths } from 'src/routes/paths';
-import { useGetCategorys } from 'src/api/categorys';
-import { useGetHospitalServices } from 'src/api/hospital-service';
-import { useGetHospitalTypes } from 'src/api/hospital-type';
+import { useGetCategorys, useGetCategorysWithFilter } from 'src/api/categorys';
+import { useGetHospitalServices, useGetHospitalServicesWithFilter } from 'src/api/hospital-service';
+import { useGetHospitalTypes, useGetHospitalTypesWithFilter } from 'src/api/hospital-type';
 
 // ----------------------------------------------------------------------
 
@@ -36,10 +36,16 @@ export default function HospitalQuickEditForm({
 }) {
   console.log('currentHospital', currentHospital);
   console.log('currentHospital', open);
-
-  const { categorys } = useGetCategorys();
-  const { hospitalServices } = useGetHospitalServices();
-  const { hospitalTypes } = useGetHospitalTypes();
+const filter = {
+    where:{
+      isActive: true,
+    }
+  }
+  const fillterString = encodeURIComponent(JSON.stringify(filter));
+  
+  const { filteredCategorys : categorys } = useGetCategorysWithFilter(fillterString);
+  const { filteredHospitalServices : hospitalServices  } = useGetHospitalServicesWithFilter(fillterString);
+  const { filteredHospitalTypes : hospitalTypes } = useGetHospitalTypesWithFilter(fillterString);
 
   const { enqueueSnackbar } = useSnackbar();
   const router = useRouter();

@@ -79,7 +79,7 @@ export default function DoctorTableRow({
         <TableCell>
           <Label
             variant="soft"
-            color={(isActive && 'success') || (isActive && 'error') || 'default'}
+            color={(isActive && 'success') || (!isActive && 'error') || 'default'}
           >
             {isActive ? 'Active' : 'In-Active'}
           </Label>

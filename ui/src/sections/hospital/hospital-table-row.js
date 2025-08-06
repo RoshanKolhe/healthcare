@@ -37,13 +37,8 @@ export default function UserTableRow({
     category,
     hospitalType,
     hospitalService,
-    description,
     imageUpload,
-    address,
-    city,
-    state,
     country,
-    postalCode,
     isActive,
   } = row;
   console.log('row data', row);
@@ -58,20 +53,6 @@ export default function UserTableRow({
   return (
     <>
       <TableRow hover selected={selected}>
-        {/* <TableCell padding="checkbox">
-          <Checkbox checked={selected} onClick={onSelectRow} />
-        </TableCell> */}
-        {/* <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar alt={imageUpload} src={imageUpload} sx={{ mr: 2 }} />
-
-          <ListItemText
-            primary={hospitalName}
-            // secondary={email}
-            primaryTypographyProps={{ typography: 'body2' }}
-            // secondaryTypographyProps={{ component: 'span', color: 'text.disabled' }}
-          />
-        </TableCell> */}
-
         <TableCell sx={{ whiteSpace: 'nowrap' }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar src={imageUpload?.fileUrl} alt={hospitalName} />
@@ -85,11 +66,10 @@ export default function UserTableRow({
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalType?.hospitalType || 'N/A'}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalService?.hospitalService || 'N/A'}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{country}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{postalCode}</TableCell>
         <TableCell>
           <Label
             variant="soft"
-            color={(isActive && 'success') || (isActive && 'error') || 'default'}
+            color={(isActive && 'success') || (!isActive && 'error') || 'default'}
           >
             {isActive ? 'Active' : 'In-Active'}
           </Label>

@@ -57,7 +57,6 @@ const TABLE_HEAD = [
   { id: 'hospitalType', label: 'Type' },
   { id: 'hospitalService', label: 'Services' },
   { id: 'country', label: 'Country' },
-  { id: 'postalCode', label: 'Pin Code', width: 180 },
   { id: 'isActive', label: 'Status', width: 100 },
   { id: '', width: 88 },
 ];
