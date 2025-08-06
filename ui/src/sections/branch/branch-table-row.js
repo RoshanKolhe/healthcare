@@ -31,7 +31,7 @@ export default function UserTableRow({
   onViewRow,
   handleQuickEditRow,
 }) {
-  const { name, fullAddress, city, state, isActive, hospitalName } = row;
+  const { name, fullAddress, city, state, isActive, hospitalName, country } = row;
   console.log('row data', row);
 
   const confirm = useBoolean();
@@ -43,23 +43,11 @@ export default function UserTableRow({
   return (
     <>
       <TableRow hover selected={selected}>
-        {/* <TableCell padding="checkbox">
-          <Checkbox checked={selected} onClick={onSelectRow} />
-        </TableCell> */}
-        {/* <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar alt={imageUpload} src={imageUpload} sx={{ mr: 2 }} />
-
-          <ListItemText
-            primary={branchName}
-            // secondary={email}
-            primaryTypographyProps={{ typography: 'body2' }}
-            // secondaryTypographyProps={{ component: 'span', color: 'text.disabled' }}
-          />
-        </TableCell> */}
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{name}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{fullAddress}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{state}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{city}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{country}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalName}</TableCell>
 
         <TableCell>

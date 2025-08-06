@@ -56,6 +56,7 @@ const TABLE_HEAD = [
   { id: 'fullAddress', label: 'Full Address'},
   { id: 'state', label: 'State' },
   { id: 'city', label: 'City' },
+  { id: 'country', label: 'Country' },
   { id: 'hospitalName', label: 'Hospital Name'},
   { id: 'isActive', label: 'Status', width: 100 },
   { id: '', width: 88 },

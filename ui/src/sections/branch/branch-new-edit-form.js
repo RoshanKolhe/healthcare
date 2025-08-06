@@ -53,6 +53,8 @@ export default function BranchNewEditForm({ currentBranch }) {
     fullAddress: Yup.string().required('Address is required'),
     city: Yup.string().required('City is required'),
     state: Yup.string().required('State is required'),
+    country: Yup.string().required('Country is required'),
+    postalCode: Yup.number().required('Pin code is required'),
     isActive: Yup.boolean(),
   });
 
@@ -62,6 +64,8 @@ export default function BranchNewEditForm({ currentBranch }) {
       fullAddress: currentBranch?.fullAddress || '',
       city: currentBranch?.city || '',
       state: currentBranch?.state || '',
+      country: currentBranch?.country || '',
+      postalCode: currentBranch?.postalCode || '',
       isActive: currentBranch ? (currentBranch?.isActive ? '1' : '0') : '1',
       hospital: currentBranch?.hospital || null,
     }),
@@ -90,6 +94,8 @@ export default function BranchNewEditForm({ currentBranch }) {
         fullAddress: formData.fullAddress,
         city: formData.city,
         state: formData.state,
+        country: formData.country,
+        postalCode: formData.postalCode,
         isActive: currentBranch ? formData.isActive : true,
         hospitalId: formData.hospital?.id,
       };
@@ -116,60 +122,67 @@ export default function BranchNewEditForm({ currentBranch }) {
   }, [currentBranch, defaultValues, reset]);
 
   const renderDetails = (
-      <Grid xs={12} md={12}>
-        <Card sx={{ pb: 2 }}>
-          <Stack spacing={3} sx={{ p: 3 }}>
-            <Grid container spacing={2} xs={12} md={12}>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="name" label="Branch Name" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="fullAddress" label="Full Address" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="state" label="State" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="city" label="City" />
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFAutocomplete
-                  name="hospital"
-                  label="Hospital"
-                  options={hospitals || []}
-                  getOptionLabel={(option) => `${option?.hospitalName}` || ''}
-                  filterOptions={(x) => x}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  renderOption={(props, option) => (
-                    <li {...props}>
-                      <Typography variant="subtitle2" fontWeight="bold">
-                        {option?.hospitalName}
-                      </Typography>
-                    </li>
-                  )}
-                  renderTags={(selected, getTagProps) =>
-                    selected.map((option, tagIndex) => (
-                      <Chip
-                        {...getTagProps({ index: tagIndex })}
-                        key={option.id}
-                        label={option.hospitalName}
-                        size="small"
-                        color="info"
-                        variant="soft"
-                      />
-                    ))
-                  }
-                />
-              </Grid>
+    <Grid xs={12} md={12}>
+      <Card sx={{ pb: 2 }}>
+        <Stack spacing={3} sx={{ p: 3 }}>
+          <Grid container spacing={2} xs={12} md={12}>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="name" label="Branch Name" />
             </Grid>
-            <Stack alignItems="flex-end" sx={{ mt: 3 }}>
-              <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                {!currentBranch ? 'Create User' : 'Save Changes'}
-              </LoadingButton>
-            </Stack>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="fullAddress" label="Full Address" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="country" label="Country" />
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <RHFTextField name="state" label="State" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="city" label="City" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFTextField name="postalCode" label="Postal Code" />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RHFAutocomplete
+                name="hospital"
+                label="Hospital"
+                options={hospitals || []}
+                getOptionLabel={(option) => `${option?.hospitalName}` || ''}
+                filterOptions={(x) => x}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderOption={(props, option) => (
+                  <li {...props}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {option?.hospitalName}
+                    </Typography>
+                  </li>
+                )}
+                renderTags={(selected, getTagProps) =>
+                  selected.map((option, tagIndex) => (
+                    <Chip
+                      {...getTagProps({ index: tagIndex })}
+                      key={option.id}
+                      label={option.hospitalName}
+                      size="small"
+                      color="info"
+                      variant="soft"
+                    />
+                  ))
+                }
+              />
+            </Grid>
+          </Grid>
+          <Stack alignItems="flex-end" sx={{ mt: 3 }}>
+            <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
+              {!currentBranch ? 'Create User' : 'Save Changes'}
+            </LoadingButton>
           </Stack>
-        </Card>
-      </Grid>
+        </Stack>
+      </Card>
+    </Grid>
   );
 
   return (
