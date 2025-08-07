@@ -19,7 +19,7 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import {Clinic} from '../models';
+import {Branch, Clinic} from '../models';
 import {ClinicRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
 import {PermissionKeys} from '../authorization/permission-keys';
@@ -33,6 +33,34 @@ export class ClinicController {
     @repository(ClinicRepository)
     public clinicRepository: ClinicRepository,
   ) {}
+
+  @get('/clinics/{id}/branches-by-city')
+  async getBranchesByCity(
+    @param.path.number('id') clinicId: number,
+    @param.query.string('city') city: string,
+  ): Promise<Branch[]> {
+    return this.clinicRepository.branches(clinicId).find({
+      where: {city: city},
+    });
+  }
+
+  @get('/clinics-by-city')
+  async getClinicsWithBranchesByCity(
+    @param.query.string('city') city: string,
+  ): Promise<(Clinic & {branches: Branch[]})[]> {
+    return this.clinicRepository.find({
+      include: [
+        {
+          relation: 'branches',
+          scope: {
+            where: {
+              city: city,
+            },
+          },
+        },
+      ],
+    });
+  }
 
   @authenticate({
     strategy: 'jwt',
@@ -57,7 +85,7 @@ export class ClinicController {
               }),
               branch: {
                 type: 'object',
-                required: ['city', 'state', 'fullAddress' , 'postalCode'],
+                required: ['city', 'state', 'fullAddress', 'postalCode'],
                 properties: {
                   city: {type: 'string'},
                   state: {type: 'string'},
@@ -99,7 +127,7 @@ export class ClinicController {
           state: branch.state,
           fullAddress: branch.fullAddress,
           country: clinic.country,
-          postalCode: branch.postalCode,  
+          postalCode: branch.postalCode,
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -127,9 +155,7 @@ export class ClinicController {
       },
     },
   })
-  async find(
-    @param.filter(Clinic) filter?: Filter<Clinic>,
-  ): Promise<Clinic[]> {
+  async find(@param.filter(Clinic) filter?: Filter<Clinic>): Promise<Clinic[]> {
     return this.clinicRepository.find({
       ...filter,
       include: [

@@ -240,7 +240,7 @@ export const _phoneNumbers = [
 
 export const _roles = [
   'Super Admin',
-  'Hospital',
+  'Clinic',
   'Branch',
 ];
 
