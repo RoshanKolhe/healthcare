@@ -1,5 +1,5 @@
 import {Entity, model, property, belongsTo} from '@loopback/repository';
-import {Hospital} from './hospital.model';
+import {Clinic} from './clinic.model';
 
 @model()
 export class Branch extends Entity {
@@ -73,8 +73,8 @@ export class Branch extends Entity {
   })
   isDeleted?: boolean;
 
-  @belongsTo(() => Hospital)
-  hospitalId: number;
+  @belongsTo(() => Clinic)
+  clinicId: number;
 
   constructor(data?: Partial<Branch>) {
     super(data);

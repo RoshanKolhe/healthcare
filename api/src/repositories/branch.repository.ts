@@ -5,8 +5,8 @@ import {
   BelongsToAccessor,
 } from '@loopback/repository';
 import {HealthcareDataSource} from '../datasources';
-import {Branch, BranchRelations, Hospital} from '../models';
-import {HospitalRepository} from './hospital.repository';
+import {Branch, BranchRelations, Clinic} from '../models';
+import { ClinicRepository } from './clinic.repository';
 import {TimeStampRepositoryMixin} from '../mixins/timestamp-repository-mixin';
 
 export class BranchRepository extends TimeStampRepositoryMixin<
@@ -16,21 +16,21 @@ export class BranchRepository extends TimeStampRepositoryMixin<
     DefaultCrudRepository<Branch, typeof Branch.prototype.id, BranchRelations>
   >
 >(DefaultCrudRepository) {
-  public readonly hospital: BelongsToAccessor<
-    Hospital,
+  public readonly clinic: BelongsToAccessor<
+    Clinic,
     typeof Branch.prototype.id
   >;
 
   constructor(
     @inject('datasources.healthcare') dataSource: HealthcareDataSource,
-    @repository.getter('HospitalRepository')
-    protected hospitalRepositoryGetter: Getter<HospitalRepository>,
+    @repository.getter('ClinicRepository')
+    protected clinicRepositoryGetter: Getter<ClinicRepository>,
   ) {
     super(Branch, dataSource);
-    this.hospital = this.createBelongsToAccessorFor(
-      'hospital',
-      hospitalRepositoryGetter,
+    this.clinic = this.createBelongsToAccessorFor(
+      'clinic',
+      clinicRepositoryGetter,
     );
-    this.registerInclusionResolver('hospital', this.hospital.inclusionResolver);
+    this.registerInclusionResolver('clinic', this.clinic.inclusionResolver);
   }
 }

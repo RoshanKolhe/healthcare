@@ -7,9 +7,9 @@ import {
   HasManyRepositoryFactory,
 } from '@loopback/repository';
 import {HealthcareDataSource} from '../datasources';
-import {User, UserRelations, Hospital, Branch} from '../models';
+import {User, UserRelations, Clinic, Branch} from '../models';
 import {TimeStampRepositoryMixin} from '../mixins/timestamp-repository-mixin';
-import {HospitalRepository} from './hospital.repository';
+import { ClinicRepository } from './clinic.repository';
 import {BranchRepository} from './branch.repository';
 
 export type Credentials = {
@@ -25,17 +25,17 @@ export class UserRepository extends TimeStampRepositoryMixin<
   >
 >(DefaultCrudRepository) {
 
-  public readonly hospital: BelongsToAccessor<Hospital, typeof User.prototype.id>;
+  public readonly clinic: BelongsToAccessor<Clinic, typeof User.prototype.id>;
 
   public readonly branch: BelongsToAccessor<Branch, typeof User.prototype.id>;
 
   constructor(
-    @inject('datasources.healthcare') dataSource: HealthcareDataSource, @repository.getter('HospitalRepository') protected hospitalRepositoryGetter: Getter<HospitalRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
+    @inject('datasources.healthcare') dataSource: HealthcareDataSource, @repository.getter('ClinicRepository') protected clinicRepositoryGetter: Getter<ClinicRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
   ) {
     super(User, dataSource);
     this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);
     this.registerInclusionResolver('branch', this.branch.inclusionResolver);
-    this.hospital = this.createBelongsToAccessorFor('hospital', hospitalRepositoryGetter,);
-    this.registerInclusionResolver('hospital', this.hospital.inclusionResolver);
+    this.clinic = this.createBelongsToAccessorFor('clinic', clinicRepositoryGetter,);
+    this.registerInclusionResolver('clinic', this.clinic.inclusionResolver);
   }
 }

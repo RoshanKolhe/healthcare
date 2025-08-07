@@ -43,7 +43,7 @@ const ICONS = {
   ecommerce: icon('ic_ecommerce'),
   analytics: icon('ic_analytics'),
   dashboard: icon('ic_dashboard'),
-  hospital: icon('ic_hospital'),
+  clinic: icon('ic_clinic'),
   branch: icon('ic_branch'),
   doctor: icon('ic_doctor'),
   service: icon('ic_services'),
@@ -81,12 +81,12 @@ export function useNavData() {
             ],
           },
           {
-            title: t('hospital'),
-            path: paths.dashboard.hospital.root,
-            icon: ICONS.hospital,
+            title: t('clinic'),
+            path: paths.dashboard.clinic.root,
+            icon: ICONS.clinic,
             children: [
-              { title: t('list'), path: paths.dashboard.hospital.list },
-              { title: t('create'), path: paths.dashboard.hospital.new },
+              { title: t('list'), path: paths.dashboard.clinic.list },
+              { title: t('create'), path: paths.dashboard.clinic.new },
             ],
           },
           {
@@ -148,32 +148,32 @@ export function useNavData() {
             ],
           },
           {
-            title: t('hospital type'),
-            path: paths.dashboard.hospitalType.root,
+            title: t('clinic type'),
+            path: paths.dashboard.clinicType.root,
             icon: ICONS.type,
             children: [
               {
                 title: t('list'),
-                path: paths.dashboard.hospitalType.list,
+                path: paths.dashboard.clinicType.list,
               },
               {
                 title: t('create'),
-                path: paths.dashboard.hospitalType.new,
+                path: paths.dashboard.clinicType.new,
               },
             ],
           },
           {
-            title: t('hospital service'),
-            path: paths.dashboard.hospitalService.root,
+            title: t('clinic service'),
+            path: paths.dashboard.clinicService.root,
             icon: ICONS.service,
             children: [
               {
                 title: t('list'),
-                path: paths.dashboard.hospitalService.list,
+                path: paths.dashboard.clinicService.list,
               },
               {
                 title: t('create'),
-                path: paths.dashboard.hospitalService.new,
+                path: paths.dashboard.clinicService.new,
               },
             ],
           },

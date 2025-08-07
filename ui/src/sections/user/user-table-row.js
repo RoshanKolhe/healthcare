@@ -37,7 +37,7 @@ export default function UserTableRow({
     email,
     phoneNumber,
     name,
-    hospitalName,
+    clinicName,
   } = row;
 
   const confirm = useBoolean();
@@ -66,7 +66,7 @@ export default function UserTableRow({
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{phoneNumber}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalName}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{clinicName}</TableCell>
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{name}</TableCell>
 

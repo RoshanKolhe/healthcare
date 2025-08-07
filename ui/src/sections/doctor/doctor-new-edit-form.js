@@ -36,7 +36,7 @@ import FormProvider, {
 } from 'src/components/hook-form';
 import { useAuthContext } from 'src/auth/hooks';
 import { FormControl, FormHelperText, IconButton, InputAdornment, MenuItem } from '@mui/material';
-import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useGetClinicsWithFilter } from 'src/api/clinic';
 import axiosInstance from 'src/utils/axios';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'react-phone-input-2';
@@ -56,7 +56,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
   const { enqueueSnackbar } = useSnackbar();
 
   const [branchOptions, setBranchOptions] = useState([]);
-  const [selectedHospital, setSelectedHospital] = useState(null);
+  const [selectedClinic, setSelectedClinic] = useState(null);
   const [validationSchema, setValidationSchema] = useState(() => Yup.object().shape({}));
 
   const password = useBoolean();
@@ -68,14 +68,14 @@ export default function DoctorNewEditForm({ currentDoctor }) {
   };
 
   const encodedFilter = `filter=${encodeURIComponent(JSON.stringify(rawFilter))}`;
-  const { filteredhospitals: hospitals } = useGetHospitalsWithFilter(encodedFilter);
+  const { filteredclinics: clinics } = useGetClinicsWithFilter(encodedFilter);
 
   const { specializations } = useGetSpecializations();
 
   const { doctor } = useAuthContext();
   const doctorRole = doctor?.permissions?.[0];
   const roleOptions =
-    // doctorRole === 'hospital' ? allRoles.filter((r) => r.value === 'Hospital') : allRoles;
+    // doctorRole === 'clinic' ? allRoles.filter((r) => r.value === 'Clinic') : allRoles;
     doctorRole === 'doctor' ? allRoles.filter((r) => r.value === 'Doctor') : allRoles;
 
   const defaultValues = useMemo(
@@ -90,7 +90,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
       password: '',
       confirmPassword: '',
       phoneNumber: currentDoctor?.phoneNumber || '',
-      hospital: currentDoctor?.hospital || null,
+      clinic: currentDoctor?.clinic || null,
       branch: currentDoctor?.branch || null,
       specialization: currentDoctor?.specialization || null,
       role: 'doctor',
@@ -140,7 +140,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
         postalCode: currentDoctor?.postalCode || '',
         isActive: currentDoctor ? formData.isActive : true,
         specializationId: formData.specialization?.id,
-        hospitalId: formData.hospital?.id,
+        clinicId: formData.clinic?.id,
         branchId: formData.branch?.id,
         avatar: {
           fileUrl: formData.avatar?.fileUrl,
@@ -193,7 +193,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
       setValidationSchema((prev) =>
         prev.concat(
           Yup.object().shape({
-            hospital: Yup.object().required('Hospital is required'),
+            clinic: Yup.object().required('Clinic is required'),
             branch: Yup.object().required('Branch is required'),
           })
         )
@@ -203,7 +203,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
       setValidationSchema((prev) =>
         prev.concat(
           Yup.object().shape({
-            hospital: Yup.mixed().notRequired(),
+            clinic: Yup.mixed().notRequired(),
             branch: Yup.mixed().notRequired(),
           })
         )
@@ -255,17 +255,17 @@ export default function DoctorNewEditForm({ currentDoctor }) {
   }, [currentDoctor]);
 
   useEffect(() => {
-    if (selectedHospital && selectedHospital.branches) {
-      setBranchOptions(selectedHospital.branches);
-      setValue('branch', null); // Optional: Reset branch when hospital changes
+    if (selectedClinic && selectedClinic.branches) {
+      setBranchOptions(selectedClinic.branches);
+      setValue('branch', null); // Optional: Reset branch when clinic changes
     } else {
       setBranchOptions([]);
       setValue('branch', null);
     }
-  }, [selectedHospital, setValue]);
+  }, [selectedClinic, setValue]);
 
   useEffect(() => {
-    if (role === 'hospital') {
+    if (role === 'clinic') {
       setValue('branch', null);
     }
   }, [role, setValue]);
@@ -485,15 +485,15 @@ export default function DoctorNewEditForm({ currentDoctor }) {
               {values.role === 'doctor' && (
                 <>
                   <RHFAutocomplete
-                    name="hospital"
-                    label="Hospital"
-                    options={hospitals}
-                    getOptionLabel={(option) => option?.hospitalName || ''}
+                    name="clinic"
+                    label="Clinic"
+                    options={clinics}
+                    getOptionLabel={(option) => option?.clinicName || ''}
                     isOptionEqualToValue={(option, value) => option?.id === value?.id}
                     onChange={(_, value) => {
-                      setValue('hospital', value);
-                      setSelectedHospital(value);
-                      // Extract branches from selected hospital
+                      setValue('clinic', value);
+                      setSelectedClinic(value);
+                      // Extract branches from selected clinic
                       setBranchOptions(value?.branches || []);
                     }}
                   />

@@ -42,7 +42,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
 import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
-import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useGetClinicsWithFilter } from 'src/api/clinic';
 
 // ----------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ export default function BranchViewForm({ currentBranch }) {
     },
   };
   const encodedFilter = `filter=${encodeURIComponent(JSON.stringify(rawFilter))}`;
-  const { filteredhospitals: hospitals } = useGetHospitalsWithFilter(encodedFilter);
+  const { filteredclinics: clinics } = useGetClinicsWithFilter(encodedFilter);
 
   const [validationSchema, setValidationSchema] = useState(
     Yup.object().shape({
@@ -84,7 +84,7 @@ export default function BranchViewForm({ currentBranch }) {
       country: currentBranch?.country || '',
       postalCode: currentBranch?.postalCode || '',
       isActive: currentBranch ? (currentBranch?.isActive ? '1' : '0') : '1',
-      hospital: currentBranch?.hospital || null,
+      clinic: currentBranch?.clinic || null,
     }),
     [currentBranch]
   );
@@ -247,16 +247,16 @@ export default function BranchViewForm({ currentBranch }) {
               </Grid>
               <Grid xs={12} md={6}>
                 <RHFAutocomplete
-                  name="hospital"
-                  label="Hospital"
-                  options={hospitals || []}
-                  getOptionLabel={(option) => `${option?.hospitalName}` || ''}
+                  name="clinic"
+                  label="Clinic"
+                  options={clinics || []}
+                  getOptionLabel={(option) => `${option?.clinicName}` || ''}
                   filterOptions={(x) => x}
                   isOptionEqualToValue={(option, value) => option.id === value.id}
                   renderOption={(props, option) => (
                     <li {...props}>
                       <Typography variant="subtitle2" fontWeight="bold">
-                        {option?.hospitalName}
+                        {option?.clinicName}
                       </Typography>
                     </li>
                   )}
@@ -265,7 +265,7 @@ export default function BranchViewForm({ currentBranch }) {
                       <Chip
                         {...getTagProps({ index: tagIndex })}
                         key={option.id}
-                        label={option.hospitalName}
+                        label={option.clinicName}
                         size="small"
                         color="info"
                         variant="soft"

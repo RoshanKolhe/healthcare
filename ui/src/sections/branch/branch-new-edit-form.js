@@ -28,7 +28,7 @@ import { CardHeader, Chip, MenuItem } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import axiosInstance from 'src/utils/axios';
 import { COMMON_STATUS_OPTIONS, states } from 'src/utils/constants';
-import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useGetClinicsWithFilter } from 'src/api/clinic';
 import Label from 'src/components/label';
 
 // ----------------------------------------------------------------------
@@ -47,7 +47,7 @@ export default function BranchNewEditForm({ currentBranch }) {
     },
   };
   const encodedFilter = `filter=${encodeURIComponent(JSON.stringify(rawFilter))}`;
-  const { filteredhospitals: hospitals } = useGetHospitalsWithFilter(encodedFilter);
+  const { filteredclinics: clinics } = useGetClinicsWithFilter(encodedFilter);
 
   const NewBranchSchema = Yup.object().shape({
     name: Yup.string().required('Branch Name is required'),
@@ -68,7 +68,7 @@ export default function BranchNewEditForm({ currentBranch }) {
       country: currentBranch?.country || '',
       postalCode: currentBranch?.postalCode || '',
       isActive: currentBranch ? (currentBranch?.isActive ? '1' : '0') : '1',
-      hospital: currentBranch?.hospital || null,
+      clinic: currentBranch?.clinic || null,
     }),
     [currentBranch]
   );
@@ -98,7 +98,7 @@ export default function BranchNewEditForm({ currentBranch }) {
         country: formData.country,
         postalCode: formData.postalCode,
         isActive: currentBranch ? formData.isActive : true,
-        hospitalId: formData.hospital?.id,
+        clinicId: formData.clinic?.id,
       };
       if (!currentBranch) {
         await axiosInstance.post('/branches', inputData);
@@ -168,16 +168,16 @@ export default function BranchNewEditForm({ currentBranch }) {
             </Grid>
             <Grid xs={12} md={6}>
               <RHFAutocomplete
-                name="hospital"
-                label="Hospital"
-                options={hospitals || []}
-                getOptionLabel={(option) => `${option?.hospitalName}` || ''}
+                name="clinic"
+                label="Clinic"
+                options={clinics || []}
+                getOptionLabel={(option) => `${option?.clinicName}` || ''}
                 filterOptions={(x) => x}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 renderOption={(props, option) => (
                   <li {...props}>
                     <Typography variant="subtitle2" fontWeight="bold">
-                      {option?.hospitalName}
+                      {option?.clinicName}
                     </Typography>
                   </li>
                 )}
@@ -186,7 +186,7 @@ export default function BranchNewEditForm({ currentBranch }) {
                     <Chip
                       {...getTagProps({ index: tagIndex })}
                       key={option.id}
-                      label={option.hospitalName}
+                      label={option.clinicName}
                       size="small"
                       color="info"
                       variant="soft"

@@ -41,7 +41,7 @@ import {
 import { useGetBranchs } from 'src/api/branch';
 import { _roles, USER_STATUS_OPTIONS } from 'src/utils/constants';
 import { useAuthContext } from 'src/auth/hooks';
-import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useGetClinicsWithFilter } from 'src/api/clinic';
 import BranchTableRow from '../branch-table-row';
 import BranchTableToolbar from '../branch-table-toolbar';
 import BranchTableFiltersResult from '../branch-table-filters-result';
@@ -57,7 +57,7 @@ const TABLE_HEAD = [
   { id: 'state', label: 'State' },
   { id: 'city', label: 'City' },
   { id: 'country', label: 'Country' },
-  { id: 'hospitalName', label: 'Hospital Name'},
+  { id: 'clinicName', label: 'Clinic Name'},
   { id: 'isActive', label: 'Status', width: 100 },
   { id: '', width: 88 },
 ];
@@ -91,11 +91,11 @@ export default function BranchListView() {
   const [filters, setFilters] = useState(defaultFilters);
 
   const { branchs, branchsLoading, branchsEmpty, refreshBranchs } = useGetBranchs();
-  const hospitalFilter = `filter=${encodeURIComponent(
+  const clinicFilter = `filter=${encodeURIComponent(
   JSON.stringify({ where: { isActive: true } })
 )}`;
 
-const { filteredhospitals: hospitals = [] } = useGetHospitalsWithFilter(hospitalFilter);
+const { filteredclinics: clinics = [] } = useGetClinicsWithFilter(clinicFilter);
 
   const dataFiltered = applyFilter({
     inputData: tableData,
@@ -186,17 +186,17 @@ const { filteredhospitals: hospitals = [] } = useGetHospitalsWithFilter(hospital
   //   }
   // }, [branchs]);
   useEffect(() => {
-  if (branchs && hospitals.length) {
+  if (branchs && clinics.length) {
     const enrichedBranches = branchs.map((branch) => {
-      const matchedHospital = hospitals.find((h) => h.id === branch.hospitalId);
+      const matchedClinic = clinics.find((h) => h.id === branch.clinicId);
       return {
         ...branch,
-        hospitalName: matchedHospital?.hospitalName || 'N/A',
+        clinicName: matchedClinic?.clinicName || 'N/A',
       };
     });
     setTableData(enrichedBranches);
   }
-}, [branchs, hospitals]);
+}, [branchs, clinics]);
 
   return (
     <>

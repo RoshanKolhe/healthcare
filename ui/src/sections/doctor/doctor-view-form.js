@@ -42,14 +42,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
 import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
-import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useGetClinicsWithFilter } from 'src/api/clinic';
 import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
 const allRoles = [
   { value: 'super_admin', name: 'Super Admin' },
-  { value: 'hospital', name: 'Hospital' },
+  { value: 'clinic', name: 'Clinic' },
   { value: 'branch', name: 'Branch' },
 ];
 
@@ -61,7 +61,7 @@ export default function DoctorViewForm({ currentDoctor }) {
   const { enqueueSnackbar } = useSnackbar();
   const [departments, setDepartments] = useState([]);
   const [branchOptions, setBranchOptions] = useState([]);
-  const [selectedHospital, setSelectedHospital] = useState(null);
+  const [selectedClinic, setSelectedClinic] = useState(null);
   const [validationSchema, setValidationSchema] = useState(() => Yup.object().shape({}));
 
   const password = useBoolean();
@@ -73,14 +73,14 @@ export default function DoctorViewForm({ currentDoctor }) {
   };
 
   const encodedFilter = `filter=${encodeURIComponent(JSON.stringify(rawFilter))}`;
-  const { filteredhospitals: hospitals } = useGetHospitalsWithFilter(encodedFilter);
+  const { filteredclinics: clinics } = useGetClinicsWithFilter(encodedFilter);
 
   const { doctor } = useAuthContext();
   const doctorRole = doctor?.permissions?.[0];
   const roleOptions =
-    // doctorRole === 'hospital' ? allRoles.filter((r) => r.value === 'Hospital') : allRoles;
-    doctorRole === 'hospital' || doctorRole === 'branch'
-      ? allRoles.filter((r) => r.value === 'Hospital' || r.value === 'Branch')
+    // doctorRole === 'clinic' ? allRoles.filter((r) => r.value === 'Clinic') : allRoles;
+    doctorRole === 'clinic' || doctorRole === 'branch'
+      ? allRoles.filter((r) => r.value === 'Clinic' || r.value === 'Branch')
       : allRoles;
 
   const defaultValues = useMemo(
@@ -95,7 +95,7 @@ export default function DoctorViewForm({ currentDoctor }) {
       email: currentDoctor?.email || '',
       password: '',
       phoneNumber: currentDoctor?.phoneNumber || '',
-      hospital: currentDoctor?.hospital || null,
+      clinic: currentDoctor?.clinic || null,
       branch: currentDoctor?.branch || null,
       // role: currentDoctor?.permissions[0] || '',
       role: 'doctor',
@@ -155,11 +155,11 @@ export default function DoctorViewForm({ currentDoctor }) {
     setValue('imageUpload', null);
   }, [setValue]);
   useEffect(() => {
-    if (role === 'hospital') {
+    if (role === 'clinic') {
       setValidationSchema((prev) =>
         prev.concat(
           Yup.object().shape({
-            hospital: Yup.object().required('Hospital is required'),
+            clinic: Yup.object().required('Clinic is required'),
             branch: Yup.mixed().notRequired(),
           })
         )
@@ -168,7 +168,7 @@ export default function DoctorViewForm({ currentDoctor }) {
       setValidationSchema((prev) =>
         prev.concat(
           Yup.object().shape({
-            hospital: Yup.object().required('Hospital is required'),
+            clinic: Yup.object().required('Clinic is required'),
             branch: Yup.object().required('Branch is required'),
           })
         )
@@ -178,7 +178,7 @@ export default function DoctorViewForm({ currentDoctor }) {
       setValidationSchema((prev) =>
         prev.concat(
           Yup.object().shape({
-            hospital: Yup.mixed().notRequired(),
+            clinic: Yup.mixed().notRequired(),
             branch: Yup.mixed().notRequired(),
           })
         )
@@ -225,17 +225,17 @@ export default function DoctorViewForm({ currentDoctor }) {
   }, [currentDoctor, role]);
 
   useEffect(() => {
-    if (selectedHospital && selectedHospital.branches) {
-      setBranchOptions(selectedHospital.branches);
-      setValue('branch', null); // Optional: Reset branch when hospital changes
+    if (selectedClinic && selectedClinic.branches) {
+      setBranchOptions(selectedClinic.branches);
+      setValue('branch', null); // Optional: Reset branch when clinic changes
     } else {
       setBranchOptions([]);
       setValue('branch', null);
     }
-  }, [selectedHospital, setValue]);
+  }, [selectedClinic, setValue]);
 
   useEffect(() => {
-    if (role === 'hospital') {
+    if (role === 'clinic') {
       setValue('branch', null);
     }
   }, [role, setValue]);
@@ -430,16 +430,16 @@ export default function DoctorViewForm({ currentDoctor }) {
                   </MenuItem>
                 ))}
               </RHFSelect> */}
-              {values.role === 'hospital' && (
+              {values.role === 'clinic' && (
                 <RHFAutocomplete
-                  name="hospital"
-                  label="Hospital"
-                  options={hospitals}
-                  getOptionLabel={(option) => option?.hospitalName || ''}
+                  name="clinic"
+                  label="Clinic"
+                  options={clinics}
+                  getOptionLabel={(option) => option?.clinicName || ''}
                   isOptionEqualToValue={(option, value) => option?.id === value?.id}
                   onChange={(_, value) => {
-                    setValue('hospital', value);
-                    setSelectedHospital(value);
+                    setValue('clinic', value);
+                    setSelectedClinic(value);
                   }}
                   disabled
                 />
@@ -448,15 +448,15 @@ export default function DoctorViewForm({ currentDoctor }) {
               {values.role === 'branch' && (
                 <>
                   <RHFAutocomplete
-                    name="hospital"
-                    label="Hospital"
-                    options={hospitals}
-                    getOptionLabel={(option) => option?.hospitalName || ''}
+                    name="clinic"
+                    label="Clinic"
+                    options={clinics}
+                    getOptionLabel={(option) => option?.clinicName || ''}
                     isOptionEqualToValue={(option, value) => option?.id === value?.id}
                     onChange={(_, value) => {
-                      setValue('hospital', value);
-                      setSelectedHospital(value);
-                      // Extract branches from selected hospital
+                      setValue('clinic', value);
+                      setSelectedClinic(value);
+                      // Extract branches from selected clinic
                       setBranchOptions(value?.branches || []);
                     }}
                     disabled

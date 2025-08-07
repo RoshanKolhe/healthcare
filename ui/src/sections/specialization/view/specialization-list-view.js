@@ -41,7 +41,7 @@ import {
 import { _roles, USER_STATUS_OPTIONS } from 'src/utils/constants';
 import { useGetSpecializations } from 'src/api/specializations';
 import { useAuthContext } from 'src/auth/hooks';
-import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useGetHospitalsWithFilter } from 'src/api/clinic';
 import SpecializationTableRow from '../specialization-table-row';
 import SpecializationTableToolbar from '../specialization-table-toolbar';
 import SpecializationTableFiltersResult from '../specialization-table-filters-result';

@@ -82,7 +82,7 @@ export class BranchController {
   ): Promise<Branch> {
     return this.branchRepository.findById(id, {
       ...filter,
-      include: [{relation: 'hospital'}],
+      include: [{relation: 'clinic'}],
     });
   }
 

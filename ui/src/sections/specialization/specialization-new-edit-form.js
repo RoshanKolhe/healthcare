@@ -27,7 +27,7 @@ import { CardHeader, Chip, MenuItem } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import axiosInstance from 'src/utils/axios';
 import { COMMON_STATUS_OPTIONS, USER_STATUS_OPTIONS } from 'src/utils/constants';
-import { useGetHospitalsWithFilter } from 'src/api/hospital';
+import { useGetHospitalsWithFilter } from 'src/api/clinic';
 import Label from 'src/components/label';
 
 // ----------------------------------------------------------------------

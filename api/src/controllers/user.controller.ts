@@ -136,7 +136,7 @@ export class UserController {
     const allUserData = await this.userRepository.findById(userData.id,{
       include: [
         {
-          relation: 'hospital',
+          relation: 'clinic',
           scope: {
             include: [
               {
@@ -163,7 +163,7 @@ export class UserController {
       where: {
         id: currnetUser.id,
       },
-      include: [{relation: 'hospital'}],
+      include: [{relation: 'clinic'}],
     });
     const userData = _.omit(user, 'password');
     return Promise.resolve({
@@ -204,7 +204,7 @@ export class UserController {
         isDeleted: false,
       },
       fields: {password: false, otp: false, otpExpireAt: false},
-      include: [{relation: 'hospital'}, {relation: 'branch'}],
+      include: [{relation: 'clinic'}, {relation: 'branch'}],
     };
     return this.userRepository.find(filter);
   }
@@ -235,7 +235,7 @@ export class UserController {
         otp: false,
         otpExpireAt: false,
       },
-      include: [{relation: 'hospital'},{relation: 'branch'}],
+      include: [{relation: 'clinic'},{relation: 'branch'}],
     });
     return Promise.resolve({
       ...user,

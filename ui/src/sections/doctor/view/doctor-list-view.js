@@ -54,7 +54,7 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 const TABLE_HEAD = [
   { id: 'name', label: 'Name' },
   { id: 'phoneNumber', label: 'Phone Number', width: 180 },
-  { id: 'hospitalName', label: 'Hospital Name', width: 180 },
+  { id: 'clinicName', label: 'Clinic Name', width: 180 },
   { id: 'branchName', label: 'Branch Name', width: 180 },
   { id: 'specialization', label: 'Specialization', width: 180 },
   { id: 'role', label: 'Role', width: 180 },
@@ -183,7 +183,7 @@ export default function DoctorListView() {
         .filter((doctor) => !doctor.permissions.includes('super_admin'))
         .map((doctor) => ({
           ...doctor,
-          hospitalName: doctor.hospital?.hospitalName || 'N/A',
+          clinicName: doctor.clinic?.clinicName || 'N/A',
           name: doctor.branch?.name || 'N/A',
         }));
       setTableData(updatedDoctors);

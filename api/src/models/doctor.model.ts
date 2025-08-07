@@ -1,5 +1,5 @@
 import {Entity, model, property, belongsTo} from '@loopback/repository';
-import {Hospital} from './hospital.model';
+import {Clinic} from './clinic.model';
 import {Branch} from './branch.model';
 import {Specialization} from './specialization.model';
 
@@ -117,8 +117,8 @@ export class Doctor extends Entity {
   })
   isDeleted: boolean;
 
-  @belongsTo(() => Hospital)
-  hospitalId: number;
+  @belongsTo(() => Clinic)
+  clinicId: number;
 
   @belongsTo(() => Branch)
   branchId: number;

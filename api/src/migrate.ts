@@ -1,5 +1,5 @@
 import {ApiApplication} from './application';
-import {Hospital} from './models';
+import {Clinic} from './models';
 
 export async function migrate(args: string[]) {
   const existingSchema = args.includes('--rebuild') ? 'drop' : 'alter';
@@ -11,13 +11,13 @@ export async function migrate(args: string[]) {
     existingSchema,
     models: [
       'User',
-      'Hospital',
+      'Clinic',
       'Branch',
       'Doctor',
       'Specialization',
       'Category',
-      'HospitalType',
-      'HospitalService',
+      'ClinicType',
+      'ClinicService',
     ],
   });
 

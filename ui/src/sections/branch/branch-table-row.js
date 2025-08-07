@@ -31,7 +31,7 @@ export default function UserTableRow({
   onViewRow,
   handleQuickEditRow,
 }) {
-  const { name, fullAddress, city, state, isActive, hospitalName, country } = row;
+  const { name, fullAddress, city, state, isActive, clinicName, country } = row;
   console.log('row data', row);
 
   const confirm = useBoolean();
@@ -48,7 +48,7 @@ export default function UserTableRow({
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{state}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{city}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{country}</TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalName}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{clinicName}</TableCell>
 
         <TableCell>
           <Label

@@ -1,7 +1,7 @@
 export const enum PermissionKeys {
   SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
-  HOSPITAL = 'hospital',
+  CLINIC = 'clinic',
   BRANCH = 'branch',
   DOCTOR = 'doctor',
 }

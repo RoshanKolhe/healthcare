@@ -60,11 +60,11 @@ export const endpoints = {
     filterList: (filter) => `/doctors/list?${filter}`,
     details: (id) => `/doctors/${id}`,
   },
-  hospital: {
-    list: '/hospitals',
-    details: (id) => `/hospitals/${id}`,
-    filterList: (filter) => `/hospitals?${filter}`,
-    search: '/api/hospitals/search',
+  clinic: {
+    list: '/clinics',
+    details: (id) => `/clinics/${id}`,
+    filterList: (filter) => `/clinics?${filter}`,
+    search: '/api/clinics/search',
   },
   branch: {
     list: '/branches',
@@ -82,14 +82,14 @@ export const endpoints = {
     details: (id) => `/categories/${id}`,
     filterList: (filter) => `/categories?filter=${filter}`,
   },
-  hospitalType: {
-    list: '/hospital-types',
-    details: (id) => `/hospital-types/${id}`,
-    filterList: (filter) => `/hospital-types?${filter}`,
+  clinicType: {
+    list: '/clinic-types',
+    details: (id) => `/clinic-types/${id}`,
+    filterList: (filter) => `/clinic-types?${filter}`,
   },
-  hospitalService: {
-    list: '/hospital-services',
-    details: (id) => `/hospital-services/${id}`,
-    filterList: (filter) => `/hospital-services?${filter}`,
+  clinicService: {
+    list: '/clinic-services',
+    details: (id) => `/clinic-services/${id}`,
+    filterList: (filter) => `/clinic-services?${filter}`,
   },
 };

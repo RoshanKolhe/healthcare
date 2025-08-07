@@ -96,9 +96,9 @@ export function useSearchBranchs(query) {
 
 // ----------------------------------------------------------------------
 
-export function useGetBranchesByHospitalId(hospitalId) {
-  const filter = hospitalId
-    ? `filter=${encodeURIComponent(JSON.stringify({ where: { hospitalId, isActive: true } }))}`
+export function useGetBranchesByClinicId(clinicId) {
+  const filter = clinicId
+    ? `filter=${encodeURIComponent(JSON.stringify({ where: { clinicId, isActive: true } }))}`
     : null;
 
   const URL = filter ? endpoints.branch.filterList(filter) : null;

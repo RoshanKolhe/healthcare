@@ -5,8 +5,8 @@ import {
   BelongsToAccessor,
 } from '@loopback/repository';
 import {HealthcareDataSource} from '../datasources';
-import {Doctor, DoctorRelations, Hospital, Branch, Specialization} from '../models';
-import {HospitalRepository} from './hospital.repository';
+import {Doctor, DoctorRelations, Clinic, Branch, Specialization} from '../models';
+import { ClinicRepository } from './clinic.repository';
 import {BranchRepository} from './branch.repository';
 import {TimeStampRepositoryMixin} from '../mixins/timestamp-repository-mixin';
 import {SpecializationRepository} from './specialization.repository';
@@ -18,8 +18,8 @@ export class DoctorRepository extends TimeStampRepositoryMixin<
     DefaultCrudRepository<Doctor, typeof Doctor.prototype.id, DoctorRelations>
   >
 >(DefaultCrudRepository) {
-  public readonly hospital: BelongsToAccessor<
-    Hospital,
+  public readonly clinic: BelongsToAccessor<
+    Clinic,
     typeof Doctor.prototype.id
   >;
 
@@ -29,8 +29,8 @@ export class DoctorRepository extends TimeStampRepositoryMixin<
 
   constructor(
     @inject('datasources.healthcare') dataSource: HealthcareDataSource,
-    @repository.getter('HospitalRepository')
-    protected hospitalRepositoryGetter: Getter<HospitalRepository>,
+    @repository.getter('ClinicRepository')
+    protected clinicRepositoryGetter: Getter<ClinicRepository>,
     @repository.getter('BranchRepository')
     protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('SpecializationRepository') protected specializationRepositoryGetter: Getter<SpecializationRepository>,
   ) {
@@ -42,10 +42,10 @@ export class DoctorRepository extends TimeStampRepositoryMixin<
       branchRepositoryGetter,
     );
     this.registerInclusionResolver('branch', this.branch.inclusionResolver);
-    this.hospital = this.createBelongsToAccessorFor(
-      'hospital',
-      hospitalRepositoryGetter,
+    this.clinic = this.createBelongsToAccessorFor(
+      'clinic',
+      clinicRepositoryGetter,
     );
-    this.registerInclusionResolver('hospital', this.hospital.inclusionResolver);
+    this.registerInclusionResolver('clinic', this.clinic.inclusionResolver);
   }
 }

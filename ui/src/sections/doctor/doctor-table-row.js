@@ -36,7 +36,7 @@ export default function DoctorTableRow({
     permissions,
     phoneNumber,
     name,
-    hospitalName,
+    clinicName,
     specialization,
     isActive,
   } = row;
@@ -67,7 +67,7 @@ export default function DoctorTableRow({
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{phoneNumber}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{hospitalName}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{clinicName}</TableCell>
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{name}</TableCell>
 

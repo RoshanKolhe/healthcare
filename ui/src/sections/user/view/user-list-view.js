@@ -57,7 +57,7 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 const TABLE_HEAD = [
   { id: 'name', label: 'Name' },
   { id: 'phoneNumber', label: 'Phone Number', width: 180 },
-  { id: 'hospitalName', label: 'Hospital Name', width: 180 },
+  { id: 'clinicName', label: 'Clinic Name', width: 180 },
   { id: 'branchName', label: 'Branch Name', width: 180 },
   { id: 'role', label: 'Role', width: 180 },
   { id: 'status', label: 'Status', width: 100 },
@@ -72,7 +72,7 @@ const defaultFilters = {
 
 const roleLabels = {
   super_admin: 'Super Admin',
-  hospital: 'Hospital',
+  clinic: 'Clinic',
   branch: 'Branch',
 };
 
@@ -82,8 +82,8 @@ export default function UserListView() {
   const { user: currentUser } = useAuthContext();
   const userRole = currentUser?.permissions?.[0];
   const roleOptions =
-    userRole === 'hospital'
-      ? _roles.filter((r) => r === roleLabels.hospital)
+    userRole === 'clinic'
+      ? _roles.filter((r) => r === roleLabels.clinic)
       : userRole === 'branch'
       ? _roles.filter((r) => r === roleLabels.branch)
       : _roles;
@@ -201,7 +201,7 @@ export default function UserListView() {
         .filter((user) => !user.permissions.includes('super_admin'))
         .map((user) => ({
           ...user,
-          hospitalName: user.hospital?.hospitalName || 'N/A',
+          clinicName: user.clinic?.clinicName || 'N/A',
           name: user.branch?.name || 'N/A',
         }));
       setTableData(updatedUsers);
@@ -415,7 +415,7 @@ export default function UserListView() {
 //   const { name, status, role } = filters;
 //   const roleMapping = {
 //     super_admin: 'Super Admin',
-//     hospital: 'Hospital',
+//     clinic: 'Clinic',
 //     branch: 'Branch',
 //   };
 
@@ -463,7 +463,7 @@ function applyFilter({ inputData, comparator, filters }) {
   const stabilizedThis = inputData.map((el, index) => [el, index]);
   const roleMapping = {
     super_admin: 'Super Admin',
-    hospital: 'Hospital',
+    clinic: 'Clinic',
     branch: 'Branch',
   };
   stabilizedThis.sort((a, b) => {
