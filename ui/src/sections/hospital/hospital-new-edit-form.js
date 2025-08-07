@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
@@ -56,7 +57,7 @@ export default function HospitalNewEditForm({ currentHospital, isEditForm }) {
   const NewHospitalSchema = Yup.object().shape({
     isEditForm: Yup.boolean(),
     hospitalName: Yup.string().required('Hospital Name is required'),
-    hospitalRegNum: Yup.number().required('Hospital Register Number is required'),
+    hospitalRegNum: Yup.string().required('Hospital Register Number is required'),
     category: Yup.object().required('Hospital Category is required'),
     hospitalType: Yup.object().required('Hospital Services is required'),
     hospitalService: Yup.object().required('Hospital Type is required'),
@@ -140,7 +141,7 @@ export default function HospitalNewEditForm({ currentHospital, isEditForm }) {
     try {
       const hospitalPayload = {
         hospitalName: formData.hospitalName,
-        hospitalRegNum: Number(formData.hospitalRegNum),
+        hospitalRegNum: formData.hospitalRegNum,
         categoryId: formData.category?.id,
         hospitalServiceId: formData.hospitalService?.id,
         hospitalTypeId: formData.hospitalType?.id,
@@ -203,6 +204,27 @@ export default function HospitalNewEditForm({ currentHospital, isEditForm }) {
     },
     [setValue]
   );
+  
+  useEffect(() => {
+    const fetchAddressDetails = async (postalCode) => {
+      try {
+        const response = await axiosInstance.get(`/location-by-pincode/${postalCode}`);
+
+        const { city, state, stateCode, country } = response.data;
+        setValue('city', city || '');
+        setValue('state', state || '');
+        setValue('country', country || '');
+      } catch (error) {
+        console.error('Error fetching address details:', error);
+      }
+    };
+
+    const postalCodeRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
+    if (values.postalCode && postalCodeRegex.test(values.postalCode)) {
+      fetchAddressDetails(values.postalCode);
+    }
+  }, [values.postalCode, setValue]);
+
   useEffect(() => {
     if (currentHospital) {
       reset(defaultValues);
@@ -288,22 +310,22 @@ export default function HospitalNewEditForm({ currentHospital, isEditForm }) {
             <Grid xs={12} md={12}>
               <RHFTextField name="description" label="Description" multiline rows={3} />
             </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField name="country" label="Country" />
-            </Grid>
             {!currentHospital ? (
               <>
                 <Grid xs={12} md={6}>
-                  <RHFTextField name="fullAddress" label="Address" />
+                  <RHFTextField name="postalCode" label="Postal Code" />
                 </Grid>
                 <Grid xs={12} md={6}>
-                  <RHFTextField name="city" label="City" />
+                  <RHFTextField name="country" label="Country" />
                 </Grid>
                 <Grid xs={12} md={6}>
                   <RHFTextField name="state" label="State" />
                 </Grid>
                 <Grid xs={12} md={6}>
-                  <RHFTextField name="postalCode" label="Postal Code" />
+                  <RHFTextField name="city" label="City" />
+                </Grid>
+                <Grid xs={12} md={6}>
+                  <RHFTextField name="fullAddress" label="Address" />
                 </Grid>
               </>
             ) : null}

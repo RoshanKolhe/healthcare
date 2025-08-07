@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
@@ -90,13 +91,14 @@ export default function DoctorViewForm({ currentDoctor }) {
       fullAddress: currentDoctor?.fullAddress || '',
       city: currentDoctor?.city || '',
       state: currentDoctor?.state || '',
+      postalCode: currentDoctor?.postalCode || '',
       email: currentDoctor?.email || '',
       password: '',
       phoneNumber: currentDoctor?.phoneNumber || '',
       hospital: currentDoctor?.hospital || null,
       branch: currentDoctor?.branch || null,
       // role: currentDoctor?.permissions[0] || '',
-      role:'doctor',
+      role: 'doctor',
       isVerified: currentDoctor?.isVerified || true,
       isActive: currentDoctor?.isActive ?? 1,
       avatar: currentDoctor?.avatar
@@ -203,6 +205,7 @@ export default function DoctorViewForm({ currentDoctor }) {
       avatar: Yup.object().shape({
         fileUrl: Yup.string().required('Image is required'),
       }),
+      postalCode: Yup.string().required('Pin code is required'),
       isActive: Yup.boolean(),
       status: Yup.string(),
       isVerified: Yup.boolean(),
@@ -241,6 +244,26 @@ export default function DoctorViewForm({ currentDoctor }) {
     document.body.classList.remove('light-mode', 'dark-mode');
     document.body.classList.add(isDark ? 'dark-mode' : 'light-mode');
   }, [isDark]);
+
+  useEffect(() => {
+    const fetchAddressDetails = async (postalCode) => {
+      try {
+        const response = await axiosInstance.get(`/location-by-pincode/${postalCode}`);
+
+        const { city, state, country } = response.data;
+        setValue('city', city || '');
+        setValue('state', state || '');
+        setValue('country', country || '');
+      } catch (error) {
+        console.error('Error fetching address details:', error);
+      }
+    };
+
+    const postalCodeRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
+    if (values.postalCode && postalCodeRegex.test(values.postalCode)) {
+      fetchAddressDetails(values.postalCode);
+    }
+  }, [values.postalCode, setValue]);
 
   useEffect(() => {
     if (currentDoctor) {
@@ -323,9 +346,10 @@ export default function DoctorViewForm({ currentDoctor }) {
                   />
                 )}
               />
-              <RHFTextField name="fullAddress" label="Full Address " disabled />
-              <RHFTextField name="city" label="City" disabled />
+              <RHFTextField name="postalCode" label="Postal Code" disabled/>
               <RHFTextField name="state" label="State" disabled />
+              <RHFTextField name="city" label="City" disabled />
+              <RHFTextField name="fullAddress" label="Full Address " disabled />
               <RHFTextField name="email" label="Email Address" disabled />
               {!currentDoctor ? (
                 <RHFTextField

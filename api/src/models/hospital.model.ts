@@ -20,10 +20,10 @@ export class Hospital extends Entity {
   hospitalName: string;
 
   @property({
-    type: 'number',
+    type: 'string',
     required: true,
   })
-  hospitalRegNum: number;
+  hospitalRegNum: string;
 
   @property({
     type: 'object',

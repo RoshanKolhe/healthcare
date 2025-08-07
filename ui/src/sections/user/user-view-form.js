@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
@@ -90,6 +91,8 @@ export default function UserViewForm({ currentUser }) {
       fullAddress: currentUser?.fullAddress || '',
       city: currentUser?.city || '',
       state: currentUser?.state || '',
+      country: currentUser?.country || '',
+      postalCode: currentUser?.postalCode || '',
       email: currentUser?.email || '',
       password: '',
       phoneNumber: currentUser?.phoneNumber || '',
@@ -196,6 +199,8 @@ export default function UserViewForm({ currentUser }) {
         .email('Email must be a valid email address'),
       password: Yup.string().required('Password is required'),
       role: Yup.string().required('Role is required'),
+      postalCode: Yup.string().required('Pin code is required'),
+      country: Yup.string().required('Country is required'),
       phoneNumber: Yup.string()
         .required('Phone number is required')
         .matches(/^[0-9]{8,15}$/, 'Phone number must be between 8 and 15 digits'),
@@ -240,6 +245,26 @@ export default function UserViewForm({ currentUser }) {
     document.body.classList.remove('light-mode', 'dark-mode');
     document.body.classList.add(isDark ? 'dark-mode' : 'light-mode');
   }, [isDark]);
+
+  useEffect(() => {
+    const fetchAddressDetails = async (postalCode) => {
+      try {
+        const response = await axiosInstance.get(`/location-by-pincode/${postalCode}`);
+
+        const { city, state, stateCode, country } = response.data;
+        setValue('city', city || '');
+        setValue('state', state || '');
+        setValue('country', country || '');
+      } catch (error) {
+        console.error('Error fetching address details:', error);
+      }
+    };
+
+    const postalCodeRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
+    if (values.postalCode && postalCodeRegex.test(values.postalCode)) {
+      fetchAddressDetails(values.postalCode);
+    }
+  }, [values.postalCode, setValue]);
 
   useEffect(() => {
     if (currentUser) {
@@ -322,9 +347,11 @@ export default function UserViewForm({ currentUser }) {
                   />
                 )}
               />
-              <RHFTextField name="fullAddress" label="Full Address " disabled />
-              <RHFTextField name="city" label="City" disabled />
+              <RHFTextField name="postalCode" label="Postal Code" disabled/>
+              <RHFTextField name="country" label="Country" disabled />
               <RHFTextField name="state" label="State" disabled />
+              <RHFTextField name="city" label="City" disabled />
+              <RHFTextField name="fullAddress" label="Full Address " disabled />
               <RHFTextField name="email" label="Email Address" disabled />
               {!currentUser ? (
                 <RHFTextField

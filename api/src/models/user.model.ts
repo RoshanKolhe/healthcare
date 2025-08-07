@@ -62,6 +62,18 @@ export class User extends Entity {
   })
   avatar?: object;
 
+  @property({
+    type: 'string',
+    required: true,
+  })
+  country: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  postalCode: string;
+
   @property.array(String, {
     name: 'permissions',
   })

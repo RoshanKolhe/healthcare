@@ -62,7 +62,7 @@ export class HospitalController {
                   city: {type: 'string'},
                   state: {type: 'string'},
                   fullAddress: {type: 'string'},
-                  postalCode: {type: 'number'},
+                  postalCode: {type: 'string'},
                 },
               },
             },
@@ -76,7 +76,7 @@ export class HospitalController {
         city: string;
         state: string;
         fullAddress: string;
-        postalCode: number;
+        postalCode: string;
       };
     },
   ): Promise<Hospital> {

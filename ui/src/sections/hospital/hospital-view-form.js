@@ -65,7 +65,7 @@ export default function HospitalViewForm({ currentHospital }) {
   const [validationSchema, setValidationSchema] = useState(
     Yup.object().shape({
       hospitalName: Yup.string().required('Hospital Name is required'),
-      hospitalRegNum: Yup.number().required('Hospital Register Number is required'),
+      hospitalRegNum: Yup.string().required('Hospital Register Number is required'),
       category: Yup.string().required('Hospital Category is required'),
       hospitalType: Yup.string().required('Hospital Services is required'),
       hospitalService: Yup.string().required('Hospital Type is required'),
@@ -256,9 +256,6 @@ export default function HospitalViewForm({ currentHospital }) {
                     )}
                   </Box>
                 </Stack>
-              </Grid>
-              <Grid xs={12} md={6}>
-                <RHFTextField name="country" label="Country" />
               </Grid>
             </Grid>
           </Stack>

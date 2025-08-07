@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
@@ -69,6 +70,8 @@ export default function BranchViewForm({ currentBranch }) {
       fullAddress: Yup.string().required('Address is required'),
       city: Yup.string().required('City is required'),
       state: Yup.string().required('State is required'),
+      country: Yup.string().required('Country is required'),
+      postalCode: Yup.string().required('Pin code is required'),
       isActive: Yup.boolean(),
     })
   );
@@ -78,6 +81,8 @@ export default function BranchViewForm({ currentBranch }) {
       fullAddress: currentBranch?.fullAddress || '',
       city: currentBranch?.city || '',
       state: currentBranch?.state || '',
+      country: currentBranch?.country || '',
+      postalCode: currentBranch?.postalCode || '',
       isActive: currentBranch ? (currentBranch?.isActive ? '1' : '0') : '1',
       hospital: currentBranch?.hospital || null,
     }),
@@ -176,6 +181,26 @@ export default function BranchViewForm({ currentBranch }) {
   }, [role, setValue]);
 
   useEffect(() => {
+    const fetchAddressDetails = async (postalCode) => {
+      try {
+        const response = await axiosInstance.get(`/location-by-pincode/${postalCode}`);
+
+        const { city, state, stateCode, country } = response.data;
+        setValue('city', city || '');
+        setValue('state', state || '');
+        setValue('country', country || '');
+      } catch (error) {
+        console.error('Error fetching address details:', error);
+      }
+    };
+
+    const postalCodeRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
+    if (values.postalCode && postalCodeRegex.test(values.postalCode)) {
+      fetchAddressDetails(values.postalCode);
+    }
+  }, [values.postalCode, setValue]);
+
+  useEffect(() => {
     if (currentBranch) {
       reset(defaultValues);
     }
@@ -207,6 +232,12 @@ export default function BranchViewForm({ currentBranch }) {
               </Grid>
               <Grid xs={12} md={6}>
                 <RHFTextField name="fullAddress" label="Full Address" disabled />
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="postalCode" label="Postal Code" disabled/>
+              </Grid>
+              <Grid xs={12} md={6}>
+                <RHFTextField name="country" label="Country" disabled/>
               </Grid>
               <Grid xs={12} md={6}>
                 <RHFTextField name="state" label="State" disabled />

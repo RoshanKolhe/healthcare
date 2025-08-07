@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
@@ -88,6 +89,8 @@ export default function UserNewEditForm({ currentUser }) {
       fullAddress: currentUser?.fullAddress || '',
       city: currentUser?.city || '',
       state: currentUser?.state || '',
+      country: currentUser?.country || '',
+      postalCode: currentUser?.postalCode || '',
       email: currentUser?.email || '',
       password: '',
       confirmPassword: '',
@@ -133,6 +136,8 @@ export default function UserNewEditForm({ currentUser }) {
         fullAddress: formData.fullAddress,
         city: formData.city,
         state: formData.state,
+        country: formData.country,
+        postalCode: formData.postalCode,
         email: formData.email,
         password: formData.password,
         phoneNumber: formData.phoneNumber,
@@ -217,7 +222,7 @@ export default function UserNewEditForm({ currentUser }) {
       );
     }
   }, [currentUser, role]);
-  
+
   useEffect(() => {
     const baseSchema = {
       firstName: Yup.string().required('First Name is required'),
@@ -231,6 +236,8 @@ export default function UserNewEditForm({ currentUser }) {
         .email('Email must be a valid email address'),
       password: Yup.string().required('Password is required'),
       role: Yup.string().required('Role is required'),
+      postalCode: Yup.string().required('Pin code is required'),
+      country: Yup.string().required('Country is required'),
       phoneNumber: Yup.string()
         .required('Phone number is required')
         .matches(/^[0-9]{8,15}$/, 'Phone number must be between 8 and 15 digits'),
@@ -279,6 +286,26 @@ export default function UserNewEditForm({ currentUser }) {
     document.body.classList.remove('light-mode', 'dark-mode');
     document.body.classList.add(isDark ? 'dark-mode' : 'light-mode');
   }, [isDark]);
+
+  useEffect(() => {
+    const fetchAddressDetails = async (postalCode) => {
+      try {
+        const response = await axiosInstance.get(`/location-by-pincode/${postalCode}`);
+
+        const { city, state, stateCode, country } = response.data;
+        setValue('city', city || '');
+        setValue('state', state || '');
+        setValue('country', country || '');
+      } catch (error) {
+        console.error('Error fetching address details:', error);
+      }
+    };
+
+    const postalCodeRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
+    if (values.postalCode && postalCodeRegex.test(values.postalCode)) {
+      fetchAddressDetails(values.postalCode);
+    }
+  }, [values.postalCode, setValue]);
 
   useEffect(() => {
     if (currentUser) {
@@ -447,9 +474,11 @@ export default function UserNewEditForm({ currentUser }) {
                   </FormControl>
                 )}
               />
-              <RHFTextField name="fullAddress" label="Full Address" />
-              <RHFTextField name="city" label="City" />
+              <RHFTextField name="postalCode" label="Postal Code" />
+              <RHFTextField name="country" label="Country" />
               <RHFTextField name="state" label="State" />
+              <RHFTextField name="city" label="City" />
+              <RHFTextField name="fullAddress" label="Full Address" />
               <RHFSelect fullWidth name="role" label="Role">
                 {roleOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>

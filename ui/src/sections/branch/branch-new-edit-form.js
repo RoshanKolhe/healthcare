@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
@@ -26,7 +27,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import { CardHeader, Chip, MenuItem } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import axiosInstance from 'src/utils/axios';
-import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
+import { COMMON_STATUS_OPTIONS, states } from 'src/utils/constants';
 import { useGetHospitalsWithFilter } from 'src/api/hospital';
 import Label from 'src/components/label';
 
@@ -54,7 +55,7 @@ export default function BranchNewEditForm({ currentBranch }) {
     city: Yup.string().required('City is required'),
     state: Yup.string().required('State is required'),
     country: Yup.string().required('Country is required'),
-    postalCode: Yup.number().required('Pin code is required'),
+    postalCode: Yup.string().required('Pin code is required'),
     isActive: Yup.boolean(),
   });
 
@@ -115,6 +116,27 @@ export default function BranchNewEditForm({ currentBranch }) {
       });
     }
   });
+
+  useEffect(() => {
+    const fetchAddressDetails = async (postalCode) => {
+      try {
+        const response = await axiosInstance.get(`/location-by-pincode/${postalCode}`);
+
+        const { city, state, stateCode, country } = response.data;
+        setValue('city', city || '');
+        setValue('state', state || '');
+        setValue('country', country || '');
+      } catch (error) {
+        console.error('Error fetching address details:', error);
+      }
+    };
+
+    const postalCodeRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
+    if (values.postalCode && postalCodeRegex.test(values.postalCode)) {
+      fetchAddressDetails(values.postalCode);
+    }
+  }, [values.postalCode, setValue]);
+
   useEffect(() => {
     if (currentBranch) {
       reset(defaultValues);
@@ -133,17 +155,16 @@ export default function BranchNewEditForm({ currentBranch }) {
               <RHFTextField name="fullAddress" label="Full Address" />
             </Grid>
             <Grid xs={12} md={6}>
+              <RHFTextField name="postalCode" label="Postal Code" />
+            </Grid>
+            <Grid xs={12} md={6}>
               <RHFTextField name="country" label="Country" />
             </Grid>
-
             <Grid xs={12} md={6}>
               <RHFTextField name="state" label="State" />
             </Grid>
             <Grid xs={12} md={6}>
               <RHFTextField name="city" label="City" />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <RHFTextField name="postalCode" label="Postal Code" />
             </Grid>
             <Grid xs={12} md={6}>
               <RHFAutocomplete

@@ -52,7 +52,7 @@ const filter = {
 
   const NewHospitalSchema = Yup.object().shape({
     hospitalName: Yup.string().required('Hospital Name is required'),
-    hospitalRegNum: Yup.number().required('Hospital Register Number is required'),
+    hospitalRegNum: Yup.string().required('Hospital Register Number is required'),
     category: Yup.object().required('Hospital Category is required'),
     hospitalType: Yup.object().required('Hospital Type is required'),
     hospitalService: Yup.object().required('Hospital Services is required'),
@@ -98,7 +98,7 @@ const filter = {
     try {
       const inputData = {
         hospitalName: formData.hospitalName,
-        hospitalRegNum: Number(formData.hospitalRegNum),
+        hospitalRegNum: formData.hospitalRegNum,
         categoryId: formData.category?.id,
         hospitalServiceId: formData.hospitalService?.id,
         hospitalTypeId: formData.hospitalType?.id,

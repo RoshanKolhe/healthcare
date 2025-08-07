@@ -41,10 +41,10 @@ export class Branch extends Entity {
   country: string;
 
   @property({
-    type: 'number',
+    type: 'string',
     required: true,
   })
-  postalCode: number;
+  postalCode: string;
 
   @property({
     type: 'boolean',
