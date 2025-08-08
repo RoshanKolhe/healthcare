@@ -7,6 +7,7 @@ import { useLocales } from 'src/locales';
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
 import SvgColor from 'src/components/svg-color';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -48,16 +49,18 @@ const ICONS = {
   doctor: icon('ic_doctor'),
   service: icon('ic_services'),
   type: icon('ic_type'),
-  category: icon('ic_category'),  
+  category: icon('ic_category'),
 };
 
 // ----------------------------------------------------------------------
 
 export function useNavData() {
   const { t } = useLocales();
+  const { user } = useAuthContext();
 
-  const data = useMemo(
-    () => [
+  let data = [];
+  if (user && (user.permissions.includes('super_admin'))) {
+    data = [
       // OVERVIEW
       // ----------------------------------------------------------------------
       {
@@ -109,7 +112,7 @@ export function useNavData() {
           },
         ],
       },
-       // MASTERS
+      // MASTERS
       {
         subheader: t('masters'),
         items: [
@@ -177,12 +180,71 @@ export function useNavData() {
               },
             ],
           },
-        ]
-
-      }
-    ],
-    [t]
-  );
+        ],
+      },
+    ];
+  }
+  if (user && user.permissions.includes('clinic')) {
+    data = [
+      // OVERVIEW
+      // ----------------------------------------------------------------------
+      {
+        subheader: t('overview'),
+        items: [{ title: t('dashboard'), path: paths.dashboard.root, icon: ICONS.dashboard }],
+      },
+      // CLINIC DASHBOARD
+      {
+        subheader: t('management'),
+        items: [
+          {
+            title: t('clinic'),
+            path: paths.dashboard.clinic.root,
+            icon: ICONS.clinic,
+            children: [
+              { title: t('list'), path: paths.dashboard.clinic.list },
+              { title: t('create'), path: paths.dashboard.clinic.new },
+            ],
+          },
+          {
+            title: t('branch'),
+            path: paths.dashboard.branch.root,
+            icon: ICONS.branch,
+            children: [
+              { title: t('list'), path: paths.dashboard.branch.list },
+              { title: t('create'), path: paths.dashboard.branch.new },
+            ],
+          },
+          {
+            title: t('doctor'),
+            path: paths.dashboard.doctor.root,
+            icon: ICONS.doctor,
+            children: [
+              { title: t('list'), path: paths.dashboard.doctor.list },
+              { title: t('create'), path: paths.dashboard.doctor.new },
+            ],
+          },
+        ],
+      },
+    ];
+  }
+  if (user && user.permissions.includes('doctor')) {
+    data = [
+      {
+        subheader: t('management'),
+        items: [
+          {
+            title: t('doctor'),
+            path: paths.dashboard.doctor.root,
+            icon: ICONS.doctor,
+            children: [
+              { title: t('list'), path: paths.dashboard.doctor.list },
+              { title: t('create'), path: paths.dashboard.doctor.new },
+            ],
+          },
+        ],
+      },
+    ];
+  }
 
   return data;
 }
