@@ -20,12 +20,15 @@ import FormProvider, { RHFTextField, RHFUploadAvatar, RHFSelect } from 'src/comp
 import axiosInstance, { endpoints } from 'src/utils/axios';
 import { MenuItem } from '@mui/material';
 import { states } from 'src/utils/constants';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
 export default function AccountGeneral() {
   const { enqueueSnackbar } = useSnackbar();
   const [user, setUser] = useState();
+  // const { user } = useAuthContext();
+  const role = user?.permissions?.[0];
 
   const UpdateUserSchema = Yup.object().shape({
     firstName: Yup.string().required('First Name is required'),
@@ -187,14 +190,13 @@ export default function AccountGeneral() {
             >
               <RHFTextField name="firstName" label="First Name" />
               <RHFTextField name="lastName" label="Last Name" />
-              <RHFTextField name="email" label="Email Address" disabled/>
+              <RHFTextField name="email" label="Email Address" disabled />
               <RHFSelect fullWidth name="role" label="Role" disabled>
                 {[
                   { value: 'super_admin', name: 'Super Admin' },
-                  { value: 'admin', name: 'Admin' },
-                  { value: 'cgm', name: 'CGM' },
-                  { value: 'hod', name: 'HOD' },
-                  { value: 'sub_hod', name: 'SUB HOD' },
+                  { value: 'clinic', name: 'Clinic' },
+                  { value: 'doctor', name: 'Doctor' },
+                  { value: 'branch', name: 'Branch' },
                 ].map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.name}
@@ -222,10 +224,14 @@ export default function AccountGeneral() {
                   />
                 )}
               />
-              <RHFTextField name="fullAddress" label="Full Address" />
-              <RHFTextField name="state" label="State/Region" />
+              {role === 'super_admin' && (
+                <>
+                  <RHFTextField name="fullAddress" label="Full Address" />
+                  <RHFTextField name="state" label="State/Region" />
 
-              <RHFTextField name="city" label="City" />
+                  <RHFTextField name="city" label="City" />
+                </>
+              )}
             </Box>
 
             <Stack spacing={3} alignItems="flex-end" sx={{ mt: 3 }}>
