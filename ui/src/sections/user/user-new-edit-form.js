@@ -1,3 +1,4 @@
+/* eslint-disable no-lonely-if */
 /* eslint-disable no-useless-escape */
 /* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
@@ -191,6 +192,7 @@ export default function UserNewEditForm({ currentUser }) {
     },
     [setValue]
   );
+
   useEffect(() => {
     if (role === 'clinic') {
       setValidationSchema((prev) =>
@@ -267,14 +269,52 @@ export default function UserNewEditForm({ currentUser }) {
   }, [currentUser]);
 
   useEffect(() => {
-    if (selectedClinic && selectedClinic.branches) {
-      setBranchOptions(selectedClinic.branches);
-      setValue('branch', null); // Optional: Reset branch when clinic changes
-    } else {
-      setBranchOptions([]);
+  if (selectedClinic && selectedClinic.branches) {
+    setBranchOptions(selectedClinic.branches);
+    if (!currentUser) {
       setValue('branch', null);
+    } else {
+      if (selectedClinic.id !== currentUser.clinicId) {
+        setValue('branch', null);
+      }
     }
-  }, [selectedClinic, setValue]);
+  } else {
+    setBranchOptions([]);
+    setValue('branch', null);
+  }
+}, [selectedClinic, setValue, currentUser]);
+
+  useEffect(() => {
+    if (currentUser?.clinic && Array.isArray(clinics) && clinics.length > 0) {
+      const clinicId = currentUser.clinic?.id ?? currentUser.clinic;
+      const clinicObj = clinics.find((c) => c.id === clinicId);
+
+      if (clinicObj) {
+        setSelectedClinic(clinicObj);
+        setValue('clinic', clinicObj, { shouldValidate: false, shouldDirty: false });
+
+        setBranchOptions(clinicObj.branches || []);
+
+        if (currentUser.branch && clinicObj.branches?.length) {
+          const branchId = currentUser.branch?.id ?? currentUser.branch;
+          const branchObj = clinicObj.branches.find((b) => b.id === branchId);
+          if (branchObj) {
+            setValue('branch', branchObj, { shouldValidate: false, shouldDirty: false });
+          }
+        }
+      }
+    }
+  }, [currentUser, clinics, setValue]);
+
+  // useEffect(() => {
+  //   if (selectedClinic && selectedClinic.branches) {
+  //     setBranchOptions(selectedClinic.branches);
+  //     setValue('branch', null); // Optional: Reset branch when clinic changes
+  //   } else {
+  //     setBranchOptions([]);
+  //     setValue('branch', null);
+  //   }
+  // }, [selectedClinic, setValue]);
 
   useEffect(() => {
     if (role === 'clinic') {
