@@ -35,10 +35,10 @@ export default function DoctorTableRow({
     email,
     permissions,
     phoneNumber,
-    name,
     clinicName,
     specialization,
     isActive,
+    name,
   } = row;
 
   const confirm = useBoolean();
@@ -68,8 +68,6 @@ export default function DoctorTableRow({
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{phoneNumber}</TableCell>
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{clinicName}</TableCell>
-
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{name}</TableCell>
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{specialization.specialization}</TableCell>
 

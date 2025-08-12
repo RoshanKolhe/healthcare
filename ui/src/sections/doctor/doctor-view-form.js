@@ -35,7 +35,14 @@ import FormProvider, {
   RHFSelect,
   RHFUploadBox,
 } from 'src/components/hook-form';
-import { FormControl, FormHelperText, IconButton, InputAdornment, MenuItem } from '@mui/material';
+import {
+  Chip,
+  FormControl,
+  FormHelperText,
+  IconButton,
+  InputAdornment,
+  MenuItem,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import axiosInstance from 'src/utils/axios';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -44,6 +51,7 @@ import 'react-phone-input-2/lib/material.css';
 import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
 import { useGetClinicsWithFilter } from 'src/api/clinic';
 import { useAuthContext } from 'src/auth/hooks';
+import { useGetSpecializations } from 'src/api/specializations';
 
 // ----------------------------------------------------------------------
 
@@ -63,6 +71,8 @@ export default function DoctorViewForm({ currentDoctor }) {
   const [branchOptions, setBranchOptions] = useState([]);
   const [selectedClinic, setSelectedClinic] = useState(null);
   const [validationSchema, setValidationSchema] = useState(() => Yup.object().shape({}));
+
+  const { specializations } = useGetSpecializations();
 
   const password = useBoolean();
   const rawFilter = {
@@ -91,16 +101,17 @@ export default function DoctorViewForm({ currentDoctor }) {
       fullAddress: currentDoctor?.fullAddress || '',
       city: currentDoctor?.city || '',
       state: currentDoctor?.state || '',
-      postalCode: currentDoctor?.postalCode || '',
       email: currentDoctor?.email || '',
       password: '',
+      confirmPassword: '',
       phoneNumber: currentDoctor?.phoneNumber || '',
       clinic: currentDoctor?.clinic || null,
-      branch: currentDoctor?.branch || null,
-      // role: currentDoctor?.permissions[0] || '',
+      branch: currentDoctor?.branches?.length > 0 ? currentDoctor?.branches : [],
+      specialization: currentDoctor?.specialization || null,
       role: 'doctor',
       isVerified: currentDoctor?.isVerified || true,
       isActive: currentDoctor?.isActive ?? 1,
+      postalCode: currentDoctor?.postalCode || '',
       avatar: currentDoctor?.avatar
         ? {
             fileUrl: currentDoctor.avatar.fileUrl,
@@ -154,37 +165,28 @@ export default function DoctorViewForm({ currentDoctor }) {
   const handleRemoveFile = useCallback(() => {
     setValue('imageUpload', null);
   }, [setValue]);
+  
   useEffect(() => {
-    if (role === 'clinic') {
-      setValidationSchema((prev) =>
-        prev.concat(
-          Yup.object().shape({
-            clinic: Yup.object().required('Clinic is required'),
-            branch: Yup.mixed().notRequired(),
-          })
-        )
-      );
-    } else if (role === 'branch') {
-      setValidationSchema((prev) =>
-        prev.concat(
-          Yup.object().shape({
-            clinic: Yup.object().required('Clinic is required'),
-            branch: Yup.object().required('Branch is required'),
-          })
-        )
-      );
-    } else {
-      // Default case: super_admin or any undefined role
-      setValidationSchema((prev) =>
-        prev.concat(
-          Yup.object().shape({
-            clinic: Yup.mixed().notRequired(),
-            branch: Yup.mixed().notRequired(),
-          })
-        )
-      );
-    }
-  }, [currentDoctor, role]);
+      if (role === 'doctor') {
+        setValidationSchema((prev) =>
+          prev.concat(
+            Yup.object().shape({
+              clinic: Yup.object().required('Clinic is required'),
+              branch: Yup.array().of(Yup.object().required('Branch is required')),
+            })
+          )
+        );
+      } else {
+        setValidationSchema((prev) =>
+          prev.concat(
+            Yup.object().shape({
+              clinic: Yup.mixed().notRequired(),
+              branch: Yup.mixed().notRequired(),
+            })
+          )
+        );
+      }
+    }, [currentDoctor, role]);
 
   useEffect(() => {
     const baseSchema = {
@@ -227,16 +229,45 @@ export default function DoctorViewForm({ currentDoctor }) {
   useEffect(() => {
     if (selectedClinic && selectedClinic.branches) {
       setBranchOptions(selectedClinic.branches);
-      setValue('branch', null); // Optional: Reset branch when clinic changes
+      if (!currentDoctor) {
+        setValue('branch', []);
+      } else {
+        // eslint-disable-next-line no-lonely-if
+        if (selectedClinic.id !== currentDoctor.clinicId) {
+          setValue('branch', []);
+        }
+      }
     } else {
       setBranchOptions([]);
-      setValue('branch', null);
+      setValue('branch', []);
     }
-  }, [selectedClinic, setValue]);
+  }, [selectedClinic, setValue, currentDoctor]);
+
+  useEffect(() => {
+    if (currentDoctor?.clinic && Array.isArray(clinics) && clinics.length > 0) {
+      const clinicId = currentDoctor.clinic?.id ?? currentDoctor.clinic;
+      const clinicObj = clinics.find((c) => c.id === clinicId);
+
+      if (clinicObj) {
+        setSelectedClinic(clinicObj);
+        setValue('clinic', clinicObj, { shouldValidate: false, shouldDirty: false });
+
+        setBranchOptions(clinicObj.branches || []);
+
+        // ✅ Handle multiple branches for edit
+        if (Array.isArray(currentDoctor.branches) && clinicObj.branches?.length) {
+          const selectedBranches = clinicObj.branches.filter((b) =>
+            currentDoctor.branches.some((cb) => cb.id === b.id)
+          );
+          setValue('branch', selectedBranches, { shouldValidate: false, shouldDirty: false });
+        }
+      }
+    }
+  }, [currentDoctor, clinics, setValue]);
 
   useEffect(() => {
     if (role === 'clinic') {
-      setValue('branch', null);
+      setValue('branch', []);
     }
   }, [role, setValue]);
 
@@ -323,8 +354,8 @@ export default function DoctorViewForm({ currentDoctor }) {
                 sm: 'repeat(2, 1fr)',
               }}
             >
-              <RHFTextField name="firstName" label="First Name" disabled />
-              <RHFTextField name="lastName" label="Last Name" disabled />
+              <RHFTextField name="firstName" label="First Name" disabled/>
+              <RHFTextField name="lastName" label="Last Name" disabled/>
               <Controller
                 name="dob"
                 control={control}
@@ -346,30 +377,43 @@ export default function DoctorViewForm({ currentDoctor }) {
                   />
                 )}
               />
-              <RHFTextField name="postalCode" label="Postal Code" disabled/>
-              <RHFTextField name="state" label="State" disabled />
-              <RHFTextField name="city" label="City" disabled />
-              <RHFTextField name="fullAddress" label="Full Address " disabled />
-              <RHFTextField name="email" label="Email Address" disabled />
+              <RHFTextField name="email" label="Email Address" disabled/>
               {!currentDoctor ? (
-                <RHFTextField
-                  name="password"
-                  label="Password"
-                  type={password.value ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={password.onToggle} edge="end">
-                          <Iconify
-                            icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
-                          />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  disabled
-                />
+                <>
+                  <RHFTextField
+                    name="password"
+                    label="Password"
+                    type={password.value ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={password.onToggle} edge="end">
+                            <Iconify
+                              icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                            />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  <RHFTextField
+                    name="confirmPassword"
+                    label="Confirm New Password"
+                    type={password.value ? 'text' : 'password'}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={password.onToggle} edge="end">
+                            <Iconify
+                              icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                            />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </>
               ) : null}
               <Controller
                 name="phoneNumber"
@@ -423,29 +467,20 @@ export default function DoctorViewForm({ currentDoctor }) {
                   </FormControl>
                 )}
               />
-              {/* <RHFSelect fullWidth name="role" label="Role" disabled>
-                {roleOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.name}
-                  </MenuItem>
-                ))}
-              </RHFSelect> */}
-              {values.role === 'clinic' && (
-                <RHFAutocomplete
-                  name="clinic"
-                  label="Clinic"
-                  options={clinics}
-                  getOptionLabel={(option) => option?.clinicName || ''}
-                  isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                  onChange={(_, value) => {
-                    setValue('clinic', value);
-                    setSelectedClinic(value);
-                  }}
-                  disabled
-                />
-              )}
+              <RHFTextField name="postalCode" label="Postal Code" disabled/>
+              <RHFTextField name="state" label="State" disabled/>
+              <RHFTextField name="city" label="City" disabled/>
+              <RHFTextField name="fullAddress" label="Full Address" disabled/>
+              <RHFAutocomplete
+                name="specialization"
+                label="Specialization"
+                options={specializations}
+                getOptionLabel={(option) => option?.specialization || ''}
+                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                disabled
+              />
 
-              {values.role === 'branch' && (
+              {values.role === 'doctor' && (
                 <>
                   <RHFAutocomplete
                     name="clinic"
@@ -461,13 +496,33 @@ export default function DoctorViewForm({ currentDoctor }) {
                     }}
                     disabled
                   />
-
                   <RHFAutocomplete
+                    multiple
                     name="branch"
-                    label="Branch"
-                    options={branchOptions}
-                    getOptionLabel={(option) => option?.name || ''}
+                    label="Branch Doctors"
+                    options={branchOptions || []}
+                    getOptionLabel={(option) => `${option?.name}` || ''}
+                    filterOptions={(x) => x}
                     isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                    renderOption={(props, option) => (
+                      <li {...props}>
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          {option?.name}
+                        </Typography>
+                      </li>
+                    )}
+                    renderTags={(selected, getTagProps) =>
+                      selected?.map((option, tagIndex) => (
+                        <Chip
+                          {...getTagProps({ index: tagIndex })}
+                          key={option?.id}
+                          label={option?.name}
+                          size="small"
+                          color="info"
+                          variant="soft"
+                        />
+                      ))
+                    }
                     disabled
                   />
                 </>

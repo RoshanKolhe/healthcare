@@ -55,7 +55,6 @@ const TABLE_HEAD = [
   { id: 'name', label: 'Name' },
   { id: 'phoneNumber', label: 'Phone Number', width: 180 },
   { id: 'clinicName', label: 'Clinic Name', width: 180 },
-  { id: 'branchName', label: 'Branch Name', width: 180 },
   { id: 'specialization', label: 'Specialization', width: 180 },
   { id: 'role', label: 'Role', width: 180 },
   { id: 'status', label: 'Status', width: 100 },

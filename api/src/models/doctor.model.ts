@@ -1,7 +1,8 @@
-import {Entity, model, property, belongsTo} from '@loopback/repository';
+import {Entity, model, property, belongsTo, hasMany} from '@loopback/repository';
 import {Clinic} from './clinic.model';
 import {Branch} from './branch.model';
 import {Specialization} from './specialization.model';
+import {BranchDoctor} from './branch-doctor.model';
 
 @model()
 export class Doctor extends Entity {
@@ -120,11 +121,11 @@ export class Doctor extends Entity {
   @belongsTo(() => Clinic)
   clinicId: number;
 
-  @belongsTo(() => Branch)
-  branchId: number;
-
   @belongsTo(() => Specialization)
   specializationId: number;
+
+  @hasMany(() => Branch, {through: {model: () => BranchDoctor}})
+  branches: Branch[];
 
   constructor(data?: Partial<Doctor>) {
     super(data);

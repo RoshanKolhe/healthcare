@@ -24,19 +24,23 @@ import {
   HttpErrors,
 } from '@loopback/rest';
 import {Doctor} from '../models';
-import {Credentials, DoctorRepository} from '../repositories';
+import {
+  BranchDoctorRepository,
+  Credentials,
+  DoctorRepository,
+} from '../repositories';
 import {HealthcareDataSource} from '../datasources';
 import {EmailManagerBindings} from '../keys';
 import {EmailManager} from '../services/email.service';
 import {BcryptHasher} from '../services/hash.password.bcrypt';
-import { MyDoctorService } from '../services/doctor-service';
+import {MyDoctorService} from '../services/doctor-service';
 import {JWTService} from '../services/jwt-service';
 import {validateCredentials} from '../services/validator';
 import SITE_SETTINGS from '../utils/config';
 import _ from 'lodash';
 import {CredentialsRequestBody} from './specs/user-controller-spec';
-import { UserProfile } from '@loopback/security';
-import { PermissionKeys } from '../authorization/permission-keys';
+import {UserProfile} from '@loopback/security';
+import {PermissionKeys} from '../authorization/permission-keys';
 import generateResetPasswordTemplate from '../templates/reset-password.template';
 
 export class DoctorController {
@@ -47,6 +51,8 @@ export class DoctorController {
     public emailManager: EmailManager,
     @repository(DoctorRepository)
     public doctorRepository: DoctorRepository,
+    @repository(BranchDoctorRepository)
+    public branchDoctorRepository: BranchDoctorRepository,
     @inject('service.hasher')
     public hasher: BcryptHasher,
     @inject('service.doctor.service')
@@ -69,42 +75,63 @@ export class DoctorController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Doctor, {
-            exclude: ['id'],
-          }),
+          schema: {
+            type: 'object',
+            properties: {
+              ...getModelSchemaRef(Doctor, {exclude: ['id']}).definitions
+                ?.Doctor?.properties,
+              branches: {
+                type: 'array',
+                items: {type: 'number'}, // Branch IDs
+              },
+            },
+          },
         },
       },
     })
-    doctorData: Omit<Doctor, 'id'>,
+    doctorData: Omit<Doctor, 'id'> & {
+      branches?: number[];
+    },
   ) {
     const repo = new DefaultTransactionalRepository(Doctor, this.dataSource);
     const tx = await repo.beginTransaction(IsolationLevel.READ_COMMITTED);
+
     try {
-      validateCredentials(doctorData);
+      const {branches, ...doctorFields} = doctorData;
+      validateCredentials(doctorFields);
+
       const doctor = await this.doctorRepository.findOne({
-        where: {
-          email: doctorData.email,
-        },
+        where: {email: doctorData.email},
       });
-      console.log(doctor);
       if (doctor) {
         throw new HttpErrors.BadRequest('Doctor Already Exists');
       }
 
-      // doctorData.permissions = [PermissionKeys.ADMIN];
+      // Hash password
       doctorData.password = await this.hasher.hashPassword(doctorData.password);
-      const savedDoctor = await this.doctorRepository.create(doctorData, {
+
+      // Create doctor
+      const savedDoctor = await this.doctorRepository.create(doctorFields, {
         transaction: tx,
       });
+
+      // Link branches if provided
+      if (branches?.length) {
+        for (const branchId of branches) {
+          await this.doctorRepository.branches(savedDoctor.id).link(branchId);
+        }
+      }
+
       const savedDoctorData = _.omit(savedDoctor, 'password');
-      tx.commit();
-      return Promise.resolve({
+      await tx.commit();
+
+      return {
         success: true,
         doctorData: savedDoctorData,
         message: `Doctor registered successfully`,
-      });
+      };
     } catch (err) {
-      tx.rollback();
+      await tx.rollback();
       throw err;
     }
   }
@@ -193,7 +220,11 @@ export class DoctorController {
         isDeleted: false,
       },
       fields: {password: false, otp: false, otpExpireAt: false},
-      include: [{relation: 'clinic'}, {relation: 'branch'},{relation: 'specialization'}],
+      include: [
+        {relation: 'clinic'},
+        {relation: 'branches'},
+        {relation: 'specialization'},
+      ],
     };
     return this.doctorRepository.find(filter);
   }
@@ -220,7 +251,11 @@ export class DoctorController {
         otp: false,
         otpExpireAt: false,
       },
-      include: [{relation: 'clinic'},{relation: 'branch'},{relation: 'specialization'}],
+      include: [
+        {relation: 'clinic'},
+        {relation: 'branches'},
+        {relation: 'specialization'},
+      ],
     });
     return Promise.resolve({
       ...doctor,
@@ -230,51 +265,121 @@ export class DoctorController {
   @authenticate({
     strategy: 'jwt',
   })
+  // @patch('/doctors/{id}')
+  // @response(204, {
+  //   description: 'Doctor PATCH success',
+  // })
+  // async updateById(
+  //   @param.path.number('id') id: number,
+  //   @requestBody({
+  //     content: {
+  //       'application/json': {
+  //         schema: getModelSchemaRef(Doctor, {partial: true}),
+  //       },
+  //     },
+  //   })
+  //   doctor: Doctor,
+  //   @inject(AuthenticationBindings.CURRENT_USER) currentDoctor: UserProfile,
+  // ): Promise<any> {
+  //   // Fetch the Doctor information before updating
+  //   const existingDoctor = await this.doctorRepository.findById(id);
+  //   if (!existingDoctor) {
+  //     throw new HttpErrors.NotFound('Doctor not found');
+  //   }
+
+  //   // Hash password if it's being updated
+  //   if (doctor.password) {
+  //     doctor.password = await this.hasher.hashPassword(doctor.password);
+  //   }
+
+  //   // Validate email uniqueness only if email is being updated
+  //   if (doctor.email && doctor.email !== existingDoctor.email) {
+  //     const emailExists = await this.doctorRepository.findOne({
+  //       where: {email: doctor.email, id: {neq: id}}, // Exclude the current doctor
+  //     });
+
+  //     if (emailExists) {
+  //       throw new HttpErrors.BadRequest('Email already exists');
+  //     }
+  //   }
+
+  //   await this.doctorRepository.updateById(id, doctor);
+
+  //   return {
+  //     success: true,
+  //     message: `Doctor profile updated successfully`,
+  //   };
+  // }
   @patch('/doctors/{id}')
-  @response(204, {
-    description: 'Doctor PATCH success',
-  })
-  async updateById(
-    @param.path.number('id') id: number,
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Doctor, {partial: true}),
+@response(204, {
+  description: 'Doctor PATCH success',
+})
+async updateById(
+  @param.path.number('id') id: number,
+  @requestBody({
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            ...getModelSchemaRef(Doctor, {partial: true}).definitions?.Doctor?.properties,
+            branches: {
+              type: 'array',
+              items: {type: 'number'}, // Branch IDs
+            },
+          },
         },
       },
-    })
-    doctor: Doctor,
-    @inject(AuthenticationBindings.CURRENT_USER) currentDoctor: UserProfile,
-  ): Promise<any> {
-    // Fetch the Doctor information before updating
-    const existingDoctor = await this.doctorRepository.findById(id);
-    if (!existingDoctor) {
-      throw new HttpErrors.NotFound('Doctor not found');
-    }
-
-    // Hash password if it's being updated
-    if (doctor.password) {
-      doctor.password = await this.hasher.hashPassword(doctor.password);
-    }
-
-    // Validate email uniqueness only if email is being updated
-    if (doctor.email && doctor.email !== existingDoctor.email) {
-      const emailExists = await this.doctorRepository.findOne({
-        where: {email: doctor.email, id: {neq: id}}, // Exclude the current doctor
-      });
-
-      if (emailExists) {
-        throw new HttpErrors.BadRequest('Email already exists');
-      }
-    }
-
-    await this.doctorRepository.updateById(id, doctor);
-
-    return {
-      success: true,
-      message: `Doctor profile updated successfully`,
-    };
+    },
+  })
+  doctorData: Partial<Doctor> & {branches?: number[]},
+  @inject(AuthenticationBindings.CURRENT_USER) currentDoctor: UserProfile,
+): Promise<any> {
+  const existingDoctor = await this.doctorRepository.findById(id);
+  if (!existingDoctor) {
+    throw new HttpErrors.NotFound('Doctor not found');
   }
+
+  // Hash password if updated
+  if (doctorData.password) {
+    doctorData.password = await this.hasher.hashPassword(doctorData.password);
+  }
+
+  // Validate email uniqueness
+  if (doctorData.email && doctorData.email !== existingDoctor.email) {
+    const emailExists = await this.doctorRepository.findOne({
+      where: {email: doctorData.email, id: {neq: id}},
+    });
+    if (emailExists) {
+      throw new HttpErrors.BadRequest('Email already exists');
+    }
+  }
+
+  // Extract branches separately
+  const {branches, ...doctorFields} = doctorData;
+
+  // Update doctor fields
+  await this.doctorRepository.updateById(id, doctorFields);
+
+  // Update branch links if provided
+  if (branches) {
+    // First unlink all existing branches
+    const existingBranches = await this.doctorRepository.branches(id).find();
+    for (const branch of existingBranches) {
+      await this.doctorRepository.branches(id).unlink(branch.id);
+    }
+
+    // Then link the new branches
+    for (const branchId of branches) {
+      await this.doctorRepository.branches(id).link(branchId);
+    }
+  }
+
+  return {
+    success: true,
+    message: `Doctor profile updated successfully`,
+  };
+}
 
   @post('/doctors/sendResetPasswordLink')
   async sendResetPasswordLink(
@@ -401,7 +506,8 @@ export class DoctorController {
   @post('/doctors/setNewPassword')
   async setNewPassword(
     @requestBody({
-      description: 'Input for resetting doctor password without the old password',
+      description:
+        'Input for resetting doctor password without the old password',
       required: true,
       content: {
         'application/json': {
@@ -471,77 +577,77 @@ export class DoctorController {
   }
 }
 
-  // @post('/doctors')
-  // @response(200, {
-  //   description: 'Doctor model instance',
-  //   content: {'application/json': {schema: getModelSchemaRef(Doctor)}},
-  // })
-  // async create(
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {
-  //         schema: getModelSchemaRef(Doctor, {
-  //           title: 'NewDoctor',
-  //           exclude: ['id'],
-  //         }),
-  //       },
-  //     },
-  //   })
-  //   doctor: Omit<Doctor, 'id'>,
-  // ): Promise<Doctor> {
-  //   return this.doctorRepository.create(doctor);
-  // }
+// @post('/doctors')
+// @response(200, {
+//   description: 'Doctor model instance',
+//   content: {'application/json': {schema: getModelSchemaRef(Doctor)}},
+// })
+// async create(
+//   @requestBody({
+//     content: {
+//       'application/json': {
+//         schema: getModelSchemaRef(Doctor, {
+//           title: 'NewDoctor',
+//           exclude: ['id'],
+//         }),
+//       },
+//     },
+//   })
+//   doctor: Omit<Doctor, 'id'>,
+// ): Promise<Doctor> {
+//   return this.doctorRepository.create(doctor);
+// }
 
-  // @get('/doctors')
-  // @response(200, {
-  //   description: 'Array of Doctor model instances',
-  //   content: {
-  //     'application/json': {
-  //       schema: {
-  //         type: 'array',
-  //         items: getModelSchemaRef(Doctor, {includeRelations: true}),
-  //       },
-  //     },
-  //   },
-  // })
-  // async find(@param.filter(Doctor) filter?: Filter<Doctor>): Promise<Doctor[]> {
-  //   return this.doctorRepository.find(filter);
-  // }
+// @get('/doctors')
+// @response(200, {
+//   description: 'Array of Doctor model instances',
+//   content: {
+//     'application/json': {
+//       schema: {
+//         type: 'array',
+//         items: getModelSchemaRef(Doctor, {includeRelations: true}),
+//       },
+//     },
+//   },
+// })
+// async find(@param.filter(Doctor) filter?: Filter<Doctor>): Promise<Doctor[]> {
+//   return this.doctorRepository.find(filter);
+// }
 
-  // @get('/doctors/{id}')
-  // @response(200, {
-  //   description: 'Doctor model instance',
-  //   content: {
-  //     'application/json': {
-  //       schema: getModelSchemaRef(Doctor, {includeRelations: true}),
-  //     },
-  //   },
-  // })
-  // async findById(
-  //   @param.path.number('id') id: number,
-  //   @param.filter(Doctor, {exclude: 'where'})
-  //   filter?: FilterExcludingWhere<Doctor>,
-  // ): Promise<Doctor> {
-  //   return this.doctorRepository.findById(id, filter);
-  // }
+// @get('/doctors/{id}')
+// @response(200, {
+//   description: 'Doctor model instance',
+//   content: {
+//     'application/json': {
+//       schema: getModelSchemaRef(Doctor, {includeRelations: true}),
+//     },
+//   },
+// })
+// async findById(
+//   @param.path.number('id') id: number,
+//   @param.filter(Doctor, {exclude: 'where'})
+//   filter?: FilterExcludingWhere<Doctor>,
+// ): Promise<Doctor> {
+//   return this.doctorRepository.findById(id, filter);
+// }
 
-  // @patch('/doctors/{id}')
-  // @response(204, {
-  //   description: 'Doctor PATCH success',
-  // })
-  // async updateById(
-  //   @param.path.number('id') id: number,
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {
-  //         schema: getModelSchemaRef(Doctor, {partial: true}),
-  //       },
-  //     },
-  //   })
-  //   doctor: Doctor,
-  // ): Promise<void> {
-  //   await this.doctorRepository.updateById(id, doctor);
-  // }
+// @patch('/doctors/{id}')
+// @response(204, {
+//   description: 'Doctor PATCH success',
+// })
+// async updateById(
+//   @param.path.number('id') id: number,
+//   @requestBody({
+//     content: {
+//       'application/json': {
+//         schema: getModelSchemaRef(Doctor, {partial: true}),
+//       },
+//     },
+//   })
+//   doctor: Doctor,
+// ): Promise<void> {
+//   await this.doctorRepository.updateById(id, doctor);
+// }
 
 //   @del('/doctors/{id}')
 //   @response(204, {

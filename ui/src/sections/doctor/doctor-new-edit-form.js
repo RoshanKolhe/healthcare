@@ -35,7 +35,14 @@ import FormProvider, {
   RHFSelect,
 } from 'src/components/hook-form';
 import { useAuthContext } from 'src/auth/hooks';
-import { FormControl, FormHelperText, IconButton, InputAdornment, MenuItem } from '@mui/material';
+import {
+  Chip,
+  FormControl,
+  FormHelperText,
+  IconButton,
+  InputAdornment,
+  MenuItem,
+} from '@mui/material';
 import { useGetClinicsWithFilter } from 'src/api/clinic';
 import axiosInstance from 'src/utils/axios';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -91,7 +98,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
       confirmPassword: '',
       phoneNumber: currentDoctor?.phoneNumber || '',
       clinic: currentDoctor?.clinic || null,
-      branch: currentDoctor?.branch || null,
+      branch: currentDoctor?.branches?.length > 0 ? currentDoctor?.branches : [],
       specialization: currentDoctor?.specialization || null,
       role: 'doctor',
       isVerified: currentDoctor?.isVerified || true,
@@ -137,11 +144,11 @@ export default function DoctorNewEditForm({ currentDoctor }) {
         password: formData.password,
         phoneNumber: formData.phoneNumber,
         permissions: [formData.role],
-        postalCode: currentDoctor?.postalCode || '',
+        postalCode: formData.postalCode,
         isActive: currentDoctor ? formData.isActive : true,
         specializationId: formData.specialization?.id,
         clinicId: formData.clinic?.id,
-        branchId: formData.branch?.id,
+        branches: formData.branch?.map((branch) => branch?.id) || [],
         avatar: {
           fileUrl: formData.avatar?.fileUrl,
         },
@@ -194,12 +201,11 @@ export default function DoctorNewEditForm({ currentDoctor }) {
         prev.concat(
           Yup.object().shape({
             clinic: Yup.object().required('Clinic is required'),
-            branch: Yup.object().required('Branch is required'),
+            branch: Yup.array().of(Yup.object().required('Branch is required')),
           })
         )
       );
     } else {
-      // Default case: super_admin or any undefined role
       setValidationSchema((prev) =>
         prev.concat(
           Yup.object().shape({
@@ -257,16 +263,45 @@ export default function DoctorNewEditForm({ currentDoctor }) {
   useEffect(() => {
     if (selectedClinic && selectedClinic.branches) {
       setBranchOptions(selectedClinic.branches);
-      setValue('branch', null); // Optional: Reset branch when clinic changes
+      if (!currentDoctor) {
+        setValue('branch', []);
+      } else {
+        // eslint-disable-next-line no-lonely-if
+        if (selectedClinic.id !== currentDoctor.clinicId) {
+          setValue('branch', []);
+        }
+      }
     } else {
       setBranchOptions([]);
-      setValue('branch', null);
+      setValue('branch', []);
     }
-  }, [selectedClinic, setValue]);
+  }, [selectedClinic, setValue, currentDoctor]);
+
+  useEffect(() => {
+    if (currentDoctor?.clinic && Array.isArray(clinics) && clinics.length > 0) {
+      const clinicId = currentDoctor.clinic?.id ?? currentDoctor.clinic;
+      const clinicObj = clinics.find((c) => c.id === clinicId);
+
+      if (clinicObj) {
+        setSelectedClinic(clinicObj);
+        setValue('clinic', clinicObj, { shouldValidate: false, shouldDirty: false });
+
+        setBranchOptions(clinicObj.branches || []);
+
+        // ✅ Handle multiple branches for edit
+        if (Array.isArray(currentDoctor.branches) && clinicObj.branches?.length) {
+          const selectedBranches = clinicObj.branches.filter((b) =>
+            currentDoctor.branches.some((cb) => cb.id === b.id)
+          );
+          setValue('branch', selectedBranches, { shouldValidate: false, shouldDirty: false });
+        }
+      }
+    }
+  }, [currentDoctor, clinics, setValue]);
 
   useEffect(() => {
     if (role === 'clinic') {
-      setValue('branch', null);
+      setValue('branch', []);
     }
   }, [role, setValue]);
 
@@ -497,13 +532,33 @@ export default function DoctorNewEditForm({ currentDoctor }) {
                       setBranchOptions(value?.branches || []);
                     }}
                   />
-
                   <RHFAutocomplete
+                    multiple
                     name="branch"
-                    label="Branch"
-                    options={branchOptions}
-                    getOptionLabel={(option) => option?.name || ''}
+                    label="Branch Doctors"
+                    options={branchOptions || []}
+                    getOptionLabel={(option) => `${option?.name}` || ''}
+                    filterOptions={(x) => x}
                     isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                    renderOption={(props, option) => (
+                      <li {...props}>
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          {option?.name}
+                        </Typography>
+                      </li>
+                    )}
+                    renderTags={(selected, getTagProps) =>
+                      selected?.map((option, tagIndex) => (
+                        <Chip
+                          {...getTagProps({ index: tagIndex })}
+                          key={option?.id}
+                          label={option?.name}
+                          size="small"
+                          color="info"
+                          variant="soft"
+                        />
+                      ))
+                    }
                   />
                 </>
               )}

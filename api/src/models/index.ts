@@ -6,3 +6,4 @@ export * from './specialization.model';
 export * from './category.model';
 export * from './clinic-type.model';
 export * from './clinic-service.model';
+export * from './branch-doctor.model';
