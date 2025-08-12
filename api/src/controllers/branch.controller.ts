@@ -38,108 +38,74 @@ export class BranchController {
     public branchDoctorRepository: BranchDoctorRepository,
   ) {}
 
-  @get('/branches/by-specialization/{specializationId}/{city}', {
-    responses: {
-      '200': {
-        description:
-          'Get clinics (with branches) based on specialization and city',
-        content: {
-          'application/json': {
-            schema: {
-              oneOf: [
-                {
-                  type: 'array',
-                  items: getModelSchemaRef(Clinic, {includeRelations: true}),
-                },
-                {type: 'object', properties: {message: {type: 'string'}}},
-              ],
-            },
+  @get('/branches/by-specialization', {
+  responses: {
+    '200': {
+      description: 'Get clinics (with branches) based on specialization and city',
+      content: {
+        'application/json': {
+          schema: {
+            oneOf: [
+              {
+                type: 'array',
+                items: getModelSchemaRef(Clinic, {includeRelations: true}),
+              },
+              {type: 'object', properties: {message: {type: 'string'}}},
+            ],
           },
         },
       },
     },
-  })
-  async getClinicsWithBranchesBySpecializationAndCity(
-    @param.path.number('specializationId') specializationId: number,
-    @param.path.string('city') city: string,
-  ): Promise<Clinic[] | {message: string}> {
-    // Step 1: Get doctors with that specialization
-    const doctors = await this.doctorRepository.find({
-      where: {specializationId},
-      fields: ['id'], // Get doctor IDs instead of branchId
-    });
-    if (!doctors.length) {
-      return {message: `No clinic found at ${city}`};
-    }
-    // Step 2: Get branch-doctor relationships for these doctors
-    const doctorIds = doctors
-      .map(d => d.id)
-      .filter((id): id is number => id !== undefined && id !== null);
-    const branchDoctors = await this.branchDoctorRepository.find({
-      where: {
-        doctorId: {inq: doctorIds},
-      },
-      fields: ['branchId'],
-    });
-    if (!branchDoctors.length) {
-      return {message: `No clinic found at ${city}`};
-    }
-    // Step 3: Get unique branch IDs
-    const branchIds = [
-      ...new Set(
-        branchDoctors
-          .map(bd => bd.branchId)
-          .filter((id): id is number => id !== undefined && id !== null),
-      ),
-    ];
-    if (!branchIds.length) {
-      return {message: `No clinic found at ${city}`};
-    }
-    // Step 4: Filter those branches by city
-    const branchesInCity = await this.branchRepository.find({
-      where: {
-        id: {inq: branchIds},
-        city: city,
-      },
-      fields: ['id', 'clinicId'],
-    });
-    if (!branchesInCity.length) {
-      return {message: `No clinic found at ${city}`};
-    }
-    const branchIdsInCity = branchesInCity
-      .map(b => b.id)
-      .filter((id): id is number => id !== undefined && id !== null);
-
-    const clinicIds = [
-      ...new Set(
-        branchesInCity
-          .map(b => b.clinicId)
-          .filter((id): id is number => id !== undefined && id !== null),
-      ),
-    ];
-    if (!clinicIds.length) {
-      return {message: `No clinic found at ${city}`};
-    }
-    // Step 5: Fetch clinics with only matching branches
-    const clinics = await this.clinicRepository.find({
-      where: {id: {inq: clinicIds}},
-      include: [
-        {
-          relation: 'branches',
-          scope: {
-            where: {
-              id: {inq: branchIdsInCity},
-              city: city,
-            },
-          },
-        },
-      ],
-    });
-    if (!clinics.length) {
-      return {message: `No clinic found at ${city}`};
-    }
-    return clinics;
+  },
+})
+async getClinicsWithBranchesBySpecializationAndCity(
+  @param.query.number('specializationId') specializationId: number,
+  @param.query.string('city') city: string,
+): Promise<Clinic[] | {message: string}> {
+  const doctors = await this.doctorRepository.find({
+    where: {specializationId},
+    fields: ['id'],
+  });
+  if (!doctors.length) {
+    return {message: `No clinic found at ${city}`};
   }
+
+  const doctorIds = doctors.map(d => d.id!).filter(Boolean);
+  const branchDoctors = await this.branchDoctorRepository.find({
+    where: {doctorId: {inq: doctorIds}},
+    fields: ['branchId'],
+  });
+  if (!branchDoctors.length) {
+    return {message: `No clinic found at ${city}`};
+  }
+
+  const branchIds = [...new Set(branchDoctors.map(bd => bd.branchId!).filter(Boolean))];
+  const branchesInCity = await this.branchRepository.find({
+    where: {id: {inq: branchIds}, city},
+    fields: ['id', 'clinicId'],
+  });
+  if (!branchesInCity.length) {
+    return {message: `No clinic found at ${city}`};
+  }
+
+  const branchIdsInCity = branchesInCity.map(b => b.id!).filter(Boolean);
+  const clinicIds = [...new Set(branchesInCity.map(b => b.clinicId!).filter(Boolean))];
+
+  const clinics = await this.clinicRepository.find({
+    where: {id: {inq: clinicIds}},
+    include: [
+      {
+        relation: 'branches',
+        scope: {where: {id: {inq: branchIdsInCity}, city}},
+      },
+    ],
+  });
+
+  if (!clinics.length) {
+    return {message: `No clinic found at ${city}`};
+  }
+  return clinics;
+}
 
   @post('/branches')
   @response(200, {
