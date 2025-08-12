@@ -18,7 +18,7 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import {Branch, Clinic} from '../models';
+import {Branch, Clinic, Doctor} from '../models';
 import {
   BranchDoctorRepository,
   BranchRepository,
@@ -127,6 +127,66 @@ async getClinicsWithBranchesBySpecializationAndCity(
   ): Promise<Branch> {
     return this.branchRepository.create(branch);
   }
+
+  @get('/doctors/by-specialization-and-branch', {
+  responses: {
+    '200': {
+      description: 'Get doctors by specialization and branch',
+      content: {
+        'application/json': {
+          schema: {
+            oneOf: [
+              {
+                type: 'array',
+                items: getModelSchemaRef(Doctor, {includeRelations: true}),
+              },
+              {type: 'object', properties: {message: {type: 'string'}}},
+            ],
+          },
+        },
+      },
+    },
+  },
+})
+async getDoctorsBySpecializationAndBranch(
+  @param.query.number('specializationId') specializationId: number,
+  @param.query.number('branchId') branchId: number,
+): Promise<Doctor[] | {message: string}> {
+  // Step 1: Get doctors matching the specialization
+  const doctorsWithSpecialization = await this.doctorRepository.find({
+    where: {specializationId},
+    fields: ['id'],
+  });
+  if (!doctorsWithSpecialization.length) {
+    return {message: `No doctors found for specialization ${specializationId}`};
+  }
+
+  const doctorIds = doctorsWithSpecialization.map(d => d.id!).filter(Boolean);
+
+  // Step 2: Find doctors linked to the branch
+  const branchDoctorLinks = await this.branchDoctorRepository.find({
+    where: {branchId, doctorId: {inq: doctorIds}},
+    fields: ['doctorId'],
+  });
+  if (!branchDoctorLinks.length) {
+    return {message: `No doctors found for this branch`};
+  }
+
+  const matchedDoctorIds = [
+    ...new Set(branchDoctorLinks.map(link => link.doctorId!).filter(Boolean)),
+  ];
+
+  // Step 3: Get full doctor details
+  const doctors = await this.doctorRepository.find({
+    where: {id: {inq: matchedDoctorIds}},
+    // include: [{relation: 'branches'}], // optional if you want branch info
+  });
+
+  return doctors.length
+    ? doctors
+    : {message: `No doctors found for given criteria`};
+}
+
 
   @get('/branches')
   @response(200, {
