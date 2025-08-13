@@ -133,7 +133,20 @@ export class UserController {
     const userProfile = this.userService.convertToUserProfile(user);
     const userData = _.omit(user, 'password');
     const token = await this.jwtService.generateToken(userProfile);
-    const allUserData = await this.userRepository.findById(userData.id);
+    const allUserData = await this.userRepository.findById(userData.id,{
+      include: [
+        {
+          relation: 'clinic',
+          scope: {
+            include: [
+              {
+                relation: 'branches',
+              },
+            ],
+          },
+        },
+      ]
+    });
     return Promise.resolve({
       accessToken: token,
       user: allUserData,
@@ -150,6 +163,7 @@ export class UserController {
       where: {
         id: currnetUser.id,
       },
+      include: [{relation: 'clinic'}],
     });
     const userData = _.omit(user, 'password');
     return Promise.resolve({
@@ -164,7 +178,7 @@ export class UserController {
       required: [PermissionKeys.SUPER_ADMIN],
     },
   })
-  @get('/api/users/list')
+  @get('/users/list')
   @response(200, {
     description: 'Array of Users model instances',
     content: {
@@ -190,7 +204,7 @@ export class UserController {
         isDeleted: false,
       },
       fields: {password: false, otp: false, otpExpireAt: false},
-      include: [{relation: 'creator'}, {relation: 'updater'}],
+      include: [{relation: 'clinic'}, {relation: 'branch'}],
     };
     return this.userRepository.find(filter);
   }
@@ -199,7 +213,7 @@ export class UserController {
     strategy: 'jwt',
     options: {required: [PermissionKeys.SUPER_ADMIN]},
   })
-  @get('/api/users/{id}', {
+  @get('/users/{id}', {
     responses: {
       '200': {
         description: 'User Details',
@@ -221,6 +235,7 @@ export class UserController {
         otp: false,
         otpExpireAt: false,
       },
+      include: [{relation: 'clinic'},{relation: 'branch'}],
     });
     return Promise.resolve({
       ...user,
@@ -230,7 +245,7 @@ export class UserController {
   @authenticate({
     strategy: 'jwt',
   })
-  @patch('/api/users/{id}')
+  @patch('/users/{id}')
   @response(204, {
     description: 'User PATCH success',
   })
@@ -309,7 +324,7 @@ export class UserController {
     if (user) {
       const userProfile = this.userService.convertToUserProfile(user);
       const token = await this.jwtService.generate10MinToken(userProfile);
-      const resetPasswordLink = `${process.env.REACT_APP_ENDPOINT}/auth/admin/new-password?token=${token}`;
+      const resetPasswordLink = `${process.env.REACT_APP_ENDPOINT}/auth/jwt/new-password?token=${token}`;
       const template = generateResetPasswordTemplate({
         userData: userProfile,
         resetLink: resetPasswordLink,

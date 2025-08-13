@@ -7,6 +7,7 @@ import { useLocales } from 'src/locales';
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
 import SvgColor from 'src/components/svg-color';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -43,20 +44,28 @@ const ICONS = {
   ecommerce: icon('ic_ecommerce'),
   analytics: icon('ic_analytics'),
   dashboard: icon('ic_dashboard'),
+  clinic: icon('ic_clinic'),
+  branch: icon('ic_branch'),
+  doctor: icon('ic_doctor'),
+  service: icon('ic_services'),
+  type: icon('ic_type'),
+  category: icon('ic_category'),
 };
 
 // ----------------------------------------------------------------------
 
 export function useNavData() {
   const { t } = useLocales();
+  const { user } = useAuthContext();
 
-  const data = useMemo(
-    () => [
+  let data = [];
+  if (user && (user.permissions.includes('super_admin'))) {
+    data = [
       // OVERVIEW
       // ----------------------------------------------------------------------
       {
         subheader: t('overview'),
-        items: [{ title: t('app'), path: paths.dashboard.root, icon: ICONS.dashboard }],
+        items: [{ title: t('dashboard'), path: paths.dashboard.root, icon: ICONS.dashboard }],
       },
 
       // MANAGEMENT
@@ -74,11 +83,168 @@ export function useNavData() {
               { title: t('create'), path: paths.dashboard.user.new },
             ],
           },
+          {
+            title: t('clinic'),
+            path: paths.dashboard.clinic.root,
+            icon: ICONS.clinic,
+            children: [
+              { title: t('list'), path: paths.dashboard.clinic.list },
+              { title: t('create'), path: paths.dashboard.clinic.new },
+            ],
+          },
+          {
+            title: t('branch'),
+            path: paths.dashboard.branch.root,
+            icon: ICONS.branch,
+            children: [
+              { title: t('list'), path: paths.dashboard.branch.list },
+              { title: t('create'), path: paths.dashboard.branch.new },
+            ],
+          },
+          {
+            title: t('doctor'),
+            path: paths.dashboard.doctor.root,
+            icon: ICONS.doctor,
+            children: [
+              { title: t('list'), path: paths.dashboard.doctor.list },
+              { title: t('create'), path: paths.dashboard.doctor.new },
+            ],
+          },
         ],
       },
-    ],
-    [t]
-  );
+      // MASTERS
+      {
+        subheader: t('masters'),
+        items: [
+          // Department
+          {
+            title: t('specializations'),
+            path: paths.dashboard.specialization.root,
+            icon: ICONS.label,
+            // roles: [ 'doctor'],
+            children: [
+              {
+                title: t('list'),
+                path: paths.dashboard.specialization.list,
+                // roles: [ 'doctor'],
+              },
+              {
+                title: t('create'),
+                path: paths.dashboard.specialization.new,
+                // roles: ['doctor'],
+              },
+            ],
+          },
+          {
+            title: t('category'),
+            path: paths.dashboard.category.root,
+            icon: ICONS.category,
+            children: [
+              {
+                title: t('list'),
+                path: paths.dashboard.category.list,
+              },
+              {
+                title: t('create'),
+                path: paths.dashboard.category.new,
+              },
+            ],
+          },
+          {
+            title: t('clinic type'),
+            path: paths.dashboard.clinicType.root,
+            icon: ICONS.type,
+            children: [
+              {
+                title: t('list'),
+                path: paths.dashboard.clinicType.list,
+              },
+              {
+                title: t('create'),
+                path: paths.dashboard.clinicType.new,
+              },
+            ],
+          },
+          {
+            title: t('clinic service'),
+            path: paths.dashboard.clinicService.root,
+            icon: ICONS.service,
+            children: [
+              {
+                title: t('list'),
+                path: paths.dashboard.clinicService.list,
+              },
+              {
+                title: t('create'),
+                path: paths.dashboard.clinicService.new,
+              },
+            ],
+          },
+        ],
+      },
+    ];
+  }
+  if (user && user.permissions.includes('clinic')) {
+    data = [
+      // OVERVIEW
+      // ----------------------------------------------------------------------
+      {
+        subheader: t('overview'),
+        items: [{ title: t('dashboard'), path: paths.dashboard.root, icon: ICONS.dashboard }],
+      },
+      // CLINIC DASHBOARD
+      {
+        subheader: t('management'),
+        items: [
+          {
+            title: t('clinic'),
+            path: paths.dashboard.clinic.root,
+            icon: ICONS.clinic,
+            children: [
+              { title: t('list'), path: paths.dashboard.clinic.list },
+              { title: t('create'), path: paths.dashboard.clinic.new },
+            ],
+          },
+          {
+            title: t('branch'),
+            path: paths.dashboard.branch.root,
+            icon: ICONS.branch,
+            children: [
+              { title: t('list'), path: paths.dashboard.branch.list },
+              { title: t('create'), path: paths.dashboard.branch.new },
+            ],
+          },
+          {
+            title: t('doctor'),
+            path: paths.dashboard.doctor.root,
+            icon: ICONS.doctor,
+            children: [
+              { title: t('list'), path: paths.dashboard.doctor.list },
+              { title: t('create'), path: paths.dashboard.doctor.new },
+            ],
+          },
+        ],
+      },
+    ];
+  }
+  if (user && user.permissions.includes('doctor')) {
+    data = [
+      {
+        subheader: t('management'),
+        items: [
+          {
+            title: t('doctor'),
+            path: paths.dashboard.doctor.root,
+            icon: ICONS.doctor,
+            children: [
+              { title: t('list'), path: paths.dashboard.doctor.list },
+              { title: t('create'), path: paths.dashboard.doctor.new },
+            ],
+          },
+        ],
+      },
+    ];
+  }
 
   return data;
 }

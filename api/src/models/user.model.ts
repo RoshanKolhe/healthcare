@@ -1,4 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, belongsTo} from '@loopback/repository';
+import {Clinic} from './clinic.model';
+import {Branch} from './branch.model';
 
 @model()
 export class User extends Entity {
@@ -60,6 +62,18 @@ export class User extends Entity {
   })
   avatar?: object;
 
+  @property({
+    type: 'string',
+    required: true,
+  })
+  country: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  postalCode: string;
+
   @property.array(String, {
     name: 'permissions',
   })
@@ -106,6 +120,12 @@ export class User extends Entity {
     default: false,
   })
   isDeleted: boolean;
+
+  @belongsTo(() => Clinic)
+  clinicId: number;
+
+  @belongsTo(() => Branch)
+  branchId: number;
 
   constructor(data?: Partial<User>) {
     super(data);

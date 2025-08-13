@@ -2,6 +2,9 @@ import {ApplicationConfig, ApiApplication} from './application';
 
 export * from './application';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 export async function main(options: ApplicationConfig = {}) {
   const app = new ApiApplication(options);
   await app.boot();
@@ -19,7 +22,7 @@ if (require.main === module) {
   const config = {
     rest: {
       port: +(process.env.PORT ?? 3000),
-      host: process.env.HOST || '127.0.0.1',
+      host: process.env.HOST || '0.0.0.0',
       // The `gracePeriodForClose` provides a graceful close for http/https
       // servers with keep-alive clients. The default value is `Infinity`
       // (don't force-close). If you want to immediately destroy all sockets

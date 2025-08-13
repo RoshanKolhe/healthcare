@@ -8,7 +8,7 @@ import AuthClassicLayout from 'src/layouts/auth/classic';
 
 export default function Layout({ children }) {
   return (
-    <AuthClassicLayout title="Manage the job more effectively with Minimal">
+    <AuthClassicLayout title="Manage the job more effectively with HealthCare">
       {children}
     </AuthClassicLayout>
   );

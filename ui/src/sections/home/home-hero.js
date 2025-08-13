@@ -192,7 +192,7 @@ export default function HomeHero() {
             repeat: Infinity,
           }}
         >
-          Minimal
+          HealthCare
         </StyledTextGradient>
       </m.div>
 

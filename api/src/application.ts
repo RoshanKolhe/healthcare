@@ -18,6 +18,7 @@ import multer from 'multer';
 import { AuthenticationComponent, registerAuthenticationStrategy } from '@loopback/authentication';
 import { CronComponent } from '@loopback/cron';
 import { JWTStrategy } from './authentication-strategy/jwt-strategy';
+import { MyDoctorService } from './services/doctor-service';
 
 export { ApplicationConfig };
 
@@ -63,6 +64,7 @@ export class ApiApplication extends BootMixin(
     this.bind('service.hasher').toClass(BcryptHasher);
     this.bind('service.jwt.service').toClass(JWTService);
     this.bind('service.user.service').toClass(MyUserService);
+    this.bind('service.doctor.service').toClass(MyDoctorService);
     this.bind(EmailManagerBindings.SEND_MAIL).toClass(EmailService);
   }
 

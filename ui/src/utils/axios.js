@@ -30,6 +30,10 @@ export const endpoints = {
   kanban: '/api/kanban',
   calendar: '/api/calendar',
   auth: {
+    clinic: {
+      me: '/me',
+      login: '/login',
+    },
     me: '/me',
     login: '/login',
     register: '/register',
@@ -49,5 +53,47 @@ export const endpoints = {
     list: '/api/product/list',
     details: '/api/product/details',
     search: '/api/product/search',
+  },
+  user: {
+    list: '/users/list',
+    filterList: (filter) => `/users/list?${filter}`,
+    details: (id) => `/users/${id}`,
+  },
+  doctor: {
+    list: '/doctors/list',
+    filterList: (filter) => `/doctors/list?${filter}`,
+    details: (id) => `/doctors/${id}`,
+  },
+  clinic: {
+    list: '/clinics',
+    details: (id) => `/clinics/${id}`,
+    filterList: (filter) => `/clinics?${filter}`,
+    search: '/api/clinics/search',
+  },
+  branch: {
+    list: '/branches',
+    details: (id) => `/branches/${id}`,
+    filterList: (filter) => `/branches?${filter}`,
+    search: '/api/branches/search',
+  },
+  specialization: {
+    list: '/specializations',
+    details: (id) => `/specializations/${id}`,
+    filterList: (filter) => `/specializations?${filter}`,
+  },
+  category: {
+    list: '/categories',
+    details: (id) => `/categories/${id}`,
+    filterList: (filter) => `/categories?filter=${filter}`,
+  },
+  clinicType: {
+    list: '/clinic-types',
+    details: (id) => `/clinic-types/${id}`,
+    filterList: (filter) => `/clinic-types?${filter}`,
+  },
+  clinicService: {
+    list: '/clinic-services',
+    details: (id) => `/clinic-services/${id}`,
+    filterList: (filter) => `/clinic-services?${filter}`,
   },
 };

@@ -12,13 +12,13 @@ export function useGetProducts() {
 
   const memoizedValue = useMemo(
     () => ({
-      products: data?.products || [],
+      products: data || [],
       productsLoading: isLoading,
       productsError: error,
       productsValidating: isValidating,
       productsEmpty: !isLoading && !data?.products.length,
     }),
-    [data?.products, error, isLoading, isValidating]
+    [data, error, isLoading, isValidating]
   );
 
   return memoizedValue;
