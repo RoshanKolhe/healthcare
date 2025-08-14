@@ -20,7 +20,7 @@ export default function ClinicTypeEditView() {
 
   const { id } = params;
 
-  const { clinictype: currentClinicType } = useGetClinicType(id);
+  const { clinicType: currentClinicType } = useGetClinicType(id);
   console.log('currentClinicType', currentClinicType);
 
   return (
