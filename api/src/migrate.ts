@@ -19,6 +19,8 @@ export async function migrate(args: string[]) {
       'ClinicType',
       'ClinicService',
       'BranchDoctor',
+      'DoctorAvailability',
+      'DoctorTimeSlot',
     ],
   });
 

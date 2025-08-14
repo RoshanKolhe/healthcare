@@ -7,3 +7,5 @@ export * from './category.repository';
 export * from './clinic-type.repository';
 export * from './clinic-service.repository';
 export * from './branch-doctor.repository';
+export * from './doctor-availability.repository';
+export * from './doctor-time-slot.repository';
