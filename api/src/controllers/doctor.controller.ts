@@ -188,12 +188,6 @@ export class DoctorController {
     });
   }
 
-  @authenticate({
-    strategy: 'jwt',
-    options: {
-      required: [PermissionKeys.SUPER_ADMIN],
-    },
-  })
   @get('/doctors/list')
   @response(200, {
     description: 'Array of Doctors model instances',
@@ -209,14 +203,12 @@ export class DoctorController {
     },
   })
   async find(
-    @inject(AuthenticationBindings.CURRENT_USER) currentDoctor: UserProfile,
     @param.filter(Doctor) filter?: Filter<Doctor>,
   ): Promise<Doctor[]> {
     filter = {
       ...filter,
       where: {
         ...filter?.where,
-        id: {neq: currentDoctor.id},
         isDeleted: false,
       },
       fields: {password: false, otp: false, otpExpireAt: false},
@@ -311,75 +303,76 @@ export class DoctorController {
   //   };
   // }
   @patch('/doctors/{id}')
-@response(204, {
-  description: 'Doctor PATCH success',
-})
-async updateById(
-  @param.path.number('id') id: number,
-  @requestBody({
-    content: {
-      'application/json': {
-        schema: {
-          type: 'object',
-          properties: {
-            ...getModelSchemaRef(Doctor, {partial: true}).definitions?.Doctor?.properties,
-            branches: {
-              type: 'array',
-              items: {type: 'number'}, // Branch IDs
+  @response(204, {
+    description: 'Doctor PATCH success',
+  })
+  async updateById(
+    @param.path.number('id') id: number,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              ...getModelSchemaRef(Doctor, {partial: true}).definitions?.Doctor
+                ?.properties,
+              branches: {
+                type: 'array',
+                items: {type: 'number'}, // Branch IDs
+              },
             },
           },
         },
       },
-    },
-  })
-  doctorData: Partial<Doctor> & {branches?: number[]},
-  @inject(AuthenticationBindings.CURRENT_USER) currentDoctor: UserProfile,
-): Promise<any> {
-  const existingDoctor = await this.doctorRepository.findById(id);
-  if (!existingDoctor) {
-    throw new HttpErrors.NotFound('Doctor not found');
-  }
-
-  // Hash password if updated
-  if (doctorData.password) {
-    doctorData.password = await this.hasher.hashPassword(doctorData.password);
-  }
-
-  // Validate email uniqueness
-  if (doctorData.email && doctorData.email !== existingDoctor.email) {
-    const emailExists = await this.doctorRepository.findOne({
-      where: {email: doctorData.email, id: {neq: id}},
-    });
-    if (emailExists) {
-      throw new HttpErrors.BadRequest('Email already exists');
-    }
-  }
-
-  // Extract branches separately
-  const {branches, ...doctorFields} = doctorData;
-
-  // Update doctor fields
-  await this.doctorRepository.updateById(id, doctorFields);
-
-  // Update branch links if provided
-  if (branches) {
-    // First unlink all existing branches
-    const existingBranches = await this.doctorRepository.branches(id).find();
-    for (const branch of existingBranches) {
-      await this.doctorRepository.branches(id).unlink(branch.id);
+    })
+    doctorData: Partial<Doctor> & {branches?: number[]},
+    @inject(AuthenticationBindings.CURRENT_USER) currentDoctor: UserProfile,
+  ): Promise<any> {
+    const existingDoctor = await this.doctorRepository.findById(id);
+    if (!existingDoctor) {
+      throw new HttpErrors.NotFound('Doctor not found');
     }
 
-    // Then link the new branches
-    for (const branchId of branches) {
-      await this.doctorRepository.branches(id).link(branchId);
+    // Hash password if updated
+    if (doctorData.password) {
+      doctorData.password = await this.hasher.hashPassword(doctorData.password);
     }
-  }
 
-  return {
-    success: true,
-    message: `Doctor profile updated successfully`,
-  };
-}
+    // Validate email uniqueness
+    if (doctorData.email && doctorData.email !== existingDoctor.email) {
+      const emailExists = await this.doctorRepository.findOne({
+        where: {email: doctorData.email, id: {neq: id}},
+      });
+      if (emailExists) {
+        throw new HttpErrors.BadRequest('Email already exists');
+      }
+    }
+
+    // Extract branches separately
+    const {branches, ...doctorFields} = doctorData;
+
+    // Update doctor fields
+    await this.doctorRepository.updateById(id, doctorFields);
+
+    // Update branch links if provided
+    if (branches) {
+      // First unlink all existing branches
+      const existingBranches = await this.doctorRepository.branches(id).find();
+      for (const branch of existingBranches) {
+        await this.doctorRepository.branches(id).unlink(branch.id);
+      }
+
+      // Then link the new branches
+      for (const branchId of branches) {
+        await this.doctorRepository.branches(id).link(branchId);
+      }
+    }
+
+    return {
+      success: true,
+      message: `Doctor profile updated successfully`,
+    };
+  }
 
   @post('/doctors/sendResetPasswordLink')
   async sendResetPasswordLink(

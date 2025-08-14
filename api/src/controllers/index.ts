@@ -9,3 +9,5 @@ export * from './category.controller';
 export * from './clinic-type.controller';
 export * from './clinic-service.controller';
 export * from './google-api.controller';
+export * from './doctor-availability.controller';
+export * from './doctor-time-slot.controller';

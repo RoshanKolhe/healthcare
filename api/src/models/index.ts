@@ -7,3 +7,5 @@ export * from './category.model';
 export * from './clinic-type.model';
 export * from './clinic-service.model';
 export * from './branch-doctor.model';
+export * from './doctor-availability.model';
+export * from './doctor-time-slot.model';
