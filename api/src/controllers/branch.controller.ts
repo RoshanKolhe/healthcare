@@ -249,4 +249,5 @@ async getDoctorsBySpecializationAndBranch(
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.branchRepository.deleteById(id);
   }
+  
 }
