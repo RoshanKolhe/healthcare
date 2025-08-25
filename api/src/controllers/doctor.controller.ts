@@ -23,7 +23,7 @@ import {
   getJsonSchemaRef,
   HttpErrors,
 } from '@loopback/rest';
-import {Doctor} from '../models';
+import {Branch, Doctor} from '../models';
 import {
   BranchDoctorRepository,
   Credentials,
@@ -202,9 +202,7 @@ export class DoctorController {
       },
     },
   })
-  async find(
-    @param.filter(Doctor) filter?: Filter<Doctor>,
-  ): Promise<Doctor[]> {
+  async find(@param.filter(Doctor) filter?: Filter<Doctor>): Promise<Doctor[]> {
     filter = {
       ...filter,
       where: {
@@ -253,55 +251,6 @@ export class DoctorController {
       ...doctor,
     });
   }
-
-  @authenticate({
-    strategy: 'jwt',
-  })
-  // @patch('/doctors/{id}')
-  // @response(204, {
-  //   description: 'Doctor PATCH success',
-  // })
-  // async updateById(
-  //   @param.path.number('id') id: number,
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {
-  //         schema: getModelSchemaRef(Doctor, {partial: true}),
-  //       },
-  //     },
-  //   })
-  //   doctor: Doctor,
-  //   @inject(AuthenticationBindings.CURRENT_USER) currentDoctor: UserProfile,
-  // ): Promise<any> {
-  //   // Fetch the Doctor information before updating
-  //   const existingDoctor = await this.doctorRepository.findById(id);
-  //   if (!existingDoctor) {
-  //     throw new HttpErrors.NotFound('Doctor not found');
-  //   }
-
-  //   // Hash password if it's being updated
-  //   if (doctor.password) {
-  //     doctor.password = await this.hasher.hashPassword(doctor.password);
-  //   }
-
-  //   // Validate email uniqueness only if email is being updated
-  //   if (doctor.email && doctor.email !== existingDoctor.email) {
-  //     const emailExists = await this.doctorRepository.findOne({
-  //       where: {email: doctor.email, id: {neq: id}}, // Exclude the current doctor
-  //     });
-
-  //     if (emailExists) {
-  //       throw new HttpErrors.BadRequest('Email already exists');
-  //     }
-  //   }
-
-  //   await this.doctorRepository.updateById(id, doctor);
-
-  //   return {
-  //     success: true,
-  //     message: `Doctor profile updated successfully`,
-  //   };
-  // }
   @patch('/doctors/{id}')
   @response(204, {
     description: 'Doctor PATCH success',
@@ -568,85 +517,26 @@ export class DoctorController {
       deletedAt: new Date(),
     });
   }
+
+  @get('/doctors/{id}/branches', {
+    responses: {
+      '200': {
+        description: 'Doctor has many Branches',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: getModelSchemaRef(Branch),
+            },
+          },
+        },
+      },
+    },
+  })
+  async findDoctorBranches(
+    @param.path.number('id') id: typeof Doctor.prototype.id,
+    @param.query.object('filter') filter?: Filter<Branch>,
+  ): Promise<Branch[]> {
+    return this.doctorRepository.branches(id).find(filter);
+  }
 }
-
-// @post('/doctors')
-// @response(200, {
-//   description: 'Doctor model instance',
-//   content: {'application/json': {schema: getModelSchemaRef(Doctor)}},
-// })
-// async create(
-//   @requestBody({
-//     content: {
-//       'application/json': {
-//         schema: getModelSchemaRef(Doctor, {
-//           title: 'NewDoctor',
-//           exclude: ['id'],
-//         }),
-//       },
-//     },
-//   })
-//   doctor: Omit<Doctor, 'id'>,
-// ): Promise<Doctor> {
-//   return this.doctorRepository.create(doctor);
-// }
-
-// @get('/doctors')
-// @response(200, {
-//   description: 'Array of Doctor model instances',
-//   content: {
-//     'application/json': {
-//       schema: {
-//         type: 'array',
-//         items: getModelSchemaRef(Doctor, {includeRelations: true}),
-//       },
-//     },
-//   },
-// })
-// async find(@param.filter(Doctor) filter?: Filter<Doctor>): Promise<Doctor[]> {
-//   return this.doctorRepository.find(filter);
-// }
-
-// @get('/doctors/{id}')
-// @response(200, {
-//   description: 'Doctor model instance',
-//   content: {
-//     'application/json': {
-//       schema: getModelSchemaRef(Doctor, {includeRelations: true}),
-//     },
-//   },
-// })
-// async findById(
-//   @param.path.number('id') id: number,
-//   @param.filter(Doctor, {exclude: 'where'})
-//   filter?: FilterExcludingWhere<Doctor>,
-// ): Promise<Doctor> {
-//   return this.doctorRepository.findById(id, filter);
-// }
-
-// @patch('/doctors/{id}')
-// @response(204, {
-//   description: 'Doctor PATCH success',
-// })
-// async updateById(
-//   @param.path.number('id') id: number,
-//   @requestBody({
-//     content: {
-//       'application/json': {
-//         schema: getModelSchemaRef(Doctor, {partial: true}),
-//       },
-//     },
-//   })
-//   doctor: Doctor,
-// ): Promise<void> {
-//   await this.doctorRepository.updateById(id, doctor);
-// }
-
-//   @del('/doctors/{id}')
-//   @response(204, {
-//     description: 'Doctor DELETE success',
-//   })
-//   async deleteById(@param.path.number('id') id: number): Promise<void> {
-//     await this.doctorRepository.deleteById(id);
-//   }
-// }

@@ -8,6 +8,8 @@ import {
 import {BranchDoctor} from './branch-doctor.model';
 import {Clinic} from './clinic.model';
 import {DoctorTimeSlot} from './doctor-time-slot.model';
+import {Branch} from './branch.model';
+import {Doctor} from './doctor.model';
 
 @model()
 export class DoctorAvailability extends Entity {
@@ -20,10 +22,22 @@ export class DoctorAvailability extends Entity {
 
   @property({
     type: 'array',
-    itemType: 'string',
+    itemType: 'number',
     required: true,
   })
-  dayOfWeek: string[];
+  dayOfWeek: number[];
+
+  @property({
+    type: 'date',
+    required: true,
+  })
+  startDate: Date;
+
+  @property({
+    type: 'date',
+    required: true,
+  })
+  endDate: Date;
 
   @property({
     type: 'date',
@@ -64,14 +78,14 @@ export class DoctorAvailability extends Entity {
   })
   isDeleted: boolean;
 
-  @belongsTo(() => BranchDoctor)
-  branchDoctorId: number;
-
-  @belongsTo(() => Clinic)
-  clinicId: number;
-
   @hasMany(() => DoctorTimeSlot)
   doctorTimeSlots: DoctorTimeSlot[];
+
+  @belongsTo(() => Branch)
+  branchId: number;
+
+  @belongsTo(() => Doctor)
+  doctorId: number;
 
   constructor(data?: Partial<DoctorAvailability>) {
     super(data);
