@@ -86,6 +86,7 @@ export class DoctorAvailability extends Entity {
 
   @belongsTo(() => Doctor)
   doctorId: number;
+  branch: any;
 
   constructor(data?: Partial<DoctorAvailability>) {
     super(data);

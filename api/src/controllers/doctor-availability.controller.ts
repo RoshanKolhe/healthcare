@@ -127,6 +127,193 @@ export class DoctorAvailabilityController {
     }
   }
 
+  // @get('/doctor-availabilities/{id}/daily-slots')
+  // @response(200, {
+  //   description: 'Daily doctor availabilities with nested time slots',
+  // })
+  // async getDailySlots(
+  //   @param.path.number('id') doctorId: number,
+  // ): Promise<any> {
+  //   const availabilities = await this.doctorAvailabilityRepository.find({
+  //     where: {
+  //       doctorId,
+  //       isActive: true,
+  //     },
+  //     include: [
+  //       {relation: 'branch'},
+  //       {relation: 'doctorTimeSlots'},
+  //     ],
+  //   });
+
+  //   const today = new Date();
+  //   const next3Days = Array.from({length: 3}, (_, i) => {
+  //     const d = new Date(today);
+  //     d.setDate(d.getDate() + i);
+  //     return d.toISOString().split('T')[0];
+  //   });
+
+  //   // Group by branch and date
+  //   const result: any = {};
+  //   availabilities.forEach(avail => {
+  //     const branchId = avail.branch?.id || 'unknown';
+  //     const branchName = avail.branch?.name || '';
+  //     const branchAddress = avail.branch?.fullAddress || '';
+
+  //     if (!result[branchId]) {
+  //       result[branchId] = {
+  //         branchId,
+  //         branchName,
+  //         branchAddress,
+  //         availableDates: [],
+  //       };
+  //     }
+
+  //     next3Days.forEach(dateStr => {
+  //       const dayStart = new Date(dateStr + 'T00:00:00.000Z');
+  //       const dayEnd = new Date(dateStr + 'T23:59:59.999Z');
+
+  //       // check if this availability overlaps this date
+  //       const availStart = new Date(avail.startDate);
+  //       const availEnd = new Date(avail.endDate);
+
+  //       if (availEnd < dayStart || availStart > dayEnd) return;
+
+  //       // Create date entry if not exists
+  //       let dateEntry = result[branchId].availableDates.find((d: { date: string; }) => d.date === dateStr);
+  //       if (!dateEntry) {
+  //         dateEntry = {
+  //           date: dateStr,
+  //           day: dayStart.toLocaleDateString('en-US', {weekday: 'long'}),
+  //           availabilities: [],
+  //         };
+  //         result[branchId].availableDates.push(dateEntry);
+  //       }
+
+  //       // Map time slots
+  //       const slots = (avail.doctorTimeSlots || []).map(slot => ({
+  //         slotId: slot.id,
+  //         startTime: slot.slotStart,
+  //         endTime: slot.slotEnd,
+  //         isBooked: !!slot.isBooked,
+  //       }));
+
+  //       dateEntry.availabilities.push({
+  //         availabilityId: avail.id,
+  //         startDate: avail.startDate,
+  //         endDate: avail.endDate,
+  //         doctorId: avail.doctorId,
+  //         isActive: avail.isActive,
+  //         timeSlots: slots,
+  //       });
+  //     });
+  //   });
+
+  //   // Return as array of branches
+  //   return Object.values(result);
+  // }
+
+@post('/doctor-availabilities/daily-slots')
+@response(200, {
+  description: 'Daily doctor availabilities with nested time slots',
+})
+async getDailySlotsPost(
+  @requestBody({
+    description: 'Doctor and branch info for fetching daily slots',
+    required: true,
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            doctorId: {type: 'number'},
+            branchId: {type: 'number'}, // optional
+          },
+          required: ['doctorId'],
+        },
+      },
+    },
+  })
+  body: { doctorId: number; branchId?: number },
+): Promise<any> {
+  const {doctorId, branchId} = body;
+
+  const availabilities = await this.doctorAvailabilityRepository.find({
+    where: {
+      doctorId,
+      isActive: true,
+      ...(branchId ? {branchId} : {}),
+    },
+    include: [
+      {relation: 'branch'},
+      {relation: 'doctorTimeSlots'},
+    ],
+  });
+
+  const next3Days = Array.from({length: 3}, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    // ✅ Format in IST instead of UTC
+    return (d).toISOString().split('T')[0];
+  });
+
+  const result: any = {};
+  availabilities.forEach(avail => {
+    const bId = avail.branch?.id || 'unknown';
+    const branchName = avail.branch?.name || '';
+    const branchAddress = avail.branch?.fullAddress || '';
+
+    if (!result[bId]) {
+      result[bId] = {
+        branchId: bId,
+        branchName,
+        branchAddress,
+        availableDates: [],
+      };
+    }
+
+    next3Days.forEach(dateStr => {
+      const dayStart = new Date(dateStr + 'T00:00:00.000Z');
+      const dayEnd = new Date(dateStr + 'T23:59:59.999Z');
+
+      const availStart = new Date(avail.startDate);
+      const availEnd = new Date(avail.endDate);
+
+      if (availEnd < dayStart || availStart > dayEnd) return;
+
+      let dateEntry = result[bId].availableDates.find((d: { date: string }) => d.date === dateStr);
+      if (!dateEntry) {
+        dateEntry = {
+          // date: dateStr,
+          date: (dayStart).toISOString(), 
+          availabilities: [],
+        };
+        result[bId].availableDates.push(dateEntry);
+      }
+
+      const slots = (avail.doctorTimeSlots || []).map(slot => ({
+        slotId: slot.id,
+        // ✅ convert slot start/end to IST before sending
+        startTime: (new Date(slot.slotStart)).toISOString(),
+        endTime: (new Date(slot.slotEnd)).toISOString(),
+        isBooked: !!slot.isBooked,
+      }));
+
+      dateEntry.availabilities.push({
+        availabilityId: avail.id,
+        startDate: (new Date(avail.startDate)).toISOString(), // ✅ IST
+        endDate: (new Date(avail.endDate)).toISOString(),     // ✅ IST
+        doctorId: avail.doctorId,
+        isActive: avail.isActive,
+        timeSlots: slots,
+      });
+    });
+  });
+
+  return Object.values(result);
+}
+
+
+
   @get('/doctor-availabilities/{id}')
   @response(200, {
     description: 'Array of DoctorAvailability model instances',
