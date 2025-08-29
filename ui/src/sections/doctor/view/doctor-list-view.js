@@ -142,6 +142,12 @@ export default function DoctorListView() {
     },
     [router]
   );
+  const handleSetOpenCalendar = useCallback(
+    (id) => {
+      router.push(paths.dashboard.doctor.calendar(id));
+    },
+    [router]
+  );
 
   const handleViewRow = useCallback(
     (id) => {
@@ -321,6 +327,7 @@ export default function DoctorListView() {
                         onSelectRow={() => table.onSelectRow(row.id)}
                         onDeleteRow={() => handleDeleteRow(row.id)}
                         onEditRow={() => handleEditRow(row.id)}
+                        setOpenCalendar={() => handleSetOpenCalendar(row.id)}
                         onViewRow={() => handleViewRow(row.id)}
                         handleQuickEditRow={(doctor) => {
                           handleQuickEditRow(doctor);

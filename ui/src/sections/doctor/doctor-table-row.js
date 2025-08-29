@@ -26,6 +26,7 @@ export default function DoctorTableRow({
   onSelectRow,
   onDeleteRow,
   handleQuickEditRow,
+  setOpenCalendar,
   onViewRow,
 }) {
   const {
@@ -71,7 +72,6 @@ export default function DoctorTableRow({
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{specialization.specialization}</TableCell>
 
-
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{permissions}</TableCell>
 
         <TableCell>
@@ -84,6 +84,17 @@ export default function DoctorTableRow({
         </TableCell>
 
         <TableCell align="right" sx={{ px: 1, whiteSpace: 'nowrap' }}>
+          <Tooltip title="Availability" placement="top" arrow>
+            <IconButton
+              color={quickEdit.value ? 'inherit' : 'default'}
+              onClick={() => {
+                setOpenCalendar();
+                popover.onClose();
+              }}
+            >
+              <Iconify icon="solar:calendar-bold" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Quick Edit" placement="top" arrow>
             <IconButton
               color={quickEdit.value ? 'inherit' : 'default'}
@@ -116,17 +127,6 @@ export default function DoctorTableRow({
         arrow="right-top"
         sx={{ width: 140 }}
       >
-        {/* <MenuItem
-          onClick={() => {
-            confirm.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" />
-          Delete
-        </MenuItem> */}
-
         <MenuItem
           onClick={() => {
             onEditRow();
@@ -160,5 +160,6 @@ DoctorTableRow.propTypes = {
   row: PropTypes.object,
   selected: PropTypes.bool,
   handleQuickEditRow: PropTypes.func,
+  setOpenCalendar: PropTypes.func,
   onViewRow: PropTypes.func,
 };
