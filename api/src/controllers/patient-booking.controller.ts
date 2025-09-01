@@ -49,14 +49,38 @@ export class PatientBookingController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(PatientBooking, {
-            title: 'NewPatientBooking',
-            exclude: ['id'],
-          }),
+          schema: {
+            type: 'object',
+            required: ['date', 'startTime', 'endTime'],
+            properties: {
+              ...getModelSchemaRef(PatientBooking, {
+                title: 'NewPatientBooking',
+                exclude: ['id'],
+              }).definitions?.PatientBooking?.properties,
+
+              date: {
+                type: 'string',
+                format: 'date',
+              },
+              startTime: {
+                type: 'string',
+              },
+              endTime: {
+                type: 'string',
+              },
+            },
+          },
         },
       },
     })
-    patientBooking: Omit<PatientBooking, 'id'>,
+    patientBooking: Omit<
+      PatientBooking,
+      'id' | 'date' | 'startTime' | 'endTime'
+    > & {
+      date: string;
+      startTime: string;
+      endTime: string;
+    },
   ): Promise<PatientBooking> {
     const repo = new DefaultTransactionalRepository(
       PatientBooking,
@@ -65,6 +89,14 @@ export class PatientBookingController {
     const tx = await repo.beginTransaction(IsolationLevel.READ_COMMITTED);
 
     try {
+      const dateString = String(patientBooking.date);
+      const startTimeStr = String(patientBooking.startTime);
+      const endTimeStr = String(patientBooking.endTime);
+      const date = new Date(dateString);
+      const startTime = new Date(`${dateString}T${startTimeStr}:00`);
+      console.log('start time', patientBooking.startTime, startTime);
+      const endTime = new Date(`${dateString}T${endTimeStr}:00`);
+
       // 1️⃣ Check if slot is already booked
       const slot = await this.doctorTimeSlotRepository.findById(
         patientBooking.doctorTimeSlotId,
@@ -72,7 +104,6 @@ export class PatientBookingController {
       if (slot.isBooked) {
         throw new Error('This slot is already booked.');
       }
-
       // 2️⃣ Check if patient exists (by email or phoneNo) using PatientRepository
       let patient = await this.patientRepository.findOne({
         where: {
@@ -98,7 +129,6 @@ export class PatientBookingController {
           {transaction: tx},
         );
       }
-
       // 4️⃣ Set patientId and store full patient details in booking
       patientBooking.patientId = patient.id!;
       patientBooking.patientFullDetail = {
@@ -109,6 +139,9 @@ export class PatientBookingController {
         gender:
           (patientBooking.patientFullDetail as any)?.gender || 'Not Specified',
       };
+      patientBooking.date = date.toUTCString();
+      patientBooking.startTime = startTime.toUTCString();
+      patientBooking.endTime = endTime.toUTCString();
 
       // 5️⃣ Create booking
       const booking = await this.patientBookingRepository.create(
@@ -170,23 +203,6 @@ export class PatientBookingController {
     return this.patientBookingRepository.findById(id, filter);
   }
 
-  // @patch('/patient-bookings/{id}')
-  // @response(204, {
-  //   description: 'PatientBooking PATCH success',
-  // })
-  // async updateById(
-  //   @param.path.number('id') id: number,
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {
-  //         schema: getModelSchemaRef(PatientBooking, {partial: true}),
-  //       },
-  //     },
-  //   })
-  //   patientBooking: PatientBooking,
-  // ): Promise<void> {
-  //   await this.patientBookingRepository.updateById(id, patientBooking);
-  // }
   @patch('/patient-bookings/{id}')
   @response(200, {
     description: 'PatientBooking PATCH success',
@@ -197,11 +213,26 @@ export class PatientBookingController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(PatientBooking, {partial: true}),
+          schema: {
+            type: 'object',
+            properties: {
+              ...getModelSchemaRef(PatientBooking, {partial: true}).definitions
+                ?.PatientBooking?.properties,
+              date: {type: 'string', format: 'date'},
+              startTime: {type: 'string'},
+               endTime: {type: 'string'},
+            },
+          },
         },
       },
     })
-    patientBooking: Partial<PatientBooking>,
+    patientBooking: Partial<
+      Omit<PatientBooking, 'date' | 'startTime' | 'endTime'>
+    > & {
+      date?: string;
+      startTime?: string;
+      endTime?: string;
+    },
   ): Promise<PatientBooking> {
     const repo = new DefaultTransactionalRepository(
       PatientBooking,
@@ -212,12 +243,24 @@ export class PatientBookingController {
     try {
       // 1️⃣ Find the existing booking
       const existingBooking = await this.patientBookingRepository.findById(id);
+      if (!existingBooking) throw new Error(`Booking with id ${id} not found`);
 
-      if (!existingBooking) {
-        throw new Error(`Booking with id ${id} not found`);
+      // 2️⃣ Convert date/time strings to UTC if provided
+      if (patientBooking.date) {
+        const dateString = patientBooking.date;
+        const startTimeStr = patientBooking.startTime || '00:00';
+        const endTimeStr = patientBooking.endTime || '23:59';
+
+        patientBooking.date = new Date(dateString).toUTCString();
+        patientBooking.startTime = new Date(
+          `${dateString}T${startTimeStr}:00`,
+        ).toUTCString();
+        patientBooking.endTime = new Date(
+          `${dateString}T${endTimeStr}:00`,
+        ).toUTCString();
       }
 
-      // 2️⃣ If updating slot, check if the new slot is free
+      // 3️⃣ If updating slot, check if new slot is free
       if (
         patientBooking.doctorTimeSlotId &&
         patientBooking.doctorTimeSlotId !== existingBooking.doctorTimeSlotId
@@ -225,9 +268,7 @@ export class PatientBookingController {
         const newSlot = await this.doctorTimeSlotRepository.findById(
           patientBooking.doctorTimeSlotId,
         );
-        if (newSlot.isBooked) {
-          throw new Error('This slot is already booked.');
-        }
+        if (newSlot.isBooked) throw new Error('This slot is already booked.');
 
         // free old slot
         await this.doctorTimeSlotRepository.updateById(
@@ -244,15 +285,15 @@ export class PatientBookingController {
         );
       }
 
-      // 3️⃣ Update booking with new details
+      // 4️⃣ Update booking with new details
       await this.patientBookingRepository.updateById(id, patientBooking, {
         transaction: tx,
       });
 
-      // 4️⃣ Commit transaction
+      // 5️⃣ Commit transaction
       await tx.commit();
 
-      // return updated booking
+      // 6️⃣ Return updated booking
       return this.patientBookingRepository.findById(id);
     } catch (err) {
       await tx.rollback();
