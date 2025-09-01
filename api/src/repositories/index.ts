@@ -9,3 +9,5 @@ export * from './clinic-service.repository';
 export * from './branch-doctor.repository';
 export * from './doctor-availability.repository';
 export * from './doctor-time-slot.repository';
+export * from './patient.repository';
+export * from './patient-booking.repository';

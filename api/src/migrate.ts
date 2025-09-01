@@ -21,6 +21,8 @@ export async function migrate(args: string[]) {
       'BranchDoctor',
       'DoctorAvailability',
       'DoctorTimeSlot',
+      'Patient',
+      'PatientBooking'
     ],
   });
 

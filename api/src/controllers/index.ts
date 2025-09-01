@@ -11,3 +11,5 @@ export * from './clinic-service.controller';
 export * from './google-api.controller';
 export * from './doctor-availability.controller';
 export * from './doctor-time-slot.controller';
+export * from './patient.controller';
+export * from './patient-booking.controller';

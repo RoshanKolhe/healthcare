@@ -3,6 +3,7 @@ import {Clinic} from './clinic.model';
 import {Branch} from './branch.model';
 import {Specialization} from './specialization.model';
 import {BranchDoctor} from './branch-doctor.model';
+import {PatientBooking} from './patient-booking.model';
 
 @model()
 export class Doctor extends Entity {
@@ -126,6 +127,9 @@ export class Doctor extends Entity {
 
   @hasMany(() => Branch, {through: {model: () => BranchDoctor}})
   branches: Branch[];
+
+  @hasMany(() => PatientBooking)
+  patientBookings: PatientBooking[];
 
   constructor(data?: Partial<Doctor>) {
     super(data);

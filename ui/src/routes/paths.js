@@ -128,6 +128,7 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/doctor/new`,
       list: `${ROOTS.DASHBOARD}/doctor/list`,
       profile: `${ROOTS.DASHBOARD}/profile`,
+      calendar: (id) => `${ROOTS.DASHBOARD}/doctor/${id}/calendar`,
       edit: (id) => `${ROOTS.DASHBOARD}/doctor/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/doctor/${id}/view`,
     },

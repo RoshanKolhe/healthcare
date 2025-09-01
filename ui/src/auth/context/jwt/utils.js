@@ -73,3 +73,20 @@ export const setSession = (accessToken) => {
     delete axios.defaults.headers.common.Authorization;
   }
 };
+
+// ----------------------------------------------------------------------
+
+export function getMatchingDates(rangeStart, rangeEnd, dayOfWeeks) {
+  const dates = [];
+  const startTime = new Date(rangeStart);
+  const endTime = new Date(rangeEnd);
+
+  const current = new Date(startTime);
+  while (current <= endTime) {
+    if (dayOfWeeks.includes(current.getDay())) {
+      dates.push(new Date(current));
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return dates;
+}
