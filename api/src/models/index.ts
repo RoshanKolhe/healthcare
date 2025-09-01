@@ -9,3 +9,5 @@ export * from './clinic-service.model';
 export * from './branch-doctor.model';
 export * from './doctor-availability.model';
 export * from './doctor-time-slot.model';
+export * from './patient.model';
+export * from './patient-booking.model';

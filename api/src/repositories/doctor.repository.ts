@@ -2,14 +2,15 @@ import {inject, Getter, Constructor} from '@loopback/core';
 import {
   DefaultCrudRepository,
   repository,
-  BelongsToAccessor, HasManyThroughRepositoryFactory} from '@loopback/repository';
+  BelongsToAccessor, HasManyThroughRepositoryFactory, HasManyRepositoryFactory} from '@loopback/repository';
 import {HealthcareDataSource} from '../datasources';
-import {Doctor, DoctorRelations, Clinic, Branch, Specialization, BranchDoctor} from '../models';
+import {Doctor, DoctorRelations, Clinic, Branch, Specialization, BranchDoctor, PatientBooking} from '../models';
 import { ClinicRepository } from './clinic.repository';
 import {BranchRepository} from './branch.repository';
 import {TimeStampRepositoryMixin} from '../mixins/timestamp-repository-mixin';
 import {SpecializationRepository} from './specialization.repository';
 import {BranchDoctorRepository} from './branch-doctor.repository';
+import {PatientBookingRepository} from './patient-booking.repository';
 
 export class DoctorRepository extends TimeStampRepositoryMixin<
   Doctor,
@@ -31,14 +32,18 @@ export class DoctorRepository extends TimeStampRepositoryMixin<
           typeof Doctor.prototype.id
         >;
 
+  public readonly patientBookings: HasManyRepositoryFactory<PatientBooking, typeof Doctor.prototype.id>;
+
   constructor(
     @inject('datasources.healthcare') dataSource: HealthcareDataSource,
     @repository.getter('ClinicRepository')
     protected clinicRepositoryGetter: Getter<ClinicRepository>,
     @repository.getter('BranchRepository')
-    protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('SpecializationRepository') protected specializationRepositoryGetter: Getter<SpecializationRepository>, @repository.getter('BranchDoctorRepository') protected branchDoctorRepositoryGetter: Getter<BranchDoctorRepository>,
+    protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('SpecializationRepository') protected specializationRepositoryGetter: Getter<SpecializationRepository>, @repository.getter('BranchDoctorRepository') protected branchDoctorRepositoryGetter: Getter<BranchDoctorRepository>, @repository.getter('PatientBookingRepository') protected patientBookingRepositoryGetter: Getter<PatientBookingRepository>,
   ) {
     super(Doctor, dataSource);
+    this.patientBookings = this.createHasManyRepositoryFactoryFor('patientBookings', patientBookingRepositoryGetter,);
+    this.registerInclusionResolver('patientBookings', this.patientBookings.inclusionResolver);
     this.branches = this.createHasManyThroughRepositoryFactoryFor('branches', branchRepositoryGetter, branchDoctorRepositoryGetter,);
     this.registerInclusionResolver('branches', this.branches.inclusionResolver);
     this.specialization = this.createBelongsToAccessorFor('specialization', specializationRepositoryGetter,);
