@@ -3,6 +3,7 @@ import {
   Filter,
   FilterExcludingWhere,
   IsolationLevel,
+  relation,
   repository,
   Where,
 } from '@loopback/repository';
@@ -220,7 +221,17 @@ export class PatientBookingController {
     @param.filter(PatientBooking, {exclude: 'where'})
     filter?: FilterExcludingWhere<PatientBooking>,
   ): Promise<PatientBooking> {
-    return this.patientBookingRepository.findById(id, filter);
+    return this.patientBookingRepository.findById(id, {
+      ...filter,
+      include: [
+        {
+          relation: 'doctorTimeSlot',
+          scope: {
+            include: [{relation: 'doctorAvailability'}],
+          },
+        },
+      ],
+    });
   }
 
   // @patch('/patient-bookings/{id}')
@@ -504,7 +515,6 @@ export class PatientBookingController {
       await tx.rollback();
       throw err;
     }
-    
   }
 
   @del('/patient-bookings/{id}')
