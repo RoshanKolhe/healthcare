@@ -30,6 +30,12 @@ export class PatientBookingHistory extends Entity {
   endTime: Date;
 
   @property({
+    type: 'number',
+    default: 0,
+  })
+  status?: number; // 0 - pending, 1 - reschudule, 2 - completed, 3 - cancelled
+
+  @property({
     type: 'date',
   })
   createdAt?: Date;
