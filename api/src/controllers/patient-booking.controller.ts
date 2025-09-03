@@ -16,6 +16,7 @@ import {
   del,
   requestBody,
   response,
+  HttpErrors,
 } from '@loopback/rest';
 import {PatientBooking} from '../models';
 import {
@@ -148,6 +149,7 @@ export class PatientBookingController {
       patientBooking.date = date.toUTCString();
       patientBooking.startTime = startTime.toUTCString();
       patientBooking.endTime = endTime.toUTCString();
+      patientBooking.status = 0;
 
       // 5️⃣ Create booking
       const booking = await this.patientBookingRepository.create(
@@ -165,6 +167,7 @@ export class PatientBookingController {
           date: new Date(dateString).toUTCString(),
           startTime: new Date(`${dateString}T${startTimeStr}:00`).toUTCString(),
           endTime: new Date(`${dateString}T${endTimeStr}:00`).toUTCString(),
+          status: 0,
           createdAt: new Date(),
           updatedAt: new Date(),
           isDeleted: false,
@@ -497,6 +500,7 @@ export class PatientBookingController {
           patientBookingId: id,
           doctorTimeSlotId: bookingUpdate.doctorTimeSlotId,
           date: dateUTC,
+          status: 1,
           startTime: startTimeUTC,
           endTime: endTimeUTC,
           createdAt: new Date(),
@@ -515,6 +519,53 @@ export class PatientBookingController {
       await tx.rollback();
       throw err;
     }
+  }
+
+  @patch('/patient-bookings/{id}/cancel')
+  @response(200, {
+    description: 'Cancel a PatientBooking',
+    content: {'application/json': {schema: getModelSchemaRef(PatientBooking)}},
+  })
+  async cancelBooking(
+    @param.path.number('id') bookingId: number,
+  ): Promise<PatientBooking> {
+    // Find booking
+    const booking = await this.patientBookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new HttpErrors.NotFound('Booking not found');
+    }
+
+    // Check if already cancelled
+    if (booking.status === 2) {
+      throw new HttpErrors.BadRequest('This booking is already cancelled.');
+    }
+
+    // Update booking status to Cancelled (2 in booking table)
+    await this.patientBookingRepository.updateById(bookingId, {
+      status: 2,
+      updatedAt: new Date(),
+    });
+
+    // Insert a history entry with status = 3 (cancelled in history table)
+    await this.patientBookingHistoryRepository.create({
+      patientBookingId: booking.id!,
+      doctorTimeSlotId: booking.doctorTimeSlotId,
+      date: booking.date,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      status: 3, // cancelled in history
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isDeleted: false,
+    });
+
+    // Free the doctor’s slot again
+    await this.doctorTimeSlotRepository.updateById(booking.doctorTimeSlotId, {
+      isBooked: false,
+    });
+
+    // Return updated booking
+    return this.patientBookingRepository.findById(bookingId);
   }
 
   @del('/patient-bookings/{id}')
