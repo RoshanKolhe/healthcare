@@ -19,24 +19,6 @@ export class PatientBooking extends Entity {
   purposeOfMeet: string;
 
   @property({
-    type: 'date',
-    required: true,
-  })
-  date: Date;
-
-  @property({
-    type: 'date',
-    required: true,
-  })
-  startTime: Date;
-
-  @property({
-    type: 'date',
-    required: true,
-  })
-  endTime: Date;
-
-  @property({
     type: 'number',
     default: 0,
   })
