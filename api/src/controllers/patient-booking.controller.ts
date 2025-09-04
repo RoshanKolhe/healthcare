@@ -57,35 +57,36 @@ export class PatientBookingController {
         'application/json': {
           schema: {
             type: 'object',
-            required: ['date', 'startTime', 'endTime'],
             properties: {
               ...getModelSchemaRef(PatientBooking, {
                 title: 'NewPatientBooking',
                 exclude: ['id'],
               }).definitions?.PatientBooking?.properties,
-
-              date: {
-                type: 'string',
-                format: 'date',
-              },
-              startTime: {
-                type: 'string',
-              },
-              endTime: {
-                type: 'string',
+              doctorId: {type: 'number'},
+              doctorTimeSlotId: {type: 'number'},
+              patientFullDetail: {
+                type: 'object',
+                properties: {
+                  patientName: {type: 'string'},
+                  phoneNo: {type: 'string'},
+                  email: {type: 'string'},
+                  age: {type: 'number'},
+                  gender: {type: 'string'},
+                },
               },
             },
           },
         },
       },
     })
-    patientBooking: Omit<
-      PatientBooking,
-      'id' | 'date' | 'startTime' | 'endTime'
-    > & {
-      date: string;
-      startTime: string;
-      endTime: string;
+    patientBooking: Omit<PatientBooking, 'id'> & {
+      patientFullDetail?: {
+        patientName: string;
+        phoneNo: string;
+        email: string;
+        age: number;
+        gender?: string;
+      };
     },
   ): Promise<PatientBooking> {
     const repo = new DefaultTransactionalRepository(
@@ -95,13 +96,6 @@ export class PatientBookingController {
     const tx = await repo.beginTransaction(IsolationLevel.READ_COMMITTED);
 
     try {
-      const dateString = String(patientBooking.date);
-      const startTimeStr = String(patientBooking.startTime);
-      const endTimeStr = String(patientBooking.endTime);
-      const date = new Date(dateString);
-      const startTime = new Date(`${dateString}T${startTimeStr}:00`);
-      const endTime = new Date(`${dateString}T${endTimeStr}:00`);
-
       // 1️⃣ Check if slot is already booked
       const slot = await this.doctorTimeSlotRepository.findById(
         patientBooking.doctorTimeSlotId,
@@ -114,8 +108,7 @@ export class PatientBookingController {
       let patient = await this.patientRepository.findOne({
         where: {
           or: [
-            {email: (patientBooking.patientFullDetail as any)?.email},
-            {phoneNo: (patientBooking.patientFullDetail as any)?.phoneNo},
+            {phoneNo: patientBooking.patientFullDetail?.phoneNo},
           ],
         },
       });
@@ -124,36 +117,34 @@ export class PatientBookingController {
       if (!patient) {
         patient = await this.patientRepository.create(
           {
-            patientName: (patientBooking.patientFullDetail as any)?.patientName,
-            phoneNo: (patientBooking.patientFullDetail as any)?.phoneNo,
-            email: (patientBooking.patientFullDetail as any)?.email,
-            age: (patientBooking.patientFullDetail as any)?.age,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            isDeleted: false,
+            patientName: patientBooking.patientFullDetail?.patientName,
+            phoneNo: patientBooking.patientFullDetail?.phoneNo,
+            email: patientBooking.patientFullDetail?.email,
+            age: patientBooking.patientFullDetail?.age,
           },
           {transaction: tx},
         );
       }
 
       // 4️⃣ Set patientId and store full patient details in booking
-      patientBooking.patientId = patient.id!;
-      patientBooking.patientFullDetail = {
-        patientName: patient.patientName,
-        phoneNo: patient.phoneNo,
-        email: patient.email,
-        age: patient.age,
-        gender:
-          (patientBooking.patientFullDetail as any)?.gender || 'Not Specified',
+      const patientBookingData: PatientBooking = {
+        ...patientBooking,
+        patientId: patient.id!,
+        patientFullDetail: {
+          patientName: patient.patientName,
+          phoneNo: patient.phoneNo,
+          email: patient.email,
+          age: patient.age,
+          gender:
+            (patientBooking.patientFullDetail as any)?.gender ||
+            'Not Specified',
+        },
+        status: 0,
       };
-      patientBooking.date = date.toUTCString();
-      patientBooking.startTime = startTime.toUTCString();
-      patientBooking.endTime = endTime.toUTCString();
-      patientBooking.status = 0;
 
       // 5️⃣ Create booking
       const booking = await this.patientBookingRepository.create(
-        patientBooking,
+        patientBookingData,
         {
           transaction: tx,
         },
@@ -164,13 +155,6 @@ export class PatientBookingController {
         {
           patientBookingId: booking.id!,
           doctorTimeSlotId: booking.doctorTimeSlotId,
-          date: new Date(dateString).toUTCString(),
-          startTime: new Date(`${dateString}T${startTimeStr}:00`).toUTCString(),
-          endTime: new Date(`${dateString}T${endTimeStr}:00`).toUTCString(),
-          status: 0,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isDeleted: false,
         },
         {transaction: tx},
       );
@@ -237,103 +221,6 @@ export class PatientBookingController {
     });
   }
 
-  // @patch('/patient-bookings/{id}')
-  // @response(200, {
-  //   description: 'PatientBooking PATCH success',
-  //   content: {'application/json': {schema: getModelSchemaRef(PatientBooking)}},
-  // })
-  // async updateById(
-  //   @param.path.number('id') id: number,
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {
-  //         schema: {
-  //           type: 'object',
-  //           properties: {
-  //             ...getModelSchemaRef(PatientBooking, {partial: true}).definitions
-  //               ?.PatientBooking?.properties,
-  //             date: {type: 'string', format: 'date'},
-  //             startTime: {type: 'string'},
-  //             endTime: {type: 'string'},
-  //           },
-  //         },
-  //       },
-  //     },
-  //   })
-  //   patientBooking: Partial<
-  //     Omit<PatientBooking, 'date' | 'startTime' | 'endTime'>
-  //   > & {
-  //     date?: string;
-  //     startTime?: string;
-  //     endTime?: string;
-  //   },
-  // ): Promise<PatientBooking> {
-  //   const repo = new DefaultTransactionalRepository(
-  //     PatientBooking,
-  //     this.dataSource,
-  //   );
-  //   const tx = await repo.beginTransaction(IsolationLevel.READ_COMMITTED);
-
-  //   try {
-  //     // 1️⃣ Find the existing booking
-  //     const existingBooking = await this.patientBookingRepository.findById(id);
-  //     if (!existingBooking) throw new Error(`Booking with id ${id} not found`);
-
-  //     // 2️⃣ Convert date/time strings to UTC if provided
-  //     if (patientBooking.date) {
-  //       const dateString = patientBooking.date;
-  //       const startTimeStr = patientBooking.startTime || '00:00';
-  //       const endTimeStr = patientBooking.endTime || '23:59';
-
-  //       patientBooking.date = new Date(dateString).toUTCString();
-  //       patientBooking.startTime = new Date(
-  //         `${dateString}T${startTimeStr}:00`,
-  //       ).toUTCString();
-  //       patientBooking.endTime = new Date(
-  //         `${dateString}T${endTimeStr}:00`,
-  //       ).toUTCString();
-  //     }
-
-  //     // 3️⃣ If updating slot, check if new slot is free
-  //     if (
-  //       patientBooking.doctorTimeSlotId &&
-  //       patientBooking.doctorTimeSlotId !== existingBooking.doctorTimeSlotId
-  //     ) {
-  //       const newSlot = await this.doctorTimeSlotRepository.findById(
-  //         patientBooking.doctorTimeSlotId,
-  //       );
-  //       if (newSlot.isBooked) throw new Error('This slot is already booked.');
-
-  //       // free old slot
-  //       await this.doctorTimeSlotRepository.updateById(
-  //         existingBooking.doctorTimeSlotId,
-  //         {isBooked: false},
-  //         {transaction: tx},
-  //       );
-
-  //       // mark new slot as booked
-  //       await this.doctorTimeSlotRepository.updateById(
-  //         patientBooking.doctorTimeSlotId,
-  //         {isBooked: true},
-  //         {transaction: tx},
-  //       );
-  //     }
-
-  //     // 4️⃣ Update booking with new details
-  //     await this.patientBookingRepository.updateById(id, patientBooking, {
-  //       transaction: tx,
-  //     });
-
-  //     // 5️⃣ Commit transaction
-  //     await tx.commit();
-
-  //     // 6️⃣ Return updated booking
-  //     return this.patientBookingRepository.findById(id);
-  //   } catch (err) {
-  //     await tx.rollback();
-  //     throw err;
-  //   }
-  // }
   @patch('/patient-bookings/{id}/personal-info')
   @response(200, {
     description: 'Update personal info of a booking',
@@ -348,7 +235,16 @@ export class PatientBookingController {
             type: 'object',
             properties: {
               purposeOfMeet: {type: 'string'},
-              patientFullDetail: {type: 'object'},
+              patientFullDetail: {
+                type: 'object',
+                properties: {
+                  patientName: {type: 'string'},
+                  email: {type: 'string'},
+                  age: {type: 'number'},
+                  gender: {type: 'string'},
+                },
+                additionalProperties: false,
+              },
             },
             additionalProperties: false, // Only allow these two fields
           },
@@ -410,28 +306,16 @@ export class PatientBookingController {
           schema: {
             type: 'object',
             properties: {
-              date: {type: 'string', format: 'date'},
-              startTime: {type: 'string'}, // HH:mm
-              endTime: {type: 'string'}, // HH:mm
               doctorId: {type: 'number'},
               doctorTimeSlotId: {type: 'number'},
             },
-            required: [
-              'date',
-              'startTime',
-              'endTime',
-              'doctorId',
-              'doctorTimeSlotId',
-            ],
+            required: ['doctorId', 'doctorTimeSlotId'],
             additionalProperties: false,
           },
         },
       },
     })
     bookingUpdate: {
-      date: string;
-      startTime: string;
-      endTime: string;
       doctorId: number;
       doctorTimeSlotId: number;
     },
@@ -460,26 +344,10 @@ export class PatientBookingController {
         {transaction: tx},
       );
 
-      // 4️⃣ Convert date/time to UTC (same logic as POST)
-      const dateString = String(bookingUpdate.date);
-      const startTimeStr = String(bookingUpdate.startTime);
-      const endTimeStr = String(bookingUpdate.endTime);
-
-      const dateUTC = new Date(dateString).toUTCString();
-      const startTimeUTC = new Date(
-        `${dateString}T${startTimeStr}:00`,
-      ).toUTCString();
-      const endTimeUTC = new Date(
-        `${dateString}T${endTimeStr}:00`,
-      ).toUTCString();
-
       // 5️⃣ Update booking with new slot and times
       await this.patientBookingRepository.updateById(
         id,
         {
-          date: dateUTC,
-          startTime: startTimeUTC,
-          endTime: endTimeUTC,
           doctorId: bookingUpdate.doctorId,
           doctorTimeSlotId: bookingUpdate.doctorTimeSlotId,
           updatedAt: new Date(),
@@ -499,10 +367,7 @@ export class PatientBookingController {
         {
           patientBookingId: id,
           doctorTimeSlotId: bookingUpdate.doctorTimeSlotId,
-          date: dateUTC,
           status: 1,
-          startTime: startTimeUTC,
-          endTime: endTimeUTC,
           createdAt: new Date(),
           updatedAt: new Date(),
           isDeleted: false,
@@ -543,20 +408,13 @@ export class PatientBookingController {
     // Update booking status to Cancelled (2 in booking table)
     await this.patientBookingRepository.updateById(bookingId, {
       status: 2,
-      updatedAt: new Date(),
     });
 
     // Insert a history entry with status = 3 (cancelled in history table)
     await this.patientBookingHistoryRepository.create({
       patientBookingId: booking.id!,
       doctorTimeSlotId: booking.doctorTimeSlotId,
-      date: booking.date,
-      startTime: booking.startTime,
-      endTime: booking.endTime,
       status: 3, // cancelled in history
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      isDeleted: false,
     });
 
     // Free the doctor’s slot again
