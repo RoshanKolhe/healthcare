@@ -1,7 +1,8 @@
-import {Entity, model, property, belongsTo} from '@loopback/repository';
+import {Entity, model, property, belongsTo, hasMany} from '@loopback/repository';
 import {Patient} from './patient.model';
 import {Doctor} from './doctor.model';
 import {DoctorTimeSlot} from './doctor-time-slot.model';
+import {PatientBookingHistory} from './patient-booking-history.model';
 
 @model()
 export class PatientBooking extends Entity {
@@ -58,6 +59,9 @@ export class PatientBooking extends Entity {
 
   @belongsTo(() => DoctorTimeSlot)
   doctorTimeSlotId: number;
+
+  @hasMany(() => PatientBookingHistory)
+  patientBookingHistories: PatientBookingHistory[];
 
   constructor(data?: Partial<PatientBooking>) {
     super(data);

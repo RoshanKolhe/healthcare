@@ -191,7 +191,17 @@ export class PatientBookingController {
   async find(
     @param.filter(PatientBooking) filter?: Filter<PatientBooking>,
   ): Promise<PatientBooking[]> {
-    return this.patientBookingRepository.find(filter);
+    return this.patientBookingRepository.find({
+      ...filter,
+      include: [
+        {
+          relation: 'doctorTimeSlot',
+          scope: {
+            include: [{relation: 'doctorAvailability'}],
+          },
+        },
+      ],
+    });
   }
 
   @get('/patient-bookings/{id}')
@@ -217,6 +227,9 @@ export class PatientBookingController {
             include: [{relation: 'doctorAvailability'}],
           },
         },
+        {
+          relation: 'patientBookingHistories',
+        }
       ],
     });
   }
