@@ -370,6 +370,19 @@ export const USER_STATUS_OPTIONS = [
   { value: '0', label: 'In-Active' },
 ];
 
+export const BOOKING_STATUS_OPTIONS = [
+  { value: '0', label: 'Confirm' },
+  { value: '1', label: 'Completed' },
+  { value: '2', label: 'Cancelled' },
+];
+export const BOOKING_HISTORY_STATUS_OPTIONS = [
+  { value: '0', label: 'Pending' },
+  { value: '1', label: 'Reschudule' },
+  { value: '2', label: 'Completed' },
+  { value: '3', label: 'Cancelled' },
+];
+
+
 export const TARGET_STATUS_OPTIONS = [
   { value: '0', label: 'Pending' },
   { value: '1', label: 'Approved' },

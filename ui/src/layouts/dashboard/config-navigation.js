@@ -110,6 +110,14 @@ export function useNavData() {
               { title: t('create'), path: paths.dashboard.doctor.new },
             ],
           },
+          {
+            title: t('bookings'),
+            path: paths.dashboard.booking.root,
+            icon: ICONS.doctor,
+            children: [
+              { title: t('list'), path: paths.dashboard.booking.list },
+            ],
+          },
         ],
       },
       // MASTERS
