@@ -23,7 +23,9 @@ export async function migrate(args: string[]) {
       'DoctorTimeSlot',
       'Patient',
       'PatientBooking',
-      'PatientBookingHistory'
+      'PatientBookingHistory',
+      'Agent',
+      'AgentPlan',
     ],
   });
 

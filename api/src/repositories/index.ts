@@ -12,3 +12,5 @@ export * from './doctor-time-slot.repository';
 export * from './patient.repository';
 export * from './patient-booking.repository';
 export * from './patient-booking-history.repository';
+export * from './agent.repository';
+export * from './agent-plan.repository';
