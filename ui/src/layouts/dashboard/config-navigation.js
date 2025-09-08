@@ -47,6 +47,7 @@ const ICONS = {
   clinic: icon('ic_clinic'),
   branch: icon('ic_branch'),
   doctor: icon('ic_doctor'),
+  bookings: icon('ic_bookings'),
   service: icon('ic_services'),
   type: icon('ic_type'),
   category: icon('ic_category'),
@@ -108,6 +109,14 @@ export function useNavData() {
             children: [
               { title: t('list'), path: paths.dashboard.doctor.list },
               { title: t('create'), path: paths.dashboard.doctor.new },
+            ],
+          },
+          {
+            title: t('bookings'),
+            path: paths.dashboard.booking.root,
+            icon: ICONS.bookings,
+            children: [
+              { title: t('list'), path: paths.dashboard.booking.list },
             ],
           },
         ],

@@ -25,3 +25,8 @@ export function fToNow(date) {
       })
     : '';
 }
+
+export function fTime(date, newFormat) {
+  const fm = newFormat || 'p'; // 'p' = localized time (e.g., 2:30 PM)
+  return date ? format(new Date(date), fm) : '';
+}
