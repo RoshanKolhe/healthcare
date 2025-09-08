@@ -107,9 +107,7 @@ export class PatientBookingController {
       // 2️⃣ Check if patient exists (by email or phoneNo)
       let patient = await this.patientRepository.findOne({
         where: {
-          or: [
-            {phoneNo: patientBooking.patientFullDetail?.phoneNo},
-          ],
+          or: [{phoneNo: patientBooking.patientFullDetail?.phoneNo}],
         },
       });
 
@@ -229,7 +227,7 @@ export class PatientBookingController {
         },
         {
           relation: 'patientBookingHistories',
-        }
+        },
       ],
     });
   }
@@ -445,5 +443,63 @@ export class PatientBookingController {
   })
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.patientBookingRepository.deleteById(id);
+  }
+
+  @get('/patient-bookings/reminders')
+  @response(200, {
+    description: 'Get bookings for reminders',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(PatientBooking, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async getUpcomingBookingsForReminders(): Promise<PatientBooking[]> {
+    const now = new Date().getTime();
+    const pollingWindowMs = 5 * 60 * 1000; 
+
+    // Fetch bookings with related slot + availability
+    const bookings = await this.patientBookingRepository.find({
+      where: {status: 0}, // pending bookings only
+      include: [
+        {
+          relation: 'doctorTimeSlot',
+          scope: {include: ['doctorAvailability']},
+        },
+      ],
+    });
+
+    const filtered = bookings.filter((booking: any) => {
+      const slot = booking.doctorTimeSlot;
+      if (!slot || !slot.slotStart) return false;
+
+      const startTime = new Date(slot.slotStart).getTime();
+      const endTime = new Date(slot.slotEnd || startTime).getTime();
+
+      const diffToStart = startTime - now;
+      const diffToEnd = now - endTime;
+
+      // Strict 1-hour before start (exact window: 1h ±10min)
+      const is1HrBefore =
+        diffToStart >=  60 * 60 * 1000 - pollingWindowMs &&
+        diffToStart <=  60 * 60 * 1000 + pollingWindowMs;
+
+      // Strict 1-day before start (exact window: 24h ±10min)
+      const is1DayBefore =
+        diffToStart >= 24 * 60 * 60 * 1000 - pollingWindowMs &&
+        diffToStart <= 24 * 60 * 60 * 1000 + pollingWindowMs;
+
+      // Strict 1-hour after end (exact window: 1h ±10min)
+      const is1HrAfterEnd =
+        diffToEnd >= 60 * 60 * 1000 - pollingWindowMs &&
+        diffToEnd <= 60 * 60 * 1000 + pollingWindowMs;
+
+      return is1HrBefore || is1DayBefore || is1HrAfterEnd;
+    });
+
+    return filtered;
   }
 }
