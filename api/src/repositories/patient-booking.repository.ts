@@ -1,12 +1,14 @@
 import {Constructor, inject, Getter} from '@loopback/core';
 import {DefaultCrudRepository, repository, BelongsToAccessor, HasManyRepositoryFactory} from '@loopback/repository';
 import {HealthcareDataSource} from '../datasources';
-import {PatientBooking, PatientBookingRelations, Patient, Doctor, DoctorTimeSlot, PatientBookingHistory} from '../models';
+import {PatientBooking, PatientBookingRelations, Patient, Doctor, DoctorTimeSlot, PatientBookingHistory, Clinic, Branch} from '../models';
 import { TimeStampRepositoryMixin } from '../mixins/timestamp-repository-mixin';
 import {PatientRepository} from './patient.repository';
 import {DoctorRepository} from './doctor.repository';
 import {DoctorTimeSlotRepository} from './doctor-time-slot.repository';
 import {PatientBookingHistoryRepository} from './patient-booking-history.repository';
+import {ClinicRepository} from './clinic.repository';
+import {BranchRepository} from './branch.repository';
 
 export class PatientBookingRepository extends TimeStampRepositoryMixin<
   PatientBooking,
@@ -24,10 +26,18 @@ export class PatientBookingRepository extends TimeStampRepositoryMixin<
 
   public readonly patientBookingHistories: HasManyRepositoryFactory<PatientBookingHistory, typeof PatientBooking.prototype.id>;
 
+  public readonly clinic: BelongsToAccessor<Clinic, typeof PatientBooking.prototype.id>;
+
+  public readonly branch: BelongsToAccessor<Branch, typeof PatientBooking.prototype.id>;
+
   constructor(
-    @inject('datasources.healthcare') dataSource: HealthcareDataSource, @repository.getter('PatientRepository') protected patientRepositoryGetter: Getter<PatientRepository>, @repository.getter('DoctorRepository') protected doctorRepositoryGetter: Getter<DoctorRepository>, @repository.getter('DoctorTimeSlotRepository') protected doctorTimeSlotRepositoryGetter: Getter<DoctorTimeSlotRepository>, @repository.getter('PatientBookingHistoryRepository') protected patientBookingHistoryRepositoryGetter: Getter<PatientBookingHistoryRepository>,
+    @inject('datasources.healthcare') dataSource: HealthcareDataSource, @repository.getter('PatientRepository') protected patientRepositoryGetter: Getter<PatientRepository>, @repository.getter('DoctorRepository') protected doctorRepositoryGetter: Getter<DoctorRepository>, @repository.getter('DoctorTimeSlotRepository') protected doctorTimeSlotRepositoryGetter: Getter<DoctorTimeSlotRepository>, @repository.getter('PatientBookingHistoryRepository') protected patientBookingHistoryRepositoryGetter: Getter<PatientBookingHistoryRepository>, @repository.getter('ClinicRepository') protected clinicRepositoryGetter: Getter<ClinicRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
   ) {
     super(PatientBooking, dataSource);
+    this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);
+    this.registerInclusionResolver('branch', this.branch.inclusionResolver);
+    this.clinic = this.createBelongsToAccessorFor('clinic', clinicRepositoryGetter,);
+    this.registerInclusionResolver('clinic', this.clinic.inclusionResolver);
     this.patientBookingHistories = this.createHasManyRepositoryFactoryFor('patientBookingHistories', patientBookingHistoryRepositoryGetter,);
     this.registerInclusionResolver('patientBookingHistories', this.patientBookingHistories.inclusionResolver);
     this.doctorTimeSlot = this.createBelongsToAccessorFor('doctorTimeSlot', doctorTimeSlotRepositoryGetter,);

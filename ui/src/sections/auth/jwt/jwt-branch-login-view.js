@@ -4,7 +4,7 @@
 
 import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 // @mui
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -30,8 +30,8 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import { useSnackbar } from 'notistack';
 
 // ----------------------------------------------------------------------
-export default function JwtDoctorLoginView() {
-  const { doctorLogin } = useAuthContext();
+export default function JwtBranchLoginView() {
+  const { branchLogin, authenticated } = useAuthContext();
 
   const router = useRouter();
 
@@ -43,7 +43,7 @@ export default function JwtDoctorLoginView() {
 
   const { enqueueSnackbar } = useSnackbar();
 
-  const LoginSchema = Yup.object().shape({
+  const BranchLoginSchema = Yup.object().shape({
     email: Yup.string().required('Email is required').email('Email must be a valid email address'),
     password: Yup.string().required('Password is required'),
   });
@@ -54,7 +54,7 @@ export default function JwtDoctorLoginView() {
   };
 
   const methods = useForm({
-    resolver: yupResolver(LoginSchema),
+    resolver: yupResolver(BranchLoginSchema),
     defaultValues,
   });
 
@@ -65,8 +65,9 @@ export default function JwtDoctorLoginView() {
   } = methods;
 
   const onSubmit = handleSubmit(async (data) => {
+    if (isSubmitting) return;
     try {
-      await doctorLogin?.(data.email, data.password);
+      await branchLogin?.(data.email, data.password);
 
       router.push(returnTo || PATH_AFTER_LOGIN);
     } catch (error) {
@@ -90,13 +91,19 @@ export default function JwtDoctorLoginView() {
     }
   });
 
+  useEffect(() => {
+  if (authenticated) {
+    router.push(returnTo || PATH_AFTER_LOGIN);
+  }
+}, [authenticated, router, returnTo]);
+
   const renderHead = (
     <Stack spacing={2} sx={{ mb: 5 }}>
       <Typography variant="h4">Sign in</Typography>
       {/* <Stack direction="row" spacing={0.5}>
-        <Typography variant="body2">New Doctor?</Typography>
+        <Typography variant="body2">New user?</Typography>
 
-        <Link component={RouterLink} href={paths.auth.jwt.hospitalRegister} variant="subtitle2">
+        <Link component={RouterLink} href={paths.auth.jwt.register} variant="subtitle2">
           Create an account
         </Link>
       </Stack> */}
@@ -124,7 +131,7 @@ export default function JwtDoctorLoginView() {
 
       <Link
         component={RouterLink}
-        href={paths.auth.jwt.doctorForgotPassword}
+        href={paths.auth.jwt.forgotPassword}
         variant="body2"
         color="inherit"
         underline="always"
@@ -141,7 +148,7 @@ export default function JwtDoctorLoginView() {
         variant="contained"
         loading={isSubmitting}
       >
-        Login
+        Branch Login
       </LoadingButton>
     </Stack>
   );

@@ -29,6 +29,12 @@ export default function BookingTableFiltersResult({
     onFilters('role', newValue);
   };
 
+  const statusLabels = {
+    0: 'Confirmed',
+    1: 'Completed',
+    2: 'Cancelled',
+  };
+
   return (
     <Stack spacing={1.5} {...other}>
       <Box sx={{ typography: 'body2' }}>
@@ -43,7 +49,7 @@ export default function BookingTableFiltersResult({
           <Block label="Status:">
             <Chip
               size="small"
-              label={filters.status === '1' ? 'Active' : 'In-Active'}
+              label={statusLabels[filters.status]}
               onDelete={handleRemoveStatus}
             />
           </Block>
