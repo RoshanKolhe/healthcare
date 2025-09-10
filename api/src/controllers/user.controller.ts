@@ -133,7 +133,7 @@ export class UserController {
     const userProfile = this.userService.convertToUserProfile(user);
     const userData = _.omit(user, 'password');
     const token = await this.jwtService.generateToken(userProfile);
-    const allUserData = await this.userRepository.findById(userData.id,{
+    const allUserData = await this.userRepository.findById(userData.id, {
       include: [
         {
           relation: 'clinic',
@@ -145,7 +145,7 @@ export class UserController {
             ],
           },
         },
-      ]
+      ],
     });
     return Promise.resolve({
       accessToken: token,
@@ -175,7 +175,7 @@ export class UserController {
   @authenticate({
     strategy: 'jwt',
     options: {
-      required: [PermissionKeys.SUPER_ADMIN],
+      required: [PermissionKeys.SUPER_ADMIN, PermissionKeys.CLINIC],
     },
   })
   @get('/users/list')
@@ -206,7 +206,33 @@ export class UserController {
       fields: {password: false, otp: false, otpExpireAt: false},
       include: [{relation: 'clinic'}, {relation: 'branch'}],
     };
-    return this.userRepository.find(filter);
+    // return this.userRepository.find(filter);
+    const userDetails: any = await this.userRepository.findById(
+      currentUser.id,
+      {
+        include: ['clinic', 'branch'],
+      },
+    );
+
+    const currentUserPermission = currentUser.permissions;
+
+    // SUPER ADMIN → return all users
+    if (currentUserPermission.includes(PermissionKeys.SUPER_ADMIN)) {
+      return this.userRepository.find(filter);
+    }
+
+    // CLINIC → return only branch users of this clinic
+    if (currentUserPermission.includes(PermissionKeys.CLINIC)) {
+      const users = await this.userRepository.find(filter);
+
+      // Filter branch users of this clinic
+      return users.filter(
+        u =>
+          u.clinicId === userDetails.clinicId &&
+          u.permissions.includes('branch'),
+      );
+    }
+    return [];
   }
 
   @authenticate({
@@ -235,7 +261,7 @@ export class UserController {
         otp: false,
         otpExpireAt: false,
       },
-      include: [{relation: 'clinic'},{relation: 'branch'}],
+      include: [{relation: 'clinic'}, {relation: 'branch'}],
     });
     return Promise.resolve({
       ...user,

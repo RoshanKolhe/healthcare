@@ -207,6 +207,15 @@ export function useNavData() {
         subheader: t('management'),
         items: [
           {
+            title: t('user'),
+            path: paths.dashboard.user.root,
+            icon: ICONS.user,
+            children: [
+              { title: t('list'), path: paths.dashboard.user.list },
+              { title: t('create'), path: paths.dashboard.user.new },
+            ],
+          },
+          {
             title: t('branch'),
             path: paths.dashboard.branch.root,
             icon: ICONS.branch,
