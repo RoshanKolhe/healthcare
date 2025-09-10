@@ -22,17 +22,6 @@ import CustomPopover, { usePopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-const OPTIONS = [
-  {
-    label: 'Home',
-    linkTo: '/',
-  },
-  {
-    label: 'Profile',
-    linkTo: paths.dashboard.user.profile,
-  },
-];
-
 // ----------------------------------------------------------------------
 
 export default function AccountPopover() {
@@ -43,6 +32,19 @@ export default function AccountPopover() {
   const { enqueueSnackbar } = useSnackbar();
 
   const popover = usePopover();
+
+  const userRole = user?.permissions?.[0];
+
+  const OPTIONS = [
+    {
+      label: 'Home',
+      linkTo: '/',
+    },
+    {
+      label: 'Profile',
+      linkTo: userRole === 'doctor' ? paths.dashboard.doctor.profile : paths.dashboard.user.profile,
+    },
+  ];
 
   const handleLogout = async () => {
     try {

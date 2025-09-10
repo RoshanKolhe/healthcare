@@ -38,6 +38,7 @@ const ICONS = {
   invoice: icon('ic_invoice'),
   product: icon('ic_product'),
   calendar: icon('ic_calendar'),
+  calender: icon('ic_calender'),
   disabled: icon('ic_disabled'),
   external: icon('ic_external'),
   menuItem: icon('ic_menu_item'),
@@ -213,15 +214,6 @@ export function useNavData() {
         subheader: t('management'),
         items: [
           {
-            title: t('clinic'),
-            path: paths.dashboard.clinic.root,
-            icon: ICONS.clinic,
-            children: [
-              { title: t('list'), path: paths.dashboard.clinic.list },
-              { title: t('create'), path: paths.dashboard.clinic.new },
-            ],
-          },
-          {
             title: t('branch'),
             path: paths.dashboard.branch.root,
             icon: ICONS.branch,
@@ -239,12 +231,27 @@ export function useNavData() {
               { title: t('create'), path: paths.dashboard.doctor.new },
             ],
           },
+          {
+            title: t('bookings'),
+            path: paths.dashboard.booking.root,
+            icon: ICONS.bookings,
+            children: [
+              { title: t('list'), path: paths.dashboard.booking.list },
+            ],
+          },
         ],
       },
     ];
   }
-  if (user && user.permissions.includes('doctor')) {
+  if (user && user.permissions.includes('branch')) {
     data = [
+      // OVERVIEW
+      // ----------------------------------------------------------------------
+      {
+        subheader: t('overview'),
+        items: [{ title: t('dashboard'), path: paths.dashboard.root, icon: ICONS.dashboard }],
+      },
+      // CLINIC DASHBOARD
       {
         subheader: t('management'),
         items: [
@@ -255,6 +262,43 @@ export function useNavData() {
             children: [
               { title: t('list'), path: paths.dashboard.doctor.list },
               { title: t('create'), path: paths.dashboard.doctor.new },
+            ],
+          },
+          {
+            title: t('bookings'),
+            path: paths.dashboard.booking.root,
+            icon: ICONS.bookings,
+            children: [
+              { title: t('list'), path: paths.dashboard.booking.list },
+            ],
+          },
+        ],
+      },
+    ];
+  }
+  if (user && user.permissions.includes('doctor')) {
+    data = [
+      {
+        subheader: t('overview'),
+        items: [{ title: t('dashboard'), path: paths.dashboard.root, icon: ICONS.dashboard }],
+      },
+      {
+        subheader: t('management'),
+        items: [
+          {
+            title: t('calendar'),
+            path: paths.dashboard.doctor.root,
+            icon: ICONS.calender,
+            children: [
+              { title: t('view'), path: paths.dashboard.doctor.doctorCalendar },
+            ],
+          },
+          {
+            title: t('bookings'),
+            path: paths.dashboard.booking.root,
+            icon: ICONS.bookings,
+            children: [
+              { title: t('list'), path: paths.dashboard.booking.list },
             ],
           },
         ],

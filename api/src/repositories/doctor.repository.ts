@@ -12,6 +12,10 @@ import {SpecializationRepository} from './specialization.repository';
 import {BranchDoctorRepository} from './branch-doctor.repository';
 import {PatientBookingRepository} from './patient-booking.repository';
 
+export type DoctorCredentials = {
+  email?: string;
+  password: string;
+};
 export class DoctorRepository extends TimeStampRepositoryMixin<
   Doctor,
   typeof Doctor.prototype.id,

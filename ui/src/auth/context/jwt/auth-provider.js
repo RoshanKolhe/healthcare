@@ -102,7 +102,7 @@ export function AuthProvider({ children }) {
 
     const { accessToken, user } = response.data;
 
-    if (user && (user.permissions.includes('super_admin'))) {
+    if (user && user.permissions.includes('super_admin')) {
       setSession(accessToken);
       sessionStorage.setItem(PERMISSION_KEY, user.permissions[0]);
     } else throw new Error("User doesn't have permission");
@@ -132,15 +132,15 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-  // ---------------- Doctor LOGIN ----------------
-  const doctorLogin = useCallback(async (email, password) => {
+  // ---------------- Clinic LOGIN ----------------
+  const branchLogin = useCallback(async (email, password) => {
     const data = { email, password };
 
-    const response = await axios.post(endpoints.auth.doctor.login, data);
+    const response = await axios.post(endpoints.auth.branch.login, data);
 
     const { accessToken, user } = response.data;
 
-    if (user && user.permissions.includes('doctor')) {
+    if (user && user.permissions.includes('branch')) {
       setSession(accessToken);
       sessionStorage.setItem(PERMISSION_KEY, user.permissions[0]);
     } else throw new Error("User doesn't have permission");
@@ -151,19 +151,39 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
+  // ---------------- Doctor LOGIN ----------------
+  const doctorLogin = useCallback(async (email, password) => {
+    const data = { email, password };
+
+    const response = await axios.post(endpoints.auth.doctor.login, data);
+
+    const { accessToken, doctor } = response.data;
+    console.log(doctor);
+
+    if (doctor && doctor.permissions.includes('doctor')) {
+      setSession(accessToken);
+      sessionStorage.setItem(PERMISSION_KEY, doctor.permissions[0]);
+    } else throw new Error("Doctor doesn't have permission");
+
+    dispatch({
+      type: 'LOGIN',
+      payload: { user: doctor },
+    });
+  }, []);
+
   // REGISTER (common, but probably only for super_admin in your case)
   const register = useCallback(async (email, password, firstName, lastName) => {
     const data = { email, password, firstName, lastName };
 
-    const response = await axios.post(endpoints.auth.register, data);
+    const response = await axios.post(endpoints.auth.doctor.register, data);
 
-    const { accessToken, user } = response.data;
+    const { accessToken, doctor } = response.data;
 
     sessionStorage.setItem(STORAGE_KEY, accessToken);
 
     dispatch({
       type: 'REGISTER',
-      payload: { user },
+      payload: { user: doctor },
     });
   }, []);
 
@@ -186,13 +206,14 @@ export function AuthProvider({ children }) {
       authenticated: status === 'authenticated',
       unauthenticated: status === 'unauthenticated',
       //
-      login,        // super_admin login
-      clinicLogin,  // clinic login
-      doctorLogin,  // doctor login
+      login, // super_admin login
+      clinicLogin, // clinic login
+      doctorLogin, // doctor login
+      branchLogin, // branch login
       register,
       logout,
     }),
-    [login, clinicLogin, doctorLogin, register, logout, state.user, status]
+    [login, clinicLogin, branchLogin, doctorLogin, register, logout, state.user, status]
   );
 
   return <AuthContext.Provider value={memoizedValue}>{children}</AuthContext.Provider>;

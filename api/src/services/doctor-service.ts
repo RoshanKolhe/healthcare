@@ -52,8 +52,8 @@ export class MyDoctorService implements UserService<Doctor, Credentials> {
       name: `${doctor.firstName}`,
       email: doctor.email,
       [securityId]: `${doctor.id}`,
-      permissions: doctor.permissions,
-      doctorType: 'admin',
+      permissions: doctor.permissions ?? ['doctor'],
+      userType: 'doctor',
     };
   }
 }

@@ -369,13 +369,15 @@ export default function BookingListView() {
 function applyFilter({ inputData, comparator, filters }) {
   const { name, status, role } = filters;
   const stabilizedThis = inputData.map((el, index) => [el, index]);
+
   const roleMapping = {
     super_admin: 'Super Admin',
-    admin: 'Admin',
-    cgm: 'CGM',
-    hod: 'Hod',
-    sub_hod: 'Sub Hod',
+    clinic: 'Clinic',
+    branch: 'Branch',
+    doctor: 'Doctor',
   };
+
+  // Sort
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
     if (order !== 0) return order;
@@ -384,6 +386,7 @@ function applyFilter({ inputData, comparator, filters }) {
 
   inputData = stabilizedThis.map((el) => el[0]);
 
+  // 🔍 Name search filter
   if (name) {
     inputData = inputData.filter((booking) =>
       Object.values(booking).some((value) =>
@@ -392,10 +395,12 @@ function applyFilter({ inputData, comparator, filters }) {
     );
   }
 
+  // 🔍 Status filter for bookings
   if (status !== 'all') {
-    inputData = inputData.filter((user) => (status === '1' ? user.isActive : !user.isActive));
+    inputData = inputData.filter((booking) => String(booking.status) === String(status));
   }
 
+  // 🔍 Role filter (if applicable)
   if (role.length) {
     inputData = inputData.filter(
       (booking) =>

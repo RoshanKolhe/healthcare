@@ -3,6 +3,8 @@ import {Patient} from './patient.model';
 import {Doctor} from './doctor.model';
 import {DoctorTimeSlot} from './doctor-time-slot.model';
 import {PatientBookingHistory} from './patient-booking-history.model';
+import {Clinic} from './clinic.model';
+import {Branch} from './branch.model';
 
 @model()
 export class PatientBooking extends Entity {
@@ -62,6 +64,12 @@ export class PatientBooking extends Entity {
 
   @hasMany(() => PatientBookingHistory)
   patientBookingHistories: PatientBookingHistory[];
+
+  @belongsTo(() => Clinic)
+  clinicId: number;
+
+  @belongsTo(() => Branch)
+  branchId: number;
 
   constructor(data?: Partial<PatientBooking>) {
     super(data);

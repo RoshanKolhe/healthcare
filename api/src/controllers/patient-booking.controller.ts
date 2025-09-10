@@ -18,15 +18,19 @@ import {
   response,
   HttpErrors,
 } from '@loopback/rest';
-import {PatientBooking} from '../models';
+import {DoctorTimeSlot, PatientBooking} from '../models';
 import {
   DoctorTimeSlotRepository,
   PatientBookingHistoryRepository,
   PatientBookingRepository,
   PatientRepository,
+  UserRepository,
 } from '../repositories';
 import {HealthcareDataSource} from '../datasources';
 import {inject} from '@loopback/core';
+import {authenticate, AuthenticationBindings} from '@loopback/authentication';
+import {PermissionKeys} from '../authorization/permission-keys';
+import {UserProfile} from '@loopback/security';
 
 export class PatientBookingController {
   constructor(
@@ -44,6 +48,9 @@ export class PatientBookingController {
 
     @repository(DoctorTimeSlotRepository)
     public doctorTimeSlotRepository: DoctorTimeSlotRepository,
+
+    @repository(UserRepository)
+    public userRepository: UserRepository,
   ) {}
 
   @post('/patient-bookings')
@@ -174,7 +181,7 @@ export class PatientBookingController {
     }
   }
 
-  @get('/patient-bookings')
+  @get('/patient-bookings/all')
   @response(200, {
     description: 'Array of PatientBooking model instances',
     content: {
@@ -186,7 +193,7 @@ export class PatientBookingController {
       },
     },
   })
-  async find(
+  async findall(
     @param.filter(PatientBooking) filter?: Filter<PatientBooking>,
   ): Promise<PatientBooking[]> {
     return this.patientBookingRepository.find({
@@ -200,6 +207,98 @@ export class PatientBookingController {
         },
       ],
     });
+  }
+  
+  @authenticate({
+    strategy: 'jwt',
+    options: {
+      required: [
+        PermissionKeys.SUPER_ADMIN,
+        PermissionKeys.CLINIC,
+        PermissionKeys.BRANCH,
+        PermissionKeys.DOCTOR,
+      ],
+    },
+  })
+  @get('/patient-bookings')
+  @response(200, {
+    description: 'Array of PatientBooking model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(PatientBooking, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async find(
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
+    @param.filter(PatientBooking) filter?: Filter<PatientBooking>,
+  ): Promise<PatientBooking[]> {
+    filter = {
+      ...filter,
+      include: [
+        {
+          relation: 'doctorTimeSlot',
+          scope: {
+            include: [
+              {
+                relation: 'doctorAvailability',
+              },
+            ],
+          },
+        },
+      ],
+      order: ['createdAt DESC'],
+    };
+
+    const currentUserPermission = currentUser.permissions;
+    const userDetails = await this.userRepository.findById(currentUser.id, {
+      include: ['clinic', 'branch'], // <-- make sure User model has these relations
+    });
+
+    // SUPER ADMIN → all bookings
+    if (currentUserPermission.includes(PermissionKeys.SUPER_ADMIN)) {
+      return this.patientBookingRepository.find(filter);
+    }
+    console.log('userDetails', userDetails);
+
+    // CLINIC → filter by clinicId
+    if (currentUserPermission.includes(PermissionKeys.CLINIC)) {
+      return this.patientBookingRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          clinicId: userDetails.clinicId,
+        },
+      });
+    }
+
+    // BRANCH → filter by branchId
+    if (currentUserPermission.includes(PermissionKeys.BRANCH)) {
+      return this.patientBookingRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          branchId: userDetails.branchId, // assuming currentUser.id = branchId
+        },
+      });
+    }
+
+    // DOCTOR → filter by doctorId
+    if (currentUserPermission.includes(PermissionKeys.DOCTOR)) {
+      return this.patientBookingRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          doctorId: currentUser.id, // assuming currentUser.id = doctorId
+        },
+      });
+    }
+
+    // default empty if no match
+    return [];
   }
 
   @get('/patient-bookings/{id}')
@@ -445,6 +544,63 @@ export class PatientBookingController {
     await this.patientBookingRepository.deleteById(id);
   }
 
+  // @get('/patient-bookings/reminders')
+  // @response(200, {
+  //   description: 'Get bookings for reminders',
+  //   content: {
+  //     'application/json': {
+  //       schema: {
+  //         type: 'array',
+  //         items: getModelSchemaRef(PatientBooking, {includeRelations: true}),
+  //       },
+  //     },
+  //   },
+  // })
+  // async getUpcomingBookingsForReminders(): Promise<PatientBooking[]> {
+  //   const now = new Date().getTime();
+  //   const pollingWindowMs = 5 * 60 * 1000;
+
+  //   // Fetch bookings with related slot + availability
+  //   const bookings = await this.patientBookingRepository.find({
+  //     where: {status: 0}, // pending bookings only
+  //     include: [
+  //       {
+  //         relation: 'doctorTimeSlot',
+  //         scope: {include: ['doctorAvailability']},
+  //       },
+  //     ],
+  //   });
+
+  //   const filtered = bookings.filter((booking: any) => {
+  //     const slot = booking.doctorTimeSlot;
+  //     if (!slot || !slot.slotStart) return false;
+
+  //     const startTime = new Date(slot.slotStart).getTime();
+  //     const endTime = new Date(slot.slotEnd || startTime).getTime();
+
+  //     const diffToStart = startTime - now;
+  //     const diffToEnd = now - endTime;
+
+  //     // Strict 1-hour before start (exact window: 1h ±10min)
+  //     const is1HrBefore =
+  //       diffToStart >=  60 * 60 * 1000 - pollingWindowMs &&
+  //       diffToStart <=  60 * 60 * 1000 + pollingWindowMs;
+
+  //     // Strict 1-day before start (exact window: 24h ±10min)
+  //     const is1DayBefore =
+  //       diffToStart >= 24 * 60 * 60 * 1000 - pollingWindowMs &&
+  //       diffToStart <= 24 * 60 * 60 * 1000 + pollingWindowMs;
+
+  //     // Strict 1-hour after end (exact window: 1h ±10min)
+  //     const is1HrAfterEnd =
+  //       diffToEnd >= 60 * 60 * 1000 - pollingWindowMs &&
+  //       diffToEnd <= 60 * 60 * 1000 + pollingWindowMs;
+
+  //     return is1HrBefore || is1DayBefore || is1HrAfterEnd;
+  //   });
+
+  //   return filtered;
+  // }
   @get('/patient-bookings/reminders')
   @response(200, {
     description: 'Get bookings for reminders',
@@ -457,48 +613,87 @@ export class PatientBookingController {
       },
     },
   })
-  async getUpcomingBookingsForReminders(): Promise<PatientBooking[]> {
-    const now = new Date().getTime();
-    const pollingWindowMs = 5 * 60 * 1000; 
+  async getUpcomingBookingsForReminders(
+    @param.filter(PatientBooking) filter?: Filter<PatientBooking>,
+    @param.query.string('reminderType')
+    reminderType?: '1hrBefore' | '1dayBefore' | '1hrAfter',
+  ): Promise<PatientBooking[]> {
+    const now = new Date();
+    const pollingWindowMs = 5 * 60 * 1000;
 
-    // Fetch bookings with related slot + availability
-    const bookings = await this.patientBookingRepository.find({
-      where: {status: 0}, // pending bookings only
+    const windows = {
+      '1hrBefore': {
+        min: new Date(now.getTime() + 60 * 60 * 1000 - pollingWindowMs),
+        max: new Date(now.getTime() + 60 * 60 * 1000 + pollingWindowMs),
+        field: 'slotStart',
+      },
+      '1dayBefore': {
+        min: new Date(now.getTime() + 24 * 60 * 60 * 1000 - pollingWindowMs),
+        max: new Date(now.getTime() + 24 * 60 * 60 * 1000 + pollingWindowMs),
+        field: 'slotStart',
+      },
+      '1hrAfter': {
+        min: new Date(now.getTime() - 60 * 60 * 1000 - pollingWindowMs),
+        max: new Date(now.getTime() - 60 * 60 * 1000 + pollingWindowMs),
+        field: 'slotEnd',
+      },
+    };
+
+    // Merge default filter
+    const finalFilter: Filter<PatientBooking> = {
+      ...filter,
+      where: {
+        ...filter?.where,
+        status: 0,
+      },
       include: [
         {
           relation: 'doctorTimeSlot',
           scope: {include: ['doctorAvailability']},
         },
       ],
-    });
+    };
 
-    const filtered = bookings.filter((booking: any) => {
-      const slot = booking.doctorTimeSlot;
-      if (!slot || !slot.slotStart) return false;
+    const bookings = await this.patientBookingRepository.find(finalFilter);
 
-      const startTime = new Date(slot.slotStart).getTime();
-      const endTime = new Date(slot.slotEnd || startTime).getTime();
+    // Filter based on query param
+    const filtered = bookings.filter(
+      (booking: PatientBooking & {doctorTimeSlot?: DoctorTimeSlot}) => {
+        const slot = booking.doctorTimeSlot;
+        if (!slot || !slot.slotStart) return false;
 
-      const diffToStart = startTime - now;
-      const diffToEnd = now - endTime;
+        if (!reminderType || !windows[reminderType]) {
+          // If no param passed, return all 3 conditions
+          const slotStart = new Date(slot.slotStart).getTime();
+          const slotEnd = slot.slotEnd
+            ? new Date(slot.slotEnd).getTime()
+            : slotStart;
 
-      // Strict 1-hour before start (exact window: 1h ±10min)
-      const is1HrBefore =
-        diffToStart >=  60 * 60 * 1000 - pollingWindowMs &&
-        diffToStart <=  60 * 60 * 1000 + pollingWindowMs;
+          const is1HrBefore =
+            slotStart >= windows['1hrBefore'].min.getTime() &&
+            slotStart <= windows['1hrBefore'].max.getTime();
+          const is1DayBefore =
+            slotStart >= windows['1dayBefore'].min.getTime() &&
+            slotStart <= windows['1dayBefore'].max.getTime();
+          const is1HrAfterEnd =
+            slotEnd >= windows['1hrAfter'].min.getTime() &&
+            slotEnd <= windows['1hrAfter'].max.getTime();
 
-      // Strict 1-day before start (exact window: 24h ±10min)
-      const is1DayBefore =
-        diffToStart >= 24 * 60 * 60 * 1000 - pollingWindowMs &&
-        diffToStart <= 24 * 60 * 60 * 1000 + pollingWindowMs;
+          return is1HrBefore || is1DayBefore || is1HrAfterEnd;
+        }
 
-      // Strict 1-hour after end (exact window: 1h ±10min)
-      const is1HrAfterEnd =
-        diffToEnd >= 60 * 60 * 1000 - pollingWindowMs &&
-        diffToEnd <= 60 * 60 * 1000 + pollingWindowMs;
+        // If param passed, filter only for that type
+        const window = windows[reminderType];
+        const time =
+          window.field === 'slotStart'
+            ? new Date(slot.slotStart).getTime()
+            : slot.slotEnd
+              ? new Date(slot.slotEnd).getTime()
+              : new Date(slot.slotStart).getTime();
 
-      return is1HrBefore || is1DayBefore || is1HrAfterEnd;
-    });
+        return time >= window.min.getTime() && time <= window.max.getTime();
+      },
+    );
 
     return filtered;
   }

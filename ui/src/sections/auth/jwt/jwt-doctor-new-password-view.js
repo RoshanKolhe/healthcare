@@ -139,7 +139,7 @@ export default function JwtDoctorNewPasswordView() {
 
       <Link
         component={RouterLink}
-        href={paths.auth.jwt.hospitalLogin}
+        href={paths.auth.jwt.doctorLogin}
         color="inherit"
         variant="subtitle2"
         sx={{

@@ -34,6 +34,15 @@ export const endpoints = {
       me: '/me',
       login: '/login',
     },
+    branch: {
+      me: '/me',
+      login: '/login',
+    },
+    doctor: {
+      me: '/doctors/me',
+      login: '/doctors-login',
+      register: '/doctors-register',
+    },
     me: '/me',
     login: '/login',
     register: '/register',
