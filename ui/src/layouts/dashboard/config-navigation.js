@@ -47,6 +47,7 @@ const ICONS = {
   dashboard: icon('ic_dashboard'),
   clinic: icon('ic_clinic'),
   branch: icon('ic_branch'),
+  agent: icon('ic_agent'),
   doctor: icon('ic_doctor'),
   bookings: icon('ic_bookings'),
   service: icon('ic_services'),
@@ -97,7 +98,7 @@ export function useNavData() {
           {
             title: t('agent'),
             path: paths.dashboard.agent.root,
-            icon: ICONS.branch,
+            icon: ICONS.agent,
             children: [
               { title: t('list'), path: paths.dashboard.agent.list },
               { title: t('create'), path: paths.dashboard.agent.new },
@@ -244,9 +245,7 @@ export function useNavData() {
             title: t('bookings'),
             path: paths.dashboard.booking.root,
             icon: ICONS.bookings,
-            children: [
-              { title: t('list'), path: paths.dashboard.booking.list },
-            ],
+            children: [{ title: t('list'), path: paths.dashboard.booking.list }],
           },
         ],
       },
@@ -277,9 +276,7 @@ export function useNavData() {
             title: t('bookings'),
             path: paths.dashboard.booking.root,
             icon: ICONS.bookings,
-            children: [
-              { title: t('list'), path: paths.dashboard.booking.list },
-            ],
+            children: [{ title: t('list'), path: paths.dashboard.booking.list }],
           },
         ],
       },
@@ -298,17 +295,13 @@ export function useNavData() {
             title: t('calendar'),
             path: paths.dashboard.doctor.root,
             icon: ICONS.calender,
-            children: [
-              { title: t('view'), path: paths.dashboard.doctor.doctorCalendar },
-            ],
+            children: [{ title: t('view'), path: paths.dashboard.doctor.doctorCalendar }],
           },
           {
             title: t('bookings'),
             path: paths.dashboard.booking.root,
             icon: ICONS.bookings,
-            children: [
-              { title: t('list'), path: paths.dashboard.booking.list },
-            ],
+            children: [{ title: t('list'), path: paths.dashboard.booking.list }],
           },
         ],
       },

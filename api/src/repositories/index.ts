@@ -13,3 +13,5 @@ export * from './patient.repository';
 export * from './patient-booking.repository';
 export * from './patient-booking-history.repository';
 export * from './agent.repository';
+export * from './plan.repository';
+export * from './log.repository';

@@ -16,3 +16,4 @@ export * from './patient-booking.controller';
 export * from './agent.controller';
 export * from './patient-booking-clinic.controller';
 export * from './patient-booking-branch.controller';
+export * from './plan.controller';

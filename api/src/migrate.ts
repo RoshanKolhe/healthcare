@@ -25,6 +25,7 @@ export async function migrate(args: string[]) {
       'PatientBooking',
       'PatientBookingHistory',
       'Agent',
+      'Plan',
     ],
   });
 
