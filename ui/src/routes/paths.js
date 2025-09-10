@@ -145,6 +145,13 @@ export const paths = {
       edit: (id) => `${ROOTS.DASHBOARD}/clinics/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/clinics/${id}/view`,
     },
+    agent: {
+      root: `${ROOTS.DASHBOARD}/agent`,
+      new: `${ROOTS.DASHBOARD}/agent/new`,
+      list: `${ROOTS.DASHBOARD}/agent/list`,
+      edit: (id) => `${ROOTS.DASHBOARD}/agent/${id}/edit`,
+      view: (id) => `${ROOTS.DASHBOARD}/agent/${id}/view`,
+    },
     branch: {
       root: `${ROOTS.DASHBOARD}/branches`,
       new: `${ROOTS.DASHBOARD}/branches/new`,

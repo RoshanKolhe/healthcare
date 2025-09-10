@@ -79,6 +79,11 @@ export const endpoints = {
     filterList: (filter) => `/clinics?${filter}`,
     search: '/api/clinics/search',
   },
+  agent: {
+    list: '/agents',
+    details: (id) => `/agents/${id}`,
+    filterList: (filter) => `/agents?${filter}`,
+  },
   branch: {
     list: '/branches',
     details: (id) => `/branches/${id}`,

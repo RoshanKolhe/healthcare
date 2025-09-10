@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasMany} from '@loopback/repository';
+import {AgentPlan} from './agent-plan.model';
 
 @model()
 export class Agent extends Entity {
@@ -20,6 +21,17 @@ export class Agent extends Entity {
     required: true,
   })
   description: string;
+
+  @property({
+    type: 'object',
+  })
+  thumbnail?: object;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  features: string;
 
   @property({
     type: 'boolean',

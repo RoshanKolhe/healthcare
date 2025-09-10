@@ -60,7 +60,7 @@ export function useNavData() {
   const { user } = useAuthContext();
 
   let data = [];
-  if (user && (user.permissions.includes('super_admin'))) {
+  if (user && user.permissions.includes('super_admin')) {
     data = [
       // OVERVIEW
       // ----------------------------------------------------------------------
@@ -94,6 +94,15 @@ export function useNavData() {
             ],
           },
           {
+            title: t('agent'),
+            path: paths.dashboard.agent.root,
+            icon: ICONS.branch,
+            children: [
+              { title: t('list'), path: paths.dashboard.agent.list },
+              { title: t('create'), path: paths.dashboard.agent.new },
+            ],
+          },
+          {
             title: t('branch'),
             path: paths.dashboard.branch.root,
             icon: ICONS.branch,
@@ -115,9 +124,7 @@ export function useNavData() {
             title: t('bookings'),
             path: paths.dashboard.booking.root,
             icon: ICONS.bookings,
-            children: [
-              { title: t('list'), path: paths.dashboard.booking.list },
-            ],
+            children: [{ title: t('list'), path: paths.dashboard.booking.list }],
           },
         ],
       },
