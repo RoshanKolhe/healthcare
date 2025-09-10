@@ -58,7 +58,7 @@ export class AgentController {
   @authenticate({
     strategy: 'jwt',
     options: {
-      required: [PermissionKeys.SUPER_ADMIN],
+      required: [PermissionKeys.SUPER_ADMIN,PermissionKeys.CLINIC],
     },
   })
   @get('/agents')

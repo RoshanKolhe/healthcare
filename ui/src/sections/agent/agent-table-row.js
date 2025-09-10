@@ -48,7 +48,18 @@ export default function UserTableRow({
 
           <ListItemText primary={`${name}`} primaryTypographyProps={{ typography: 'body2' }} />
         </TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{description}</TableCell>
+        <Tooltip title={description || 'N/A'} placement="top" arrow>
+          <TableCell
+            sx={{
+              whiteSpace: 'nowrap',
+              maxWidth: 200,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {description}
+          </TableCell>
+        </Tooltip>
 
         <TableCell>
           <Label

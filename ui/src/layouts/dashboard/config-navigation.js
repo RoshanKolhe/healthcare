@@ -53,6 +53,7 @@ const ICONS = {
   service: icon('ic_services'),
   type: icon('ic_type'),
   category: icon('ic_category'),
+  marketplace: icon('ic_marketplace'),
 };
 
 // ----------------------------------------------------------------------
@@ -214,6 +215,12 @@ export function useNavData() {
       {
         subheader: t('management'),
         items: [
+          {
+            title: t('marketplace'),
+            path: paths.dashboard.marketplace.root,
+            icon: ICONS.marketplace,
+            children: [{ title: t('list'), path: paths.dashboard.marketplace.list }],
+          },
           {
             title: t('user'),
             path: paths.dashboard.user.root,
