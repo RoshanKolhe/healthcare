@@ -79,11 +79,18 @@ export default function DoctorNewEditForm({ currentDoctor }) {
 
   const { specializations } = useGetSpecializations();
 
-  const { doctor } = useAuthContext();
-  const doctorRole = doctor?.permissions?.[0];
-  const roleOptions =
-    // doctorRole === 'clinic' ? allRoles.filter((r) => r.value === 'Clinic') : allRoles;
-    doctorRole === 'doctor' ? allRoles.filter((r) => r.value === 'Doctor') : allRoles;
+  const { user } = useAuthContext();
+
+  const isClinic = user?.permissions?.includes('clinic');
+  const isBranch = user?.permissions?.includes('branch');
+
+  // For auto-select conditions
+  const shouldAutoAssignClinic = isBranch;
+  const shouldAutoAssignBranch = isBranch || isClinic;
+
+  const disableBranchField =
+  (isClinic && shouldAutoAssignClinic) ||
+  (isBranch && shouldAutoAssignBranch);
 
   const defaultValues = useMemo(
     () => ({
@@ -305,6 +312,34 @@ export default function DoctorNewEditForm({ currentDoctor }) {
     }
   }, [role, setValue]);
 
+  // Auto-select Clinic  when Clinic login
+  useEffect(() => {
+    if (shouldAutoAssignClinic && clinics?.length === 1) {
+      const clinicObj = clinics[0];
+      setValue('clinic', clinicObj, { shouldValidate: true });
+      setBranchOptions(clinicObj.branches || []);
+    }
+  }, [shouldAutoAssignClinic, clinics, setValue]);
+
+  // Auto-select Clinic + Branch when branch login
+  useEffect(() => {
+    if (!shouldAutoAssignBranch) return;
+
+    const userClinic = clinics?.find((c) => c.id === user?.clinicId || c.id === user?.clinic?.id);
+    if (!userClinic) return;
+
+    setValue('clinic', userClinic, { shouldValidate: true, shouldDirty: true });
+    setBranchOptions(Array.isArray(userClinic.branches) ? userClinic.branches : []);
+    const branchId = user?.branchId ?? user?.branch?.id;
+    const branchObj = (userClinic.branches || []).find((b) => b.id === branchId);
+
+    if (branchObj) {
+      setValue('branch', [branchObj], { shouldValidate: true, shouldDirty: true });
+    } else {
+      setValue('branch', [], { shouldValidate: false, shouldDirty: false });
+    }
+  }, [shouldAutoAssignBranch, user, clinics, setValue]);
+
   useEffect(() => {
     document.body.classList.remove('light-mode', 'dark-mode');
     document.body.classList.add(isDark ? 'dark-mode' : 'light-mode');
@@ -509,13 +544,6 @@ export default function DoctorNewEditForm({ currentDoctor }) {
                 getOptionLabel={(option) => option?.specialization || ''}
                 isOptionEqualToValue={(option, value) => option?.id === value?.id}
               />
-              {/* <RHFSelect fullWidth name="role" label="Role">
-                {roleOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.name}
-                  </MenuItem>
-                ))}
-              </RHFSelect> */}
 
               {values.role === 'doctor' && (
                 <>
@@ -531,6 +559,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
                       // Extract branches from selected clinic
                       setBranchOptions(value?.branches || []);
                     }}
+                    disabled={shouldAutoAssignBranch}
                   />
                   <RHFAutocomplete
                     multiple
@@ -559,6 +588,7 @@ export default function DoctorNewEditForm({ currentDoctor }) {
                         />
                       ))
                     }
+                    disabled={disableBranchField}
                   />
                 </>
               )}

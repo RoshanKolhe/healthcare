@@ -29,7 +29,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import axiosInstance from 'src/utils/axios';
 import { COMMON_STATUS_OPTIONS, states } from 'src/utils/constants';
 import { useGetClinicsWithFilter } from 'src/api/clinic';
-import Label from 'src/components/label';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -40,6 +40,8 @@ export default function BranchNewEditForm({ currentBranch }) {
 
   const { enqueueSnackbar } = useSnackbar();
 
+  const { user } = useAuthContext();
+
   const preview = useBoolean();
   const rawFilter = {
     where: {
@@ -48,6 +50,9 @@ export default function BranchNewEditForm({ currentBranch }) {
   };
   const encodedFilter = `filter=${encodeURIComponent(JSON.stringify(rawFilter))}`;
   const { filteredclinics: clinics } = useGetClinicsWithFilter(encodedFilter);
+
+  const isClinic = user?.permissions?.includes('clinic');
+  const shouldAutoAssignClinic = isClinic;
 
   const NewBranchSchema = Yup.object().shape({
     name: Yup.string().required('Branch Name is required'),
@@ -143,6 +148,13 @@ export default function BranchNewEditForm({ currentBranch }) {
     }
   }, [currentBranch, defaultValues, reset]);
 
+  useEffect(() => {
+    if (shouldAutoAssignClinic && clinics?.length === 1) {
+      const clinicObj = clinics[0];
+      setValue('clinic', clinicObj, { shouldValidate: true });
+    }
+  }, [shouldAutoAssignClinic, clinics, setValue]);
+
   const renderDetails = (
     <Grid xs={12} md={12}>
       <Card sx={{ pb: 2 }}>
@@ -193,6 +205,7 @@ export default function BranchNewEditForm({ currentBranch }) {
                     />
                   ))
                 }
+                disabled={shouldAutoAssignClinic}
               />
             </Grid>
           </Grid>

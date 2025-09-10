@@ -204,7 +204,7 @@ export class BranchController {
   @authenticate({
     strategy: 'jwt',
     options: {
-      required: [PermissionKeys.SUPER_ADMIN, PermissionKeys.CLINIC],
+      required: [PermissionKeys.SUPER_ADMIN, PermissionKeys.CLINIC, PermissionKeys.BRANCH],
     },
   })
   @get('/branches')
@@ -251,6 +251,16 @@ export class BranchController {
         where: {
           ...filter?.where,
           clinicId: userDetails.clinicId,
+        },
+      });
+    }
+
+    if (currentUserPermission.includes(PermissionKeys.BRANCH)) {
+      return this.branchRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          id: userDetails.branchId,
         },
       });
     }
