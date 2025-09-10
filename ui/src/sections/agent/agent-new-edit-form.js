@@ -17,11 +17,18 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hook';
 // components
 import { useSnackbar } from 'src/components/snackbar';
-import FormProvider, { RHFEditor, RHFTextField, RHFUploadAvatar } from 'src/components/hook-form';
+import FormProvider, {
+  RHFEditor,
+  RHFSelect,
+  RHFTextField,
+  RHFUploadAvatar,
+} from 'src/components/hook-form';
+import { MenuItem } from '@mui/material';
 import { useResponsive } from 'src/hooks/use-responsive';
 import axiosInstance from 'src/utils/axios';
 import { fData } from 'src/utils/format-number';
 import { features } from 'process';
+import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
 
 // ----------------------------------------------------------------------
 
@@ -130,6 +137,18 @@ export default function AgentNewEditForm({ currentAgent }) {
       <Card sx={{ pb: 2 }}>
         <Stack spacing={3} sx={{ p: 3 }}>
           <Grid container spacing={2} xs={12} md={12}>
+            {currentAgent ? (
+              <Grid xs={12} md={6}>
+                <RHFSelect name="isActive" label="Status">
+                  {COMMON_STATUS_OPTIONS.map((status) => (
+                    <MenuItem key={status.value} value={status.value}>
+                      {status.label}
+                    </MenuItem>
+                  ))}
+                </RHFSelect>
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }} />
+              </Grid>
+            ) : null}
             <Grid xs={12} md={12}>
               <RHFTextField name="name" label="Agent Name" />
             </Grid>
