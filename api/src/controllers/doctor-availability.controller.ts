@@ -24,6 +24,7 @@ import {DoctorAvailability, DoctorTimeSlot} from '../models';
 import {DoctorAvailabilityRepository} from '../repositories';
 import {HealthcareDataSource} from '../datasources';
 import {inject} from '@loopback/core';
+import moment from 'moment-timezone';
 
 export class DoctorAvailabilityController {
   constructor(
@@ -268,6 +269,7 @@ export class DoctorAvailabilityController {
   //     throw err;
   //   }
   // }
+
   @post('/doctor-availabilities')
   @response(200, {
     description: 'DoctorAvailability model instances with slots',
@@ -306,25 +308,20 @@ export class DoctorAvailabilityController {
       if (customDates && customDates.length) {
         datesToCreate.push(
           ...customDates.map(d => {
-            const dt = new Date(d);
-            dt.setUTCHours(0, 0, 0, 0); // normalize to UTC midnight
-            return dt;
+            const dt = moment.tz(d, 'Asia/Kolkata').startOf('day');
+            return dt.toDate();
           }),
         );
       } else if (startDate && endDate && dayOfWeek?.length) {
-        let current = new Date(startDate);
-        let end = new Date(endDate);
+        let current = moment.tz(startDate, 'Asia/Kolkata').startOf('day');
+        let end = moment.tz(endDate, 'Asia/Kolkata').endOf('day');
 
-        // normalize to UTC midnight to avoid TZ shifts
-        current.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-
-        while (current <= end) {
-          if (dayOfWeek.includes(current.getDay())) {
-            // LOCAL day of week
-            datesToCreate.push(new Date(current));
+        while (current.isSameOrBefore(end)) {
+          const weekday = current.day(); // IST weekday
+          if (dayOfWeek.includes(weekday)) {
+            datesToCreate.push(current.clone().toDate());
           }
-          current.setDate(current.getDate() + 1);
+          current.add(1, 'day');
         }
       } else {
         throw new HttpErrors.BadRequest(
@@ -355,12 +352,12 @@ export class DoctorAvailabilityController {
       for (const date of datesToCreate) {
         for (const slot of doctorTimeSlots) {
           const slotStart = new Date(
-            date.toUTCString().split('00:00:00')[0] +
+            date.toDateString() +
+              ' ' +
               new Date(slot.slotStart!).toTimeString(),
           );
           const slotEnd = new Date(
-            date.toUTCString().split('00:00:00')[0] +
-              new Date(slot.slotEnd!).toTimeString(),
+            date.toDateString() + ' ' + new Date(slot.slotEnd!).toTimeString(),
           );
 
           const formatTimeOnly = (date: Date): string => {
@@ -389,7 +386,9 @@ export class DoctorAvailabilityController {
                 isOverlapping(slotStart, slotEnd, existSlotStart, existSlotEnd)
               ) {
                 throw new HttpErrors.BadRequest(
-                  `Doctor already has a slot overlapping on ${date.toDateString()} from ${formatTimeOnly(existSlotStart)} to ${formatTimeOnly(existSlotEnd)}`,
+                  `Doctor already has a slot overlapping on ${date.toDateString()} from ${formatTimeOnly(
+                    existSlotStart,
+                  )} to ${formatTimeOnly(existSlotEnd)}`,
                 );
               }
             }
@@ -404,7 +403,7 @@ export class DoctorAvailabilityController {
             ...rest,
             startDate: date,
             endDate: date,
-            dayOfWeek: [date.getUTCDay()],
+            dayOfWeek: [moment.tz(date, 'Asia/Kolkata').day()],
           },
           {transaction: tx},
         );
