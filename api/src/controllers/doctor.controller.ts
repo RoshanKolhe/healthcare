@@ -27,7 +27,9 @@ import {Branch, Doctor} from '../models';
 import {
   BranchDoctorRepository,
   Credentials,
+  DoctorCredentials,
   DoctorRepository,
+  UserRepository,
 } from '../repositories';
 import {HealthcareDataSource} from '../datasources';
 import {EmailManagerBindings} from '../keys';
@@ -42,6 +44,7 @@ import {CredentialsRequestBody} from './specs/user-controller-spec';
 import {UserProfile} from '@loopback/security';
 import {PermissionKeys} from '../authorization/permission-keys';
 import generateResetPasswordTemplate from '../templates/reset-password.template';
+import {Console} from 'console';
 
 export class DoctorController {
   constructor(
@@ -51,12 +54,14 @@ export class DoctorController {
     public emailManager: EmailManager,
     @repository(DoctorRepository)
     public doctorRepository: DoctorRepository,
+    @repository(UserRepository)
+    public userRepository: UserRepository,
     @repository(BranchDoctorRepository)
     public branchDoctorRepository: BranchDoctorRepository,
     @inject('service.hasher')
     public hasher: BcryptHasher,
     @inject('service.doctor.service')
-    public userService: MyDoctorService,
+    public doctorService: MyDoctorService,
     @inject('service.jwt.service')
     public jwtService: JWTService,
   ) {}
@@ -156,10 +161,10 @@ export class DoctorController {
     },
   })
   async login(
-    @requestBody(CredentialsRequestBody) credentials: Credentials,
+    @requestBody(CredentialsRequestBody) credentials: DoctorCredentials,
   ): Promise<{}> {
-    const doctor = await this.userService.verifyCredentials(credentials);
-    const doctorProfile = this.userService.convertToUserProfile(doctor);
+    const doctor = await this.doctorService.verifyCredentials(credentials);
+    const doctorProfile = this.doctorService.convertToUserProfile(doctor);
     const doctorData = _.omit(doctor, 'password');
     const token = await this.jwtService.generateToken(doctorProfile);
     const allDoctorData = await this.doctorRepository.findById(doctorData.id);
@@ -188,6 +193,16 @@ export class DoctorController {
     });
   }
 
+  @authenticate({
+    strategy: 'jwt',
+    options: {
+      required: [
+        PermissionKeys.SUPER_ADMIN,
+        PermissionKeys.CLINIC,
+        PermissionKeys.BRANCH,
+      ],
+    },
+  })
   @get('/doctors/list')
   @response(200, {
     description: 'Array of Doctors model instances',
@@ -202,7 +217,10 @@ export class DoctorController {
       },
     },
   })
-  async find(@param.filter(Doctor) filter?: Filter<Doctor>): Promise<Doctor[]> {
+  async find(
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
+    @param.filter(Doctor) filter?: Filter<Doctor>,
+  ): Promise<Doctor[]> {
     filter = {
       ...filter,
       where: {
@@ -216,7 +234,50 @@ export class DoctorController {
         {relation: 'specialization'},
       ],
     };
-    return this.doctorRepository.find(filter);
+    const currentUserPermission = currentUser.permissions;
+
+    // 🔹 Fetch full user details (with clinic/branch)
+    const userDetails: any = await this.userRepository.findById(
+      currentUser.id,
+      {
+        include: ['clinic', 'branch'],
+      },
+    );
+    console.log('userDetails', userDetails);
+
+    // SUPER ADMIN → see all doctors
+    if (currentUserPermission.includes(PermissionKeys.SUPER_ADMIN)) {
+      return this.doctorRepository.find(filter);
+    }
+
+    // CLINIC → doctors belonging to the logged-in clinic
+    if (currentUserPermission.includes(PermissionKeys.CLINIC)) {
+      return this.doctorRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          clinicId: userDetails.clinicId,
+        },
+      });
+    }
+
+    // BRANCH → doctors belonging to the logged-in branch
+    if (currentUserPermission.includes(PermissionKeys.BRANCH)) {
+      const branchDoctors = await this.branchDoctorRepository.find({
+        where: {branchId: userDetails.branchId},
+      });
+
+      const doctorIds = branchDoctors.map(bd => bd.doctorId);
+
+      return this.doctorRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          id: {inq: doctorIds},
+        },
+      });
+    }
+    return [];
   }
 
   @get('/doctors/{id}', {
@@ -251,6 +312,9 @@ export class DoctorController {
       ...doctor,
     });
   }
+  @authenticate({
+    strategy: 'jwt',
+  })
   @patch('/doctors/{id}')
   @response(204, {
     description: 'Doctor PATCH success',
@@ -354,7 +418,7 @@ export class DoctorController {
       },
     });
     if (doctor) {
-      const doctorProfile = this.userService.convertToUserProfile(doctor);
+      const doctorProfile = this.doctorService.convertToUserProfile(doctor);
       const token = await this.jwtService.generate10MinToken(doctorProfile);
       const resetPasswordLink = `${process.env.REACT_APP_ENDPOINT}/auth/admin/new-password?token=${token}`;
       const template = generateResetPasswordTemplate({

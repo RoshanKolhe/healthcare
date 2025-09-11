@@ -20,11 +20,12 @@ import {
   response,
 } from '@loopback/rest';
 import {Branch, Clinic} from '../models';
-import {ClinicRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
+import {ClinicRepository, UserRepository} from '../repositories';
+import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {PermissionKeys} from '../authorization/permission-keys';
 import {HealthcareDataSource} from '../datasources';
 import {inject} from '@loopback/core';
+import {UserProfile} from '@loopback/security';
 
 export class ClinicController {
   constructor(
@@ -32,6 +33,8 @@ export class ClinicController {
     public dataSource: HealthcareDataSource,
     @repository(ClinicRepository)
     public clinicRepository: ClinicRepository,
+    @repository(UserRepository)
+    public userRepository: UserRepository,
   ) {}
 
   @get('/clinics/{id}/branches-by-city')
@@ -143,6 +146,16 @@ export class ClinicController {
     }
   }
 
+  @authenticate({
+    strategy: 'jwt',
+    options: {
+      required: [
+        PermissionKeys.SUPER_ADMIN,
+        PermissionKeys.CLINIC,
+        PermissionKeys.BRANCH,
+      ],
+    },
+  })
   @get('/clinics')
   @response(200, {
     description: 'Array of Clinic model instances',
@@ -155,8 +168,12 @@ export class ClinicController {
       },
     },
   })
-  async find(@param.filter(Clinic) filter?: Filter<Clinic>): Promise<Clinic[]> {
-    return this.clinicRepository.find({
+  async find(
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
+    @param.filter(Clinic) filter?: Filter<Clinic>,
+  ): Promise<Clinic[]> {
+    // return this.clinicRepository.find({
+    filter = {
       ...filter,
       include: [
         {relation: 'branches'},
@@ -165,7 +182,46 @@ export class ClinicController {
         {relation: 'clinicService'},
       ],
       order: ['createdAt DESC'],
-    });
+      // });
+    };
+    const currentUserPermission = currentUser.permissions;
+
+    // 🔹 Fetch full user details with clinic & branch relation
+    const userDetails: any = await this.userRepository.findById(
+      currentUser.id,
+      {
+        include: ['clinic', 'branch'],
+      },
+    );
+    console.log('userDetails', userDetails);
+
+    // SUPER ADMIN → see all clinics
+    if (currentUserPermission.includes(PermissionKeys.SUPER_ADMIN)) {
+      return this.clinicRepository.find(filter);
+    }
+
+    // CLINIC → only their own clinic
+    if (currentUserPermission.includes(PermissionKeys.CLINIC)) {
+      return this.clinicRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          id: userDetails.clinicId,
+        },
+      });
+    }
+
+    // BRANCH → get the clinic that owns this branch
+    if (currentUserPermission.includes(PermissionKeys.BRANCH)) {
+      return this.clinicRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          id: userDetails.branch?.clinicId,
+        },
+      });
+    }
+    return [];
   }
 
   @get('/clinics/{id}')

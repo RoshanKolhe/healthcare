@@ -88,7 +88,7 @@ export default function UserListView() {
       ? _roles.filter((r) => r === roleLabels.branch)
       : _roles;
 
-      console.log(roleOptions);
+  console.log(roleOptions);
   const table = useTable();
 
   const settings = useSettingsContext();
@@ -484,16 +484,32 @@ function applyFilter({ inputData, comparator, filters }) {
     inputData = inputData.filter((user) => (status === '1' ? user.isActive : !user.isActive));
   }
 
+  // if (role.length) {
+  //   inputData = inputData.filter(
+  //     (user) =>
+  //       user.permissions &&
+  //       user.permissions.some((userRole) => {
+  //         console.log(userRole);
+  //         const mappedRole = roleMapping[userRole];
+  //         console.log('Mapped Role:', mappedRole); // Check the mapped role
+  //         return mappedRole && role.includes(mappedRole);
+  //       })
+  //   );
+  // }
   if (role.length) {
-    inputData = inputData.filter(
-      (user) =>
-        user.permissions &&
-        user.permissions.some((userRole) => {
-          console.log(userRole);
-          const mappedRole = roleMapping[userRole];
-          console.log('Mapped Role:', mappedRole); // Check the mapped role
-          return mappedRole && role.includes(mappedRole);
-        })
+    inputData = inputData.filter((user) =>
+      user.permissions.some((userRole) => {
+        const mappedRole = roleMapping[userRole];
+        // For clinic login, show both clinic and branch users
+        if (
+          userRole === 'clinic' &&
+          userRole === 'branch' &&
+          userRole === user?.permissions[0]
+        ) {
+          return true;
+        }
+        return mappedRole && role.includes(mappedRole);
+      })
     );
   }
 

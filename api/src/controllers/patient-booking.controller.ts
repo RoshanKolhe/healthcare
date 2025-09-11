@@ -24,9 +24,13 @@ import {
   PatientBookingHistoryRepository,
   PatientBookingRepository,
   PatientRepository,
+  UserRepository,
 } from '../repositories';
 import {HealthcareDataSource} from '../datasources';
 import {inject} from '@loopback/core';
+import {authenticate, AuthenticationBindings} from '@loopback/authentication';
+import {PermissionKeys} from '../authorization/permission-keys';
+import {UserProfile} from '@loopback/security';
 
 export class PatientBookingController {
   constructor(
@@ -44,6 +48,9 @@ export class PatientBookingController {
 
     @repository(DoctorTimeSlotRepository)
     public doctorTimeSlotRepository: DoctorTimeSlotRepository,
+
+    @repository(UserRepository)
+    public userRepository: UserRepository,
   ) {}
 
   @post('/patient-bookings')
@@ -174,7 +181,7 @@ export class PatientBookingController {
     }
   }
 
-  @get('/patient-bookings')
+  @get('/patient-bookings/all')
   @response(200, {
     description: 'Array of PatientBooking model instances',
     content: {
@@ -186,7 +193,7 @@ export class PatientBookingController {
       },
     },
   })
-  async find(
+  async findall(
     @param.filter(PatientBooking) filter?: Filter<PatientBooking>,
   ): Promise<PatientBooking[]> {
     return this.patientBookingRepository.find({
@@ -200,6 +207,98 @@ export class PatientBookingController {
         },
       ],
     });
+  }
+  
+  @authenticate({
+    strategy: 'jwt',
+    options: {
+      required: [
+        PermissionKeys.SUPER_ADMIN,
+        PermissionKeys.CLINIC,
+        PermissionKeys.BRANCH,
+        PermissionKeys.DOCTOR,
+      ],
+    },
+  })
+  @get('/patient-bookings')
+  @response(200, {
+    description: 'Array of PatientBooking model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(PatientBooking, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async find(
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
+    @param.filter(PatientBooking) filter?: Filter<PatientBooking>,
+  ): Promise<PatientBooking[]> {
+    filter = {
+      ...filter,
+      include: [
+        {
+          relation: 'doctorTimeSlot',
+          scope: {
+            include: [
+              {
+                relation: 'doctorAvailability',
+              },
+            ],
+          },
+        },
+      ],
+      order: ['createdAt DESC'],
+    };
+
+    const currentUserPermission = currentUser.permissions;
+    const userDetails = await this.userRepository.findById(currentUser.id, {
+      include: ['clinic', 'branch'], // <-- make sure User model has these relations
+    });
+
+    // SUPER ADMIN → all bookings
+    if (currentUserPermission.includes(PermissionKeys.SUPER_ADMIN)) {
+      return this.patientBookingRepository.find(filter);
+    }
+    console.log('userDetails', userDetails);
+
+    // CLINIC → filter by clinicId
+    if (currentUserPermission.includes(PermissionKeys.CLINIC)) {
+      return this.patientBookingRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          clinicId: userDetails.clinicId,
+        },
+      });
+    }
+
+    // BRANCH → filter by branchId
+    if (currentUserPermission.includes(PermissionKeys.BRANCH)) {
+      return this.patientBookingRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          branchId: userDetails.branchId, // assuming currentUser.id = branchId
+        },
+      });
+    }
+
+    // DOCTOR → filter by doctorId
+    if (currentUserPermission.includes(PermissionKeys.DOCTOR)) {
+      return this.patientBookingRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          doctorId: currentUser.id, // assuming currentUser.id = doctorId
+        },
+      });
+    }
+
+    // default empty if no match
+    return [];
   }
 
   @get('/patient-bookings/{id}')

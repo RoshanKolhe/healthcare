@@ -34,6 +34,15 @@ export const endpoints = {
       me: '/me',
       login: '/login',
     },
+    branch: {
+      me: '/me',
+      login: '/login',
+    },
+    doctor: {
+      me: '/doctors/me',
+      login: '/doctors-login',
+      register: '/doctors-register',
+    },
     me: '/me',
     login: '/login',
     register: '/register',
@@ -78,6 +87,11 @@ export const endpoints = {
     details: (id) => `/clinics/${id}`,
     filterList: (filter) => `/clinics?${filter}`,
     search: '/api/clinics/search',
+  },
+  agent: {
+    list: '/agents',
+    details: (id) => `/agents/${id}`,
+    filterList: (filter) => `/agents?${filter}`,
   },
   branch: {
     list: '/branches',

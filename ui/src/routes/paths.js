@@ -65,6 +65,7 @@ export const paths = {
       newPassword: `${ROOTS.AUTH}/jwt/new-password`,
       forgotPassword: `${ROOTS.AUTH}/jwt/forgot-password`,
       clinicLogin: `${ROOTS.AUTH}/jwt/clinic-login`,
+      branchLogin: `${ROOTS.AUTH}/jwt/branch-login`,
       doctorLogin: `${ROOTS.AUTH}/jwt/doctor/login`,
       doctorNewPassword: `${ROOTS.AUTH}/jwt/doctor/new-password`,
       doctorForgotPassword: `${ROOTS.AUTH}/jwt/doctor/forgot-password`,
@@ -113,6 +114,10 @@ export const paths = {
       booking: `${ROOTS.DASHBOARD}/booking`,
       file: `${ROOTS.DASHBOARD}/file`,
     },
+    marketplace: {
+      root: `${ROOTS.DASHBOARD}/marketplace`,
+      list: `${ROOTS.DASHBOARD}/marketplace/list`,
+    },
     user: {
       root: `${ROOTS.DASHBOARD}/user`,
       new: `${ROOTS.DASHBOARD}/user/new`,
@@ -127,7 +132,8 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/doctor`,
       new: `${ROOTS.DASHBOARD}/doctor/new`,
       list: `${ROOTS.DASHBOARD}/doctor/list`,
-      profile: `${ROOTS.DASHBOARD}/profile`,
+      profile: `${ROOTS.DASHBOARD}/doctor/profile`,
+      doctorCalendar: `${ROOTS.DASHBOARD}/doctor/calendar`,
       calendar: (id) => `${ROOTS.DASHBOARD}/doctor/${id}/calendar`,
       edit: (id) => `${ROOTS.DASHBOARD}/doctor/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/doctor/${id}/view`,
@@ -144,6 +150,13 @@ export const paths = {
       profile: `${ROOTS.DASHBOARD}/clinics/profile`,
       edit: (id) => `${ROOTS.DASHBOARD}/clinics/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/clinics/${id}/view`,
+    },
+    agent: {
+      root: `${ROOTS.DASHBOARD}/agent`,
+      new: `${ROOTS.DASHBOARD}/agent/new`,
+      list: `${ROOTS.DASHBOARD}/agent/list`,
+      edit: (id) => `${ROOTS.DASHBOARD}/agent/${id}/edit`,
+      view: (id) => `${ROOTS.DASHBOARD}/agent/${id}/view`,
     },
     branch: {
       root: `${ROOTS.DASHBOARD}/branches`,

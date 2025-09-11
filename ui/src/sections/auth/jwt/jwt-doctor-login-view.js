@@ -31,7 +31,7 @@ import { useSnackbar } from 'notistack';
 
 // ----------------------------------------------------------------------
 export default function JwtDoctorLoginView() {
-  const { login } = useAuthContext();
+  const { doctorLogin } = useAuthContext();
 
   const router = useRouter();
 
@@ -66,7 +66,7 @@ export default function JwtDoctorLoginView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await login?.(data.email, data.password);
+      await doctorLogin?.(data.email, data.password);
 
       router.push(returnTo || PATH_AFTER_LOGIN);
     } catch (error) {
@@ -124,7 +124,7 @@ export default function JwtDoctorLoginView() {
 
       <Link
         component={RouterLink}
-        href={paths.auth.jwt.hospitalForgotPassword}
+        href={paths.auth.jwt.doctorForgotPassword}
         variant="body2"
         color="inherit"
         underline="always"

@@ -76,10 +76,10 @@ export default function UserNewEditForm({ currentUser }) {
 
   const { user } = useAuthContext();
   const userRole = user?.permissions?.[0];
+  const isClinicLogin = userRole === 'clinic';
   const roleOptions =
-    // userRole === 'clinic' ? allRoles.filter((r) => r.value === 'Clinic') : allRoles;
     userRole === 'clinic' || userRole === 'branch'
-      ? allRoles.filter((r) => r.value === 'Clinic' || r.value === 'Branch')
+      ? allRoles.filter((r) => r.value === 'clinic' || r.value === 'branch')
       : allRoles;
 
   const defaultValues = useMemo(
@@ -269,20 +269,20 @@ export default function UserNewEditForm({ currentUser }) {
   }, [currentUser]);
 
   useEffect(() => {
-  if (selectedClinic && selectedClinic.branches) {
-    setBranchOptions(selectedClinic.branches);
-    if (!currentUser) {
-      setValue('branch', null);
-    } else {
-      if (selectedClinic.id !== currentUser.clinicId) {
+    if (selectedClinic && selectedClinic.branches) {
+      setBranchOptions(selectedClinic.branches);
+      if (!currentUser) {
         setValue('branch', null);
+      } else {
+        if (selectedClinic.id !== currentUser.clinicId) {
+          setValue('branch', null);
+        }
       }
+    } else {
+      setBranchOptions([]);
+      setValue('branch', null);
     }
-  } else {
-    setBranchOptions([]);
-    setValue('branch', null);
-  }
-}, [selectedClinic, setValue, currentUser]);
+  }, [selectedClinic, setValue, currentUser]);
 
   useEffect(() => {
     if (currentUser?.clinic && Array.isArray(clinics) && clinics.length > 0) {
@@ -305,16 +305,6 @@ export default function UserNewEditForm({ currentUser }) {
       }
     }
   }, [currentUser, clinics, setValue]);
-
-  // useEffect(() => {
-  //   if (selectedClinic && selectedClinic.branches) {
-  //     setBranchOptions(selectedClinic.branches);
-  //     setValue('branch', null); // Optional: Reset branch when clinic changes
-  //   } else {
-  //     setBranchOptions([]);
-  //     setValue('branch', null);
-  //   }
-  // }, [selectedClinic, setValue]);
 
   useEffect(() => {
     if (role === 'clinic') {
@@ -352,6 +342,31 @@ export default function UserNewEditForm({ currentUser }) {
       reset(defaultValues);
     }
   }, [currentUser, defaultValues, reset]);
+
+  useEffect(() => {
+    if (isClinicLogin && Array.isArray(clinics) && clinics.length > 0) {
+      // Find the user's clinic
+      const clinicObj = clinics.find((c) => c.id === user.clinicId);
+      if (clinicObj) {
+        setSelectedClinic(clinicObj);
+        setValue('clinic', clinicObj, { shouldValidate: true });
+
+        // If clinic has branches, auto-select the branch and role
+        if (clinicObj.branches?.length > 0) {
+          const branchObj =
+            clinicObj.branches.find((b) => b.id === user.branchId) || clinicObj.branches[0];
+          setBranchOptions(clinicObj.branches);
+          setValue('branch', branchObj, { shouldValidate: true });
+          setValue('role', 'branch', { shouldValidate: true });
+        } else {
+          // If no branches, fallback to clinic role
+          setValue('branch', null);
+          setValue('role', 'clinic', { shouldValidate: true });
+        }
+      }
+    }
+  }, [isClinicLogin, clinics, user, setValue]);
+
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
       <Grid container spacing={3}>
@@ -519,7 +534,7 @@ export default function UserNewEditForm({ currentUser }) {
               <RHFTextField name="state" label="State" />
               <RHFTextField name="city" label="City" />
               <RHFTextField name="fullAddress" label="Full Address" />
-              <RHFSelect fullWidth name="role" label="Role">
+              <RHFSelect fullWidth name="role" label="Role" disabled={isClinicLogin}>
                 {roleOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.name}
@@ -537,6 +552,7 @@ export default function UserNewEditForm({ currentUser }) {
                     setValue('clinic', value);
                     setSelectedClinic(value);
                   }}
+                  disabled={isClinicLogin}
                 />
               )}
 
@@ -554,6 +570,7 @@ export default function UserNewEditForm({ currentUser }) {
                       // Extract branches from selected clinic
                       setBranchOptions(value?.branches || []);
                     }}
+                    disabled={isClinicLogin}
                   />
 
                   <RHFAutocomplete

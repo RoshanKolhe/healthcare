@@ -12,3 +12,7 @@ export * from './doctor-time-slot.model';
 export * from './patient.model';
 export * from './patient-booking.model';
 export * from './patient-booking-history.model';
+export * from './agent.model';
+export * from './agent-plan.model';
+export * from './plan.model';
+export * from './log.model';

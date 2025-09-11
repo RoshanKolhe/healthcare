@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable no-nested-ternary */
 import Calendar from '@fullcalendar/react'; // => request placed at the top
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
@@ -37,6 +38,7 @@ import { useParams } from 'next/navigation';
 import { useGetDoctor } from 'src/api/doctor';
 import { useDoctorCalendar, useDoctorEvent } from 'src/sections/doctor/hooks';
 import { isBefore, startOfDay } from 'date-fns';
+import { useAuthContext } from 'src/auth/hooks';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import CalendarFiltersResult from '../doctor-calendar-filters-result';
 import CalendarForm from '../doctor-calendar-form';
@@ -76,18 +78,27 @@ export default function CalendarView() {
 
   const [filters, setFilters] = useState(defaultFilters);
 
+  const { user } = useAuthContext();
+  const userRole = user?.permissions?.[0];
   const params = useParams();
-  const { id } = params;
-  const { doctor: currentDoctor } = useGetDoctor(id);
+  const { id: paramId } = params;
+
+  const targetDoctorId = userRole === 'doctor' ? user.id : paramId;
+
+  const { doctor: currentDoctor } = useGetDoctor(targetDoctorId);
   const {
     doctorAvailabilities: allAvailabilities,
     doctorAvailabilitiesLoading,
     refreshDoctorAvailabilities,
-  } = useGetDoctorAvailabilities({ id });
+  } = useGetDoctorAvailabilities({ id: targetDoctorId });
   console.log('DEBUG allAvailabilities:', allAvailabilities);
 
-  const doctorAvailabilities = allAvailabilities || [];
-
+  let doctorAvailabilities = allAvailabilities || [];
+  if (userRole === 'doctor') {
+    doctorAvailabilities = doctorAvailabilities.filter(
+      (availability) => availability.doctorId === user.id
+    );
+  }
   const dateError =
     filters.startDate && filters.endDate
       ? filters.startDate.getTime() > filters.endDate.getTime()
@@ -128,7 +139,8 @@ export default function CalendarView() {
 
     const now = new Date();
     const eventDate = startOfDay(new Date(checkDate));
-    const today = startOfDay(new Date()); 
+    console.log('check eventDate:', eventDate);
+    const today = startOfDay(new Date());
 
     if (eventDate < today) return true;
 
@@ -138,7 +150,7 @@ export default function CalendarView() {
     const diffMs = eventDateTime.getTime() - now.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
 
-    return diffHours < 2;
+    return diffHours <= 2;
   }, []);
 
   // inside CalendarView
