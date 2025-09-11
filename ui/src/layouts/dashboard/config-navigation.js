@@ -48,6 +48,7 @@ const ICONS = {
   clinic: icon('ic_clinic'),
   branch: icon('ic_branch'),
   agent: icon('ic_agent'),
+  plan: icon('ic_plan'),
   doctor: icon('ic_doctor'),
   bookings: icon('ic_bookings'),
   service: icon('ic_services'),
@@ -152,6 +153,15 @@ export function useNavData() {
                 path: paths.dashboard.specialization.new,
                 // roles: ['doctor'],
               },
+            ],
+          },
+          {
+            title: t('plan'),
+            path: paths.dashboard.plan.root,
+            icon: ICONS.plan,
+            children: [
+              { title: t('list'), path: paths.dashboard.plan.list },
+              { title: t('create'), path: paths.dashboard.plan.new },
             ],
           },
           {

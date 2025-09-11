@@ -158,6 +158,13 @@ export const paths = {
       edit: (id) => `${ROOTS.DASHBOARD}/agent/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/agent/${id}/view`,
     },
+    plan: {
+      root: `${ROOTS.DASHBOARD}/plan`,
+      new: `${ROOTS.DASHBOARD}/plan/new`,
+      list: `${ROOTS.DASHBOARD}/plan/list`,
+      edit: (id) => `${ROOTS.DASHBOARD}/plan/${id}/edit`,
+      view: (id) => `${ROOTS.DASHBOARD}/plan/${id}/view`,
+    },
     branch: {
       root: `${ROOTS.DASHBOARD}/branches`,
       new: `${ROOTS.DASHBOARD}/branches/new`,
