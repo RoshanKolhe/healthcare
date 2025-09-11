@@ -93,6 +93,11 @@ export const endpoints = {
     details: (id) => `/agents/${id}`,
     filterList: (filter) => `/agents?${filter}`,
   },
+  plan: {
+    list: '/plans',
+    details: (id) => `/plans/${id}`,
+    filterList: (filter) => `/plans?${filter}`,
+  },
   branch: {
     list: '/branches',
     details: (id) => `/branches/${id}`,

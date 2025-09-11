@@ -19,6 +19,12 @@ export class Plan extends Entity {
     type: 'string',
     required: true,
   })
+  features: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
   billingCycle: string; // Monthly or Yearly
 
   @property({
@@ -38,6 +44,18 @@ export class Plan extends Entity {
 
   @property({type: 'number', required: true})
   discountedPriceUSD: number;
+
+  @property({
+    type: 'number',
+    default: 0,
+  })
+  taxPercentageINR?: number;
+
+  @property({
+    type: 'number',
+    default: 0,
+  })
+  taxPercentageUSD?: number;
 
   @property({
     type: 'number',

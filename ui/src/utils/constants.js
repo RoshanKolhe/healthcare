@@ -382,7 +382,6 @@ export const BOOKING_HISTORY_STATUS_OPTIONS = [
   { value: '3', label: 'Cancelled' },
 ];
 
-
 export const TARGET_STATUS_OPTIONS = [
   { value: '0', label: 'Pending' },
   { value: '1', label: 'Approved' },
@@ -392,6 +391,17 @@ export const TARGET_STATUS_OPTIONS = [
 export const COMMON_STATUS_OPTIONS = [
   { value: '1', label: 'Active' },
   { value: '0', label: 'In-Active' },
+];
+
+export const BILLING_CYCLE_OPTIONS = [
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'yearly', label: 'Yearly' },
+];
+
+export const TIER_OPTIONS = [
+  { value: 'basic', label: 'Basic' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'premium', label: 'Premium' },
 ];
 
 export const formatTime = (isoString) => {
