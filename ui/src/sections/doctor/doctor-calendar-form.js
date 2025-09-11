@@ -68,6 +68,7 @@ export default function CalendarForm({
 
   const [selectedOption, setSelectedOption] = useState(null);
   const [customDays, setCustomDays] = useState([]);
+  const [prevEventId, setPrevEventId] = useState(currentEvent?.id);
 
   const EventSchema = Yup.object().shape({
     branch: Yup.object().required('Branch is required'),
@@ -126,6 +127,7 @@ export default function CalendarForm({
     }));
 
     // Map currentEvent.daysOfWeek array back to one of dayOptions
+    console.log('dayOptions options', dayOptions);
     const matchedOption = dayOptions.find(
       (opt) =>
         opt.value.length === currentEvent.daysOfWeek?.length &&
@@ -267,8 +269,7 @@ export default function CalendarForm({
   const handleSlotStartChange = (index, newStart) => {
     if (!newStart) return;
     const availabilityEndDate = availabilityEnd ? new Date(availabilityEnd) : null;
-    const base = getValues('doctorTimeSlots') || [];
-    const updated = base.map((s) => ({ ...s }));
+    const updated = getValues('doctorTimeSlots') || [];
 
     const availStartDate = availabilityStart ? new Date(availabilityStart) : null;
     if (availStartDate && newStart.getTime() < availStartDate.getTime()) {
@@ -305,6 +306,7 @@ export default function CalendarForm({
     if (!newEnd) return;
     const availabilityEndDate = availabilityEnd ? new Date(availabilityEnd) : null;
     const base = getValues('doctorTimeSlots') || [];
+    console.log('handleSlotEndChange base', base);
     const updated = base.map((s) => ({ ...s }));
     if (availabilityEndDate && newEnd.getTime() > availabilityEndDate.getTime()) {
       newEnd = new Date(availabilityEndDate);
@@ -451,10 +453,16 @@ export default function CalendarForm({
   }, [role, setValue]);
 
   useEffect(() => {
-    if (defaultValues) {
+    if (currentEvent?.id !== prevEventId) {
       reset(defaultValues);
+      setPrevEventId(currentEvent?.id);
     }
-  }, [defaultValues, reset]);
+  }, [currentEvent?.id, defaultValues, reset, prevEventId]);
+  // useEffect(() => {
+  //   if (currentEvent) {
+  //     reset(defaultValues);
+  //   }
+  // }, [defaultValues, reset]);
 
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
