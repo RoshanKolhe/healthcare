@@ -39,6 +39,8 @@ import { useGetDoctor } from 'src/api/doctor';
 import { useDoctorCalendar, useDoctorEvent } from 'src/sections/doctor/hooks';
 import { isBefore, startOfDay } from 'date-fns';
 import { useAuthContext } from 'src/auth/hooks';
+import { FormControlLabel, Switch } from '@mui/material';
+import axiosInstance from 'src/utils/axios';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import CalendarFiltersResult from '../doctor-calendar-filters-result';
 import CalendarForm from '../doctor-calendar-form';
@@ -86,19 +88,10 @@ export default function CalendarView() {
   const targetDoctorId = userRole === 'doctor' ? user.id : paramId;
 
   const { doctor: currentDoctor } = useGetDoctor(targetDoctorId);
-  const {
-    doctorAvailabilities: allAvailabilities,
-    doctorAvailabilitiesLoading,
-    refreshDoctorAvailabilities,
-  } = useGetDoctorAvailabilities({ id: targetDoctorId });
-  console.log('DEBUG allAvailabilities:', allAvailabilities);
+  const { doctorAvailabilities, doctorAvailabilitiesLoading, refreshDoctorAvailabilities } =
+    useGetDoctorAvailabilities({ id: targetDoctorId });
+  console.log('DEBUG allAvailabilities:', doctorAvailabilities);
 
-  let doctorAvailabilities = allAvailabilities || [];
-  if (userRole === 'doctor') {
-    doctorAvailabilities = doctorAvailabilities.filter(
-      (availability) => availability.doctorId === user.id
-    );
-  }
   const dateError =
     filters.startDate && filters.endDate
       ? filters.startDate.getTime() > filters.endDate.getTime()
@@ -132,24 +125,56 @@ export default function CalendarView() {
 
   const currentEvent = useDoctorEvent(doctorAvailabilities, selectEventId, selectedRange, openForm);
   console.log('check event id:', selectEventId);
+  console.log('check event currentEvent:', currentEvent);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // const isPastDate = useCallback((checkDate) => {
+  //   if (!checkDate) return false;
+
+  //   const now = new Date();
+  //   const eventDate = startOfDay(new Date(checkDate));
+  //   console.log('check eventDate:', eventDate);
+  //   const today = startOfDay(new Date());
+
+  //   if (eventDate < today) return true;
+
+  //   if (eventDate > today) return false;
+
+  //   const eventDateTime = new Date(checkDate);
+  //   console.log('check eventDateTime:', eventDateTime);
+  //   const diffMs = eventDateTime.getTime() - now.getTime();
+  //   const diffHours = diffMs / (1000 * 60 * 60);
+
+  //   return diffHours <= 2;
+  // }, []);
+
   const isPastDate = useCallback((checkDate) => {
     if (!checkDate) return false;
 
     const now = new Date();
-    const eventDate = startOfDay(new Date(checkDate));
-    console.log('check eventDate:', eventDate);
-    const today = startOfDay(new Date());
-
-    if (eventDate < today) return true;
-
-    if (eventDate > today) return false;
-
     const eventDateTime = new Date(checkDate);
+
+    const today = startOfDay(now);
+    const eventDay = startOfDay(eventDateTime);
+
+    // --- Step 1: Check if it's a past day
+    if (eventDay < today) return true;
+    if (eventDay > today) return false;
+
+    // --- Step 2: If it's today, handle time properly
+    // If time is missing (00:00), assume it's end of day instead of start of day
+    if (
+      eventDateTime.getHours() === 0 &&
+      eventDateTime.getMinutes() === 0 &&
+      eventDateTime.getSeconds() === 0
+    ) {
+      eventDateTime.setHours(23, 59, 59, 999);
+    }
+
     const diffMs = eventDateTime.getTime() - now.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
 
+    // If event is already passed or happening in <= 2 hours, treat as past
     return diffHours <= 2;
   }, []);
 
@@ -198,6 +223,56 @@ export default function CalendarView() {
     />
   );
 
+  const [isAvailable, setIsAvailable] = useState(true);
+
+  const handleToggle = async (event) => {
+    const newValue = event.target.checked;
+    setIsAvailable(newValue);
+
+    const today = new Date().toISOString().split('T')[0];
+    const doctorId = doctorAvailabilities?.[0]?.doctorId;
+
+    const inputData = {
+      doctorId,
+      date: today,
+      isAvailable: newValue,
+    };
+
+    try {
+      const res = await axiosInstance.post('/doctor-availabilities/toggle-availability', inputData);
+      console.log('Toggle response:', res.data);
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+    }
+  };
+  
+  useEffect(() => {
+    if (!doctorAvailabilities || doctorAvailabilities.length === 0) return;
+
+    const today = new Date().toLocaleDateString('en-CA'); // Local date in YYYY-MM-DD
+
+    const todaysAvailability = doctorAvailabilities.find((av) => {
+      const localDate = new Date(av.startDate).toLocaleDateString('en-CA');
+      return localDate === today;
+    });
+
+    console.log('today', today);
+    console.log('todaysAvailability', todaysAvailability);
+
+    if (!todaysAvailability) {
+      setIsAvailable(true); // No slots found = assume available
+      return;
+    }
+
+    const slots = todaysAvailability.doctorTimeSlots || [];
+
+    // If there are slots and all are cancelled (isBooked === 2) => doctor is OFF
+    const allCancelled = slots.length > 0 && slots.every((slot) => slot.isBooked === 2);
+    console.log('allCancelled', allCancelled);
+
+    setIsAvailable(!allCancelled);
+  }, [doctorAvailabilities]);
+
   return (
     <>
       <Container maxWidth={settings.themeStretch ? false : 'xl'}>
@@ -215,13 +290,19 @@ export default function CalendarView() {
             { name: 'Schedule' },
           ]}
           action={
-            <Button
-              variant="contained"
-              startIcon={<Iconify icon="mingcute:add-line" />}
-              onClick={onOpenForm}
-            >
-              New Schedule
-            </Button>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <FormControlLabel
+                control={<Switch checked={isAvailable} onChange={handleToggle} color="success" />}
+                label={isAvailable ? 'Available' : 'Not Available'}
+              />
+              <Button
+                variant="contained"
+                startIcon={<Iconify icon="mingcute:add-line" />}
+                onClick={onOpenForm}
+              >
+                New Schedule
+              </Button>
+            </Stack>
           }
           sx={{
             mb: { xs: 3, md: 5 },
