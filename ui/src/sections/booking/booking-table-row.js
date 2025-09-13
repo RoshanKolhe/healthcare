@@ -26,6 +26,9 @@ export default function UserTableRow({
   onViewRow,
   handleQuickEditRow,
 }) {
+
+  const quickEdit = useBoolean();
+
   const { purposeOfMeet, status, patientFullDetail, doctorTimeSlot } = row;
   console.log('row data', row);
   console.log('doctorTimeSlot', doctorTimeSlot);
@@ -91,17 +94,16 @@ export default function UserTableRow({
         </TableCell>
 
         <TableCell align="right" sx={{ px: 1, whiteSpace: 'nowrap' }}>
-          {/* <Tooltip title="Edit" placement="top" arrow>
+          <Tooltip title="Quick Edit" placement="top" arrow>
             <IconButton
               color={quickEdit.value ? 'inherit' : 'default'}
               onClick={() => {
-                onEditRow();
-                popover.onClose();
+                handleQuickEditRow(row);
               }}
             >
               <Iconify icon="solar:pen-bold" />
             </IconButton>
-          </Tooltip> */}
+          </Tooltip>
           <Tooltip title="View" placement="top" arrow>
             <IconButton
               onClick={() => {

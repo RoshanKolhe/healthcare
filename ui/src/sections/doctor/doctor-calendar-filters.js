@@ -191,7 +191,7 @@ export default function CalendarFilters({
 
       <Divider sx={{ borderStyle: 'dashed' }} />
 
-      {renderColors}
+      {/* {renderColors} */}
 
       {renderDateRange}
 

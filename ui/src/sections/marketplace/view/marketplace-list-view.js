@@ -14,7 +14,7 @@ export default function MarketplaceListView() {
   const agentsList = Array.isArray(agents) ? agents : agents?.data || [];
 
   const handleFreeTrialClick = () => {
-    router.push(paths.pricing);
+    router.push(paths.dashboard.marketplace.pricing);
   };
 
   if (agentsLoading) {

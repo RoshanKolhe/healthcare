@@ -36,13 +36,12 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 //
-import { useGetBookings } from 'src/api/booking';
+import { useGetBooking, useGetBookings } from 'src/api/booking';
 import { _roles, BOOKING_STATUS_OPTIONS } from 'src/utils/constants';
-import { useAuthContext } from 'src/auth/hooks';
-import { useGetClinicsWithFilter } from 'src/api/clinic';
 import BookingTableRow from '../booking-table-row';
 import BookingTableToolbar from '../booking-table-toolbar';
 import BookingTableFiltersResult from '../booking-table-filters-result';
+import ReferalManagementQuickEditForm from '../referal-management-edit-form';
 
 // ----------------------------------------------------------------------
 
@@ -68,9 +67,7 @@ const defaultFilters = {
 // ----------------------------------------------------------------------
 
 export default function BookingListView() {
-  const { user } = useAuthContext();
-  const isSuperOrAdmin =
-    user?.permissions?.includes('super_admin') || user?.permissions?.includes('admin');
+
   const table = useTable();
 
   const settings = useSettingsContext();
@@ -80,6 +77,7 @@ export default function BookingListView() {
   const confirm = useBoolean();
 
   const [quickEditRow, setQuickEditRow] = useState();
+  console.log('quickEditRow', quickEditRow);
 
   const quickEdit = useBoolean();
 
@@ -87,12 +85,7 @@ export default function BookingListView() {
 
   const [filters, setFilters] = useState(defaultFilters);
 
-  const { bookings, bookingsLoading, bookingsEmpty, refreshBookings } = useGetBookings();
-  const clinicFilter = `filter=${encodeURIComponent(
-    JSON.stringify({ where: { isActive: true } })
-  )}`;
-
-  const { filteredclinics: clinics = [] } = useGetClinicsWithFilter(clinicFilter);
+  const { bookings, refreshBookings } = useGetBookings();
 
   const dataFiltered = applyFilter({
     inputData: tableData,
@@ -177,17 +170,13 @@ export default function BookingListView() {
   );
 
   useEffect(() => {
-    if (bookings && clinics.length) {
-      const enrichedBookinges = bookings.map((booking) => {
-        const matchedClinic = clinics.find((h) => h.id === booking.clinicId);
-        return {
+    if (bookings ) {
+      const enrichedBookinges = bookings.map((booking) => ({
           ...booking,
-          clinicName: matchedClinic?.clinicName || 'N/A',
-        };
-      });
+        }));
       setTableData(enrichedBookinges);
     }
-  }, [bookings, clinics]);
+  }, [bookings]);
 
   return (
     <>
@@ -360,6 +349,17 @@ export default function BookingListView() {
           </IconButton>
         }
       />
+      {quickEdit.value && quickEditRow && (
+        <ReferalManagementQuickEditForm
+          currentReferalManagement={quickEditRow}
+          open={quickEdit.value}
+          onClose={() => {
+            setQuickEditRow(null);
+            quickEdit.onFalse();
+          }}
+          refreshBookings={refreshBookings}
+        />
+      )}
     </>
   );
 }

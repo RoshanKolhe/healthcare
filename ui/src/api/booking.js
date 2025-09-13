@@ -8,20 +8,21 @@ import { fetcher, endpoints } from 'src/utils/axios';
 export function useGetBookings() {
   const URL = endpoints.booking.list;
 
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
 
-  const memoizedValue = useMemo(
-    () => ({
-      bookings: Array.isArray(data) ? data : [],
-      bookingsLoading: isLoading,
-      bookingsError: error,
-      bookingsValidating: isValidating,
-      bookingsEmpty: !isLoading && !data?.bookings?.length,
-    }),
-    [data, error, isLoading, isValidating]
-  );
+  const refreshBookings = () => {
+    // Use the `mutate` function to trigger a revalidation
+    mutate();
+  };
 
-  return memoizedValue;
+  return {
+    bookings: Array.isArray(data) ? data : [],
+    bookingsLoading: isLoading,
+    bookingsError: error,
+    bookingsValidating: isValidating,
+    bookingsEmpty: !isLoading && !data?.bookings?.length,
+    refreshBookings,
+  };
 }
 
 // ----------------------------------------------------------------------
@@ -36,12 +37,12 @@ export function useGetBooking(bookingId) {
   };
 
   return {
-      booking: data,
-      bookingLoading: isLoading,
-      bookingError: error,
-      bookingValidating: isValidating,
-      refreshBooking, 
-    };
+    booking: data,
+    bookingLoading: isLoading,
+    bookingError: error,
+    bookingValidating: isValidating,
+    refreshBooking,
+  };
 }
 
 // ----------------------------------------------------------------------
@@ -72,7 +73,6 @@ export function useGetBookingesWithFilter(filter) {
 }
 
 // ----------------------------------------------------------------------
-
 
 export function useSearchBookings(query) {
   const URL = query ? [endpoints.booking.search, { params: { query } }] : null;

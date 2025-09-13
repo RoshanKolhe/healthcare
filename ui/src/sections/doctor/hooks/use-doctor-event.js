@@ -50,7 +50,7 @@ export default function useDoctorEvent(
               (new Date(s.slotEnd) - new Date(s.slotStart)) / 60000
             )
           : 0),
-      isBooked: !!s.isBooked,
+      isBooked: s.isBooked,
       isActive: s.isActive !== undefined ? s.isActive : true,
     }));
 

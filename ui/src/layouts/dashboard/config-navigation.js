@@ -97,15 +97,7 @@ export function useNavData() {
               { title: t('create'), path: paths.dashboard.clinic.new },
             ],
           },
-          {
-            title: t('agent'),
-            path: paths.dashboard.agent.root,
-            icon: ICONS.agent,
-            children: [
-              { title: t('list'), path: paths.dashboard.agent.list },
-              { title: t('create'), path: paths.dashboard.agent.new },
-            ],
-          },
+
           {
             title: t('branch'),
             path: paths.dashboard.branch.root,
@@ -136,7 +128,17 @@ export function useNavData() {
       {
         subheader: t('masters'),
         items: [
-          // Department
+          // Agent
+          {
+            title: t('agent'),
+            path: paths.dashboard.agent.root,
+            icon: ICONS.agent,
+            children: [
+              { title: t('list'), path: paths.dashboard.agent.list },
+              { title: t('create'), path: paths.dashboard.agent.new },
+            ],
+          },
+          // Specialization
           {
             title: t('specializations'),
             path: paths.dashboard.specialization.root,

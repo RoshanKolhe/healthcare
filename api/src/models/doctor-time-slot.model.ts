@@ -30,10 +30,11 @@ export class DoctorTimeSlot extends Entity {
   duration: number;
 
   @property({
-    type: 'boolean',
+    type: 'number',
+    default: 0,
     required: true,
   })
-  isBooked: boolean;
+  isBooked?: number;
 
   @property({
     type: 'boolean',

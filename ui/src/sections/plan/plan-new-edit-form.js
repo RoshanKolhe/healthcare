@@ -83,11 +83,11 @@ export default function PlanNewEditForm({ currentPlan }) {
   const defaultValues = useMemo(
     () => ({
       name: currentPlan?.name || '',
-      description: currentPlan?.description || '',
       features: currentPlan?.features || '',
       thumbnail: currentPlan?.thumbnail?.fileUrl || '',
       isActive: currentPlan ? (currentPlan?.isActive ? '1' : '0') : '1',
       billingCycle: currentPlan?.billingCycle || '',
+      tier: currentPlan?.tier || '',
       priceINR: currentPlan?.priceINR || 0,
       discountedPriceINR: currentPlan?.discountedPriceINR || 0,
       priceUSD: currentPlan?.priceUSD || 0,

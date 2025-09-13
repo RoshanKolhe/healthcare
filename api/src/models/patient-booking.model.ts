@@ -1,10 +1,11 @@
-import {Entity, model, property, belongsTo, hasMany} from '@loopback/repository';
+import {Entity, model, property, belongsTo, hasMany, hasOne} from '@loopback/repository';
 import {Patient} from './patient.model';
 import {Doctor} from './doctor.model';
 import {DoctorTimeSlot} from './doctor-time-slot.model';
 import {PatientBookingHistory} from './patient-booking-history.model';
 import {Clinic} from './clinic.model';
 import {Branch} from './branch.model';
+import {ReferalManagement} from './referal-management.model';
 
 @model()
 export class PatientBooking extends Entity {
@@ -70,6 +71,9 @@ export class PatientBooking extends Entity {
 
   @belongsTo(() => Branch)
   branchId: number;
+
+  @hasOne(() => ReferalManagement)
+  referalManagement: ReferalManagement;
 
   constructor(data?: Partial<PatientBooking>) {
     super(data);
