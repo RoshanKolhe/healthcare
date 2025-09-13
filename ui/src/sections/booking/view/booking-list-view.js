@@ -36,13 +36,12 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 //
-import { useGetBookings } from 'src/api/booking';
+import { useGetBooking, useGetBookings } from 'src/api/booking';
 import { _roles, BOOKING_STATUS_OPTIONS } from 'src/utils/constants';
-import { useAuthContext } from 'src/auth/hooks';
-import { useGetClinicsWithFilter } from 'src/api/clinic';
 import BookingTableRow from '../booking-table-row';
 import BookingTableToolbar from '../booking-table-toolbar';
 import BookingTableFiltersResult from '../booking-table-filters-result';
+import ReferalManagementQuickEditForm from '../referal-management-edit-form';
 
 // ----------------------------------------------------------------------
 
@@ -78,6 +77,7 @@ export default function BookingListView() {
   const confirm = useBoolean();
 
   const [quickEditRow, setQuickEditRow] = useState();
+  console.log('quickEditRow', quickEditRow);
 
   const quickEdit = useBoolean();
 
@@ -85,8 +85,7 @@ export default function BookingListView() {
 
   const [filters, setFilters] = useState(defaultFilters);
 
-  const { bookings, bookingsLoading, bookingsEmpty, refreshBookings } = useGetBookings();
-
+  const { bookings, refreshBookings } = useGetBookings();
 
   const dataFiltered = applyFilter({
     inputData: tableData,
@@ -350,6 +349,17 @@ export default function BookingListView() {
           </IconButton>
         }
       />
+      {quickEdit.value && quickEditRow && (
+        <ReferalManagementQuickEditForm
+          currentReferalManagement={quickEditRow}
+          open={quickEdit.value}
+          onClose={() => {
+            setQuickEditRow(null);
+            quickEdit.onFalse();
+          }}
+          refreshBookings={refreshBookings}
+        />
+      )}
     </>
   );
 }

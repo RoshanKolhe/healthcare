@@ -15,3 +15,4 @@ export * from './patient-booking-history.repository';
 export * from './agent.repository';
 export * from './plan.repository';
 export * from './log.repository';
+export * from './referal-management.repository';
