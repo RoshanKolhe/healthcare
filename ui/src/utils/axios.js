@@ -82,6 +82,9 @@ export const endpoints = {
     list: '/patient-bookings',
     details: (id) => `/patient-bookings/${id}`,
   },
+  referalManagement: {
+    details: (id) => `/referal-managements/${id}`,
+  },
   clinic: {
     list: '/clinics',
     details: (id) => `/clinics/${id}`,
