@@ -122,7 +122,7 @@ export default function CalendarForm({
         (s.slotStart && s.slotEnd
           ? Math.round((new Date(s.slotEnd) - new Date(s.slotStart)) / 60000)
           : 0),
-      isBooked: !!s.isBooked,
+      isBooked: s.isBooked,
       isActive: s.isActive !== undefined ? s.isActive : true,
     }));
 
@@ -209,7 +209,6 @@ export default function CalendarForm({
 
     for (let i = 0; i < count; i++) {
       const s = new Date(cursor);
-      // last slot should end exactly at availability end
       let e = i === count - 1 ? new Date(endDate) : new Date(cursor.getTime() + baseMs);
       if (e.getTime() > endDate.getTime()) e = new Date(endDate);
       const duration = Math.max(0, diffMinutes(s, e));
@@ -302,29 +301,43 @@ export default function CalendarForm({
     setValue('slotCount', recalculated.length);
   };
 
+  const validateTotalTime = (slots) => {
+    const totalMinutes = diffMinutes(availabilityStart, availabilityEnd);
+    const usedMinutes = slots.reduce((sum, s) => sum + (s.duration || 0), 0);
+    return usedMinutes <= totalMinutes;
+  };
+
   const handleSlotEndChange = (index, newEnd) => {
     if (!newEnd) return;
     const availabilityEndDate = availabilityEnd ? new Date(availabilityEnd) : null;
     const base = getValues('doctorTimeSlots') || [];
-    console.log('handleSlotEndChange base', base);
     const updated = base.map((s) => ({ ...s }));
-    if (availabilityEndDate && newEnd.getTime() > availabilityEndDate.getTime()) {
-      newEnd = new Date(availabilityEndDate);
-    }
 
     const slotStart = updated[index].slotStart ? new Date(updated[index].slotStart) : null;
-    if (!slotStart) {
-      return;
-    }
+    if (!slotStart) return;
+
     const newDuration = Math.max(0, diffMinutes(slotStart, newEnd));
     updated[index].slotEnd = new Date(newEnd);
     updated[index].duration = newDuration;
+
     const recalculated = recalcFollowingSlots(updated, index);
+
+    if (!validateTotalTime(recalculated)) {
+      enqueueSnackbar('Total slots exceed availability time!', { variant: 'error' });
+      return;
+    }
+
     replace(recalculated);
     setValue('slotCount', recalculated.length);
   };
+
   console.log('currentEvent id:', currentEvent?.id);
   const onSubmit = handleSubmit(async (formData) => {
+    const slots = formData.doctorTimeSlots || [];
+    if (!validateTotalTime(slots)) {
+      enqueueSnackbar('Slots total time mismatch with availability!', { variant: 'error' });
+      return;
+    }
     if (isReadOnly) {
       enqueueSnackbar('Cannot edit past events or events starting in less than 2 hours', {
         variant: 'warning',
@@ -354,7 +367,7 @@ export default function CalendarForm({
           duration:
             s.duration ||
             (s.slotStart && s.slotEnd ? diffMinutes(toDate(s.slotStart), toDate(s.slotEnd)) : 0),
-          isBooked: !!s.isBooked,
+          isBooked: s.isBooked,
           isActive: s.isActive !== undefined ? s.isActive : true,
         })),
       };
@@ -388,32 +401,20 @@ export default function CalendarForm({
 
   useEffect(() => {
     if (!availabilityStart || !availabilityEnd || slotCount === undefined) return;
-    const currentSlots = getValues('doctorTimeSlots') || [];
-    const currentLength = currentSlots.length;
-
-    if (currentLength === slotCount) return;
 
     const startDate = new Date(availabilityStart);
     const endDate = new Date(availabilityEnd);
 
-    if (currentLength < slotCount) {
-      const slotsToAdd = slotCount - currentLength;
+    const currentSlots = getValues('doctorTimeSlots') || [];
+
+    if (currentSlots.length !== slotCount) {
       const newSlots = generateInitialSlots(startDate, endDate, slotCount);
-
-      const mergedSlots = [...currentSlots, ...newSlots.slice(currentLength)];
-
-      replace(mergedSlots);
-    } else {
-      replace(currentSlots.slice(0, slotCount));
+      replace(newSlots);
     }
   }, [slotCount, availabilityStart, availabilityEnd, getValues, generateInitialSlots, replace]);
 
   useEffect(() => {
     if (currentEvent) {
-      console.log('enter');
-      console.log('dayOptions options', dayOptions);
-      console.log('dayOfWeek options', currentEvent.daysOfWeek);
-
       const matchedOption = dayOptions.find(
         (opt) =>
           opt.value.length === currentEvent.daysOfWeek?.length &&
@@ -458,11 +459,6 @@ export default function CalendarForm({
       setPrevEventId(currentEvent?.id);
     }
   }, [currentEvent?.id, defaultValues, reset, prevEventId]);
-  // useEffect(() => {
-  //   if (currentEvent) {
-  //     reset(defaultValues);
-  //   }
-  // }, [defaultValues, reset]);
 
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
@@ -691,7 +687,8 @@ export default function CalendarForm({
                           }}
                           label={`Slot ${idx + 1} start`}
                           slotProps={{ textField: { fullWidth: true } }}
-                          disabled={isReadOnly}
+                          // disabled={isReadOnly}
+                          disabled
                         />
                       )}
                     />

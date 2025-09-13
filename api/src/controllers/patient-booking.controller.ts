@@ -20,6 +20,7 @@ import {
 } from '@loopback/rest';
 import {DoctorTimeSlot, PatientBooking} from '../models';
 import {
+  DoctorRepository,
   DoctorTimeSlotRepository,
   PatientBookingHistoryRepository,
   PatientBookingRepository,
@@ -51,6 +52,9 @@ export class PatientBookingController {
 
     @repository(UserRepository)
     public userRepository: UserRepository,
+
+    @repository(DoctorRepository)
+    public doctorRepository: DoctorRepository,
   ) {}
 
   @post('/patient-bookings')
@@ -104,12 +108,28 @@ export class PatientBookingController {
 
     try {
       // 1️⃣ Check if slot is already booked
-      const slot = await this.doctorTimeSlotRepository.findById(
+      const slot: any = await this.doctorTimeSlotRepository.findById(
         patientBooking.doctorTimeSlotId,
+        {
+          include: [
+            {
+              relation: 'doctorAvailability',
+              scope: {
+                include: [
+                  {
+                    relation: 'branch',
+                  },
+                ],
+              },
+            },
+          ],
+        },
       );
       if (slot.isBooked) {
         throw new Error('This slot is already booked.');
       }
+      const clinicId = slot.doctorAvailability?.branch?.clinicId;
+      const branchId = slot.doctorAvailability?.branchId;
 
       // 2️⃣ Check if patient exists (by email or phoneNo)
       let patient = await this.patientRepository.findOne({
@@ -135,14 +155,14 @@ export class PatientBookingController {
       const patientBookingData: PatientBooking = {
         ...patientBooking,
         patientId: patient.id!,
+        clinicId,
+        branchId,
         patientFullDetail: {
-          patientName: patient.patientName,
-          phoneNo: patient.phoneNo,
-          email: patient.email,
-          age: patient.age,
-          gender:
-            (patientBooking.patientFullDetail as any)?.gender ||
-            'Not Specified',
+          patientName: patientBooking.patientFullDetail?.patientName,
+          phoneNo: patientBooking.patientFullDetail?.phoneNo,
+          email: patientBooking.patientFullDetail?.email,
+          age: patientBooking.patientFullDetail?.age,
+          gender: patientBooking.patientFullDetail?.gender || 'Not Specified',
         },
         status: 0,
       };
@@ -167,7 +187,7 @@ export class PatientBookingController {
       // 7️⃣ Mark slot as booked
       await this.doctorTimeSlotRepository.updateById(
         patientBooking.doctorTimeSlotId,
-        {isBooked: true},
+        {isBooked: 1},
         {transaction: tx},
       );
 
@@ -205,10 +225,13 @@ export class PatientBookingController {
             include: [{relation: 'doctorAvailability'}],
           },
         },
+        {
+          relation: 'referalManagement',
+        }
       ],
     });
   }
-  
+
   @authenticate({
     strategy: 'jwt',
     options: {
@@ -249,6 +272,9 @@ export class PatientBookingController {
             ],
           },
         },
+        {
+          relation: 'referalManagement',
+        }
       ],
       order: ['createdAt DESC'],
     };
@@ -262,7 +288,6 @@ export class PatientBookingController {
     if (currentUserPermission.includes(PermissionKeys.SUPER_ADMIN)) {
       return this.patientBookingRepository.find(filter);
     }
-    console.log('userDetails', userDetails);
 
     // CLINIC → filter by clinicId
     if (currentUserPermission.includes(PermissionKeys.CLINIC)) {
@@ -287,6 +312,7 @@ export class PatientBookingController {
     }
 
     // DOCTOR → filter by doctorId
+    console.log('currentUser', currentUser);
     if (currentUserPermission.includes(PermissionKeys.DOCTOR)) {
       return this.patientBookingRepository.find({
         ...filter,
@@ -326,6 +352,9 @@ export class PatientBookingController {
         },
         {
           relation: 'patientBookingHistories',
+        },
+        {
+          relation: 'referalManagement',
         },
       ],
     });
@@ -450,7 +479,7 @@ export class PatientBookingController {
       // 3️⃣ Free old slot
       await this.doctorTimeSlotRepository.updateById(
         existingBooking.doctorTimeSlotId,
-        {isBooked: false},
+        {isBooked: 0},
         {transaction: tx},
       );
 
@@ -468,7 +497,7 @@ export class PatientBookingController {
       // 6️⃣ Mark new slot as booked
       await this.doctorTimeSlotRepository.updateById(
         bookingUpdate.doctorTimeSlotId,
-        {isBooked: true},
+        {isBooked: 1},
         {transaction: tx},
       );
 
@@ -529,7 +558,7 @@ export class PatientBookingController {
 
     // Free the doctor’s slot again
     await this.doctorTimeSlotRepository.updateById(booking.doctorTimeSlotId, {
-      isBooked: false,
+      isBooked: 0,
     });
 
     // Return updated booking
