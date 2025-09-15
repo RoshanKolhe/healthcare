@@ -17,13 +17,21 @@ import {
   response,
 } from '@loopback/rest';
 import {ReferalManagement} from '../models';
-import {ReferalManagementRepository} from '../repositories';
+import {
+  DoctorRepository,
+  PatientBookingRepository,
+  ReferalManagementRepository,
+} from '../repositories';
 import axios from 'axios';
 
 export class ReferalManagementController {
   constructor(
     @repository(ReferalManagementRepository)
     public referalManagementRepository: ReferalManagementRepository,
+    @repository(PatientBookingRepository)
+    public patientBookingRepository: PatientBookingRepository,
+    @repository('DoctorRepository')
+    public doctorRepository: DoctorRepository,
   ) {}
 
   @post('/referal-managements')
@@ -46,11 +54,29 @@ export class ReferalManagementController {
     })
     referalManagement: Omit<ReferalManagement, 'id'>,
   ): Promise<ReferalManagement> {
-    const create = this.referalManagementRepository.create(referalManagement);
+    const create = await this.referalManagementRepository.create(referalManagement);
+    const WEBHOOK_REF_URL = process.env.WEBHOOK_URL;
+    console.log('Referal Webhook URL', WEBHOOK_REF_URL);
     try {
-      await axios.post(
-        'https://super-muskrat-immortal.ngrok-free.app/webhook/b161e02e-cd1e-4849-a13e-a1862b7af10e',
-        create,
+      const booking : any = await this.patientBookingRepository.findById(
+        referalManagement.patientBookingId,
+      );
+      const doctor : any = await this.doctorRepository.findById(
+        booking?.doctorId,
+      );
+      console.log('Doctor Details', doctor);
+
+      const payload = {
+        ...create,
+        currentDoctor: `${doctor?.firstName} ${doctor?.lastName}`,
+        currentDoctorPhoneNo: doctor?.phoneNumber,
+        currentDoctorEmail: doctor?.email,
+        patientName: booking?.patientFullDetail?.patientName,
+        patientPhoneNo: booking?.patientFullDetail?.phoneNo,
+        patientEmail: booking?.patientFullDetail?.email,
+      };
+      await axios.post(`${WEBHOOK_REF_URL}/referral_data`,
+        payload,
         {
           headers: {
             'Content-Type': 'application/json',

@@ -17,6 +17,12 @@ export default function BookingPatientFullDetailsInfo({ patient, patientDetail }
     <>
       <CardHeader title="Patient Intake Details" />
       <Grid container sx={{ p: 3 }}>
+        <Grid item xs={12}>
+          <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
+          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ typography: 'body2',justifyContent: 'center',mb: 2 }}>
+            <Typography variant="subtitle2">Personal Information</Typography>
+          </Stack>
+        </Grid>
         <Grid item xs={6}>
           <Stack direction="row" spacing={0.5} alignItems="flex-start" sx={{ typography: 'body2' }}>
             <Typography variant="subtitle2">Patient Name : </Typography>
@@ -61,6 +67,12 @@ export default function BookingPatientFullDetailsInfo({ patient, patientDetail }
             <Typography variant="subtitle2">{patient?.bloodGroup || 'N/A'}</Typography>
           </Stack>
         </Grid>
+        <Grid item xs={12}>
+          <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
+          <Stack direction="row" spacing={0.5} alignItems="flex-start" sx={{ typography: 'body2',justifyContent: 'center',mb: 2 }}>
+            <Typography variant="subtitle2">Medical History(opt)</Typography>
+          </Stack>
+        </Grid>
         <Grid item xs={6}>
           <Stack direction="row" spacing={0.5} alignItems="flex-start">
             <Typography variant="subtitle2">Chronic Illnesses :</Typography>
@@ -85,6 +97,12 @@ export default function BookingPatientFullDetailsInfo({ patient, patientDetail }
             <Typography variant="subtitle2">{patient?.currentMedication || 'N/A'}</Typography>
           </Stack>
         </Grid>
+        <Grid item xs={12}>
+          <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
+          <Stack direction="row" spacing={0.5} alignItems="flex-start" sx={{ typography: 'body2',justifyContent: 'center',mb: 2 }}>
+            <Typography variant="subtitle2">Current Condition(opt)</Typography>
+          </Stack>
+        </Grid>
         <Grid item xs={6}>
           <Stack direction="row" spacing={0.5} alignItems="flex-start">
             <Typography variant="subtitle2">Main Symptoms :</Typography>
@@ -101,6 +119,12 @@ export default function BookingPatientFullDetailsInfo({ patient, patientDetail }
           <Stack direction="row" spacing={0.5} alignItems="flex-start">
             <Typography variant="subtitle2">Pain Level :</Typography>
             <Typography variant="subtitle2">{patient?.painLevel || 'N/A'}</Typography>
+          </Stack>
+        </Grid>
+        <Grid item xs={12}>
+          <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
+          <Stack direction="row" spacing={0.5} alignItems="flex-start" sx={{ typography: 'body2',justifyContent: 'center',mb: 2 }}>
+            <Typography variant="subtitle2">Insurance Details(opt)</Typography>
           </Stack>
         </Grid>
         <Grid item xs={6}>
@@ -121,6 +145,12 @@ export default function BookingPatientFullDetailsInfo({ patient, patientDetail }
             <Typography variant="subtitle2">
               {patient?.validityDate ? format(new Date(patient.validityDate), 'dd MMM yyyy') : 'N/A'}
             </Typography>
+          </Stack>
+        </Grid>
+        <Grid item xs={12}>
+          <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
+          <Stack direction="row" spacing={0.5} alignItems="flex-start" sx={{ typography: 'body2',justifyContent: 'center',mb: 2 }}>
+            <Typography variant="subtitle2">Emergency Contact(opt)</Typography>
           </Stack>
         </Grid>
         <Grid item xs={6}>
