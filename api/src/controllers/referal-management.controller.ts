@@ -56,7 +56,6 @@ export class ReferalManagementController {
   ): Promise<ReferalManagement> {
     const create = await this.referalManagementRepository.create(referalManagement);
     const WEBHOOK_REF_URL = process.env.WEBHOOK_URL;
-    console.log('Referal Webhook URL', WEBHOOK_REF_URL);
     try {
       const booking : any = await this.patientBookingRepository.findById(
         referalManagement.patientBookingId,
@@ -64,7 +63,6 @@ export class ReferalManagementController {
       const doctor : any = await this.doctorRepository.findById(
         booking?.doctorId,
       );
-      console.log('Doctor Details', doctor);
 
       const payload = {
         ...create,
@@ -74,6 +72,7 @@ export class ReferalManagementController {
         patientName: booking?.patientFullDetail?.patientName,
         patientPhoneNo: booking?.patientFullDetail?.phoneNo,
         patientEmail: booking?.patientFullDetail?.email,
+        patientAge: booking?.patientFullDetail?.age,
       };
       await axios.post(`${WEBHOOK_REF_URL}/referral_data`,
         payload,

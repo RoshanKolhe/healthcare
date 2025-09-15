@@ -63,6 +63,7 @@ export default function ReferalManagementQuickEditForm({
       patientName: currentReferalManagement?.patientFullDetail?.patientName || '',
       phoneNo: currentReferalManagement?.patientFullDetail?.phoneNo || '',
       email: currentReferalManagement?.patientFullDetail?.email || '',
+      age: currentReferalManagement?.patientFullDetail?.age || '',
       referalReason: currentReferalManagement?.referalManagement?.referalReason || '',
       clinicNote: currentReferalManagement?.referalManagement?.clinicNote || '',
       doctorName: currentReferalManagement?.referalManagement?.doctorName || '',
@@ -174,6 +175,7 @@ export default function ReferalManagementQuickEditForm({
             <RHFTextField name="patientName" label="Patient Name" disabled />
             <RHFTextField name="phoneNo" label="Patient Phone" disabled />
             <RHFTextField name="email" label="Patient Email" disabled />
+            <RHFTextField name="age" label="Patient Age" disabled />
             <RHFTextField name="referalReason" label="Referal Reason" />
             <RHFTextField name="clinicNote" label="Clinic Note" />
             <RHFTextField name="doctorName" label="Doctor Name" />
