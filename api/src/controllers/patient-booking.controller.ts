@@ -356,6 +356,9 @@ export class PatientBookingController {
         {
           relation: 'referalManagement',
         },
+        {
+          relation: 'personalInformation',
+        }
       ],
     });
   }

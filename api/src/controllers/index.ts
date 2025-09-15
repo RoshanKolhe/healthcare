@@ -18,3 +18,4 @@ export * from './patient-booking-clinic.controller';
 export * from './patient-booking-branch.controller';
 export * from './plan.controller';
 export * from './referal-management.controller';
+export * from './personal-information.controller';
