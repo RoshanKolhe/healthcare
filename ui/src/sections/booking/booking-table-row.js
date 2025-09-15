@@ -38,8 +38,8 @@ export default function UserTableRow({
   return (
     <>
       <TableRow hover selected={selected}>
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{purposeOfMeet}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{patientFullDetail.patientName}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{purposeOfMeet}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{patientFullDetail.phoneNo}</TableCell>
         {/* <TableCell sx={{ whiteSpace: 'nowrap' }}>
           {doctorTimeSlot?.doctorAvailability?.startDate

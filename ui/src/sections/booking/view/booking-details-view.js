@@ -16,6 +16,7 @@ import { useGetBooking } from 'src/api/booking';
 import BookingDetailsInfo from '../booking-details-info';
 import BookingDetailsToolbar from '../booking-details-toolbar';
 import BookingDetailsHistory from '../booking-details-history';
+import BookingPatientFullDetailsInfo from '../booking-patientfulldetails-info';
 
 // ----------------------------------------------------------------------
 
@@ -65,6 +66,15 @@ export default function BookingDetailsView() {
         <Grid xs={12} md={4}>
           <BookingDetailsInfo
             patient={currentBooking?.patientFullDetail}
+            dispatch={currentBooking?.dispatch}
+            payment={currentBooking?.payment}
+            shippingAddress={currentBooking?.shippingAddress}
+          />
+        </Grid>
+        <Grid xs={12} md={12}>
+          <BookingPatientFullDetailsInfo
+            patientDetail={currentBooking?.patientFullDetail}
+            patient={currentBooking?.personalInformation}
             dispatch={currentBooking?.dispatch}
             payment={currentBooking?.payment}
             shippingAddress={currentBooking?.shippingAddress}

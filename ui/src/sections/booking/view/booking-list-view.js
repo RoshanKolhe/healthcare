@@ -48,8 +48,8 @@ import ReferalManagementQuickEditForm from '../referal-management-edit-form';
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...BOOKING_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
-  { id: 'purposeOfMeet', label: 'Purpose Of Meet' },
   { id: 'patientName', label: 'Patient Name' },
+  { id: 'purposeOfMeet', label: 'Purpose Of Meet' },
   { id: 'phoneNo', label: 'Phone Number' },
   { id: 'date', label: 'Date' },
   { id: 'startTime', label: 'Start Time' },
