@@ -158,7 +158,7 @@ export default function ReferalManagementQuickEditForm({
       }}
     >
       <FormProvider methods={methods} onSubmit={onSubmit}>
-        <DialogTitle>Quick Update</DialogTitle>
+        <DialogTitle>Referal Management Form</DialogTitle>
 
         <DialogContent>
           <Box

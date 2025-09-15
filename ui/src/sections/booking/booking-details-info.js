@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography';
 
 // ----------------------------------------------------------------------
 
-export default function OrderDetailsInfo({ patient, dispatch, payment, shippingAddress }) {
+export default function BookingDetailsInfo({ patient, dispatch, payment, shippingAddress }) {
   const renderCustomer = (
     <>
       <CardHeader
@@ -57,7 +57,7 @@ export default function OrderDetailsInfo({ patient, dispatch, payment, shippingA
   );
 }
 
-OrderDetailsInfo.propTypes = {
+BookingDetailsInfo.propTypes = {
   patient: PropTypes.object,
   dispatch: PropTypes.object,
   payment: PropTypes.object,
