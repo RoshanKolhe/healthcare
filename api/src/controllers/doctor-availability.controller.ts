@@ -344,6 +344,7 @@ export class DoctorAvailabilityController {
       this.dataSource,
     );
     const tx = await repo.beginTransaction(IsolationLevel.READ_COMMITTED);
+    const WEBHOOK_TOGGLE_URL = process.env.WEBHOOK_URL;
 
     try {
       const startOfDay = moment
@@ -429,8 +430,7 @@ export class DoctorAvailabilityController {
       await tx.commit();
 
       if (!isAvailable && webhookPayload.length > 0) {
-        await axios.post(
-          'https://super-muskrat-immortal.ngrok-free.app/webhook/today-appointment-can',
+        await axios.post(`${WEBHOOK_TOGGLE_URL}/today-appointment-can`,
           webhookPayload,
         );
       }
@@ -438,7 +438,7 @@ export class DoctorAvailabilityController {
       return {
         message: isAvailable
           ? 'Doctor is now available. All slots marked as open '
-          : 'Doctor marked as unavailable. All slots cancelled and bookings cancelled',
+          : 'The doctor is not available, so your slot has been canceled. Please book a new slot.',
       };
     } catch (error) {
       await tx.rollback();
@@ -665,6 +665,7 @@ export class DoctorAvailabilityController {
         where: {doctorTimeSlotId: {inq: slotIds}},
       });
       const webhookPayload: any[] = [];
+      const WEBHOOK_DEL_URL = process.env.WEBHOOK_URL;
 
       // 3️⃣ Cancel each booking
       for (const b of bookings) {
@@ -711,14 +712,13 @@ export class DoctorAvailabilityController {
       await tx.commit();
 
       if (webhookPayload.length > 0) {
-        await axios.post(
-          'https://super-muskrat-immortal.ngrok-free.app/webhook/today-appointment-can',
+        await axios.post(`${WEBHOOK_DEL_URL}/today-appointment-can`,
           webhookPayload,
         );
       }
 
       return {
-        message: 'Availability and all related bookings cancelled successfully',
+        message: 'The doctor is not available, so your slot has been canceled. Please book a new slot.',
       };
     } catch (err) {
       await tx.rollback();
