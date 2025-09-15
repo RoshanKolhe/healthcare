@@ -94,7 +94,7 @@ export default function UserTableRow({
         </TableCell>
 
         <TableCell align="right" sx={{ px: 1, whiteSpace: 'nowrap' }}>
-          <Tooltip title="Quick Edit" placement="top" arrow>
+          <Tooltip title="Referal Form" placement="top" arrow>
             <IconButton
               color={quickEdit.value ? 'inherit' : 'default'}
               onClick={() => {

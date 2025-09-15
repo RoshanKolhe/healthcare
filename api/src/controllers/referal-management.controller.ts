@@ -18,17 +18,20 @@ import {
 } from '@loopback/rest';
 import {ReferalManagement} from '../models';
 import {ReferalManagementRepository} from '../repositories';
+import axios from 'axios';
 
 export class ReferalManagementController {
   constructor(
     @repository(ReferalManagementRepository)
-    public referalManagementRepository : ReferalManagementRepository,
+    public referalManagementRepository: ReferalManagementRepository,
   ) {}
 
   @post('/referal-managements')
   @response(200, {
     description: 'ReferalManagement model instance',
-    content: {'application/json': {schema: getModelSchemaRef(ReferalManagement)}},
+    content: {
+      'application/json': {schema: getModelSchemaRef(ReferalManagement)},
+    },
   })
   async create(
     @requestBody({
@@ -43,7 +46,21 @@ export class ReferalManagementController {
     })
     referalManagement: Omit<ReferalManagement, 'id'>,
   ): Promise<ReferalManagement> {
-    return this.referalManagementRepository.create(referalManagement);
+    const create = this.referalManagementRepository.create(referalManagement);
+    try {
+      await axios.post(
+        'https://super-muskrat-immortal.ngrok-free.app/webhook/b161e02e-cd1e-4849-a13e-a1862b7af10e',
+        create,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    } catch (error) {
+      console.error('Webhook send failed:', error.message);
+    }
+    return create;
   }
 
   @get('/referal-managements')
@@ -75,7 +92,8 @@ export class ReferalManagementController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(ReferalManagement, {exclude: 'where'}) filter?: FilterExcludingWhere<ReferalManagement>
+    @param.filter(ReferalManagement, {exclude: 'where'})
+    filter?: FilterExcludingWhere<ReferalManagement>,
   ): Promise<ReferalManagement> {
     return this.referalManagementRepository.findById(id, filter);
   }
@@ -96,6 +114,15 @@ export class ReferalManagementController {
     referalManagement: ReferalManagement,
   ): Promise<void> {
     await this.referalManagementRepository.updateById(id, referalManagement);
+    try {
+      await axios.post(
+        'https://super-muskrat-immortal.ngrok-free.app/webhook/b161e02e-cd1e-4849-a13e-a1862b7af10e',
+        {message: 'Your referal data is updated'},
+        {headers: {'Content-Type': 'application/json'}},
+      );
+    } catch (error) {
+      console.error('Webhook send failed:', error.message);
+    }
   }
 
   @del('/referal-managements/{id}')

@@ -6,6 +6,7 @@ import {PatientBookingHistory} from './patient-booking-history.model';
 import {Clinic} from './clinic.model';
 import {Branch} from './branch.model';
 import {ReferalManagement} from './referal-management.model';
+import {PersonalInformation} from './personal-information.model';
 
 @model()
 export class PatientBooking extends Entity {
@@ -74,6 +75,9 @@ export class PatientBooking extends Entity {
 
   @hasOne(() => ReferalManagement)
   referalManagement: ReferalManagement;
+
+  @hasOne(() => PersonalInformation)
+  personalInformation: PersonalInformation;
 
   constructor(data?: Partial<PatientBooking>) {
     super(data);
