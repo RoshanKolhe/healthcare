@@ -31,6 +31,10 @@ export default function MultiFilePreview({ thumbnail, files, onRemove, sx }) {
               alignItems="center"
               display="inline-flex"
               justifyContent="center"
+              onClick={() => {
+                const url = typeof file === 'string' ? file : file?.url || file?.fileUrl;
+                if (url) window.open(url, '_blank');
+              }}
               sx={{
                 m: 0.5,
                 width: 80,

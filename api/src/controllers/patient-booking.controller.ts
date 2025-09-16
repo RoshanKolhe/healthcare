@@ -227,6 +227,9 @@ export class PatientBookingController {
         },
         {
           relation: 'referalManagement',
+        },
+        {
+          relation: 'reportSummary',
         }
       ],
     });
@@ -274,6 +277,9 @@ export class PatientBookingController {
         },
         {
           relation: 'referalManagement',
+        },
+        {
+          relation: 'reportSummary',
         }
       ],
       order: ['createdAt DESC'],
@@ -358,6 +364,9 @@ export class PatientBookingController {
         },
         {
           relation: 'personalInformation',
+        },
+        {
+          relation: 'reportSummary',
         }
       ],
     });

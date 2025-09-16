@@ -18,3 +18,4 @@ export * from './plan.model';
 export * from './log.model';
 export * from './referal-management.model';
 export * from './personal-information.model';
+export * from './report-summary.model';
