@@ -42,6 +42,7 @@ import BookingTableRow from '../booking-table-row';
 import BookingTableToolbar from '../booking-table-toolbar';
 import BookingTableFiltersResult from '../booking-table-filters-result';
 import ReferalManagementQuickEditForm from '../referal-management-edit-form';
+import SummaryManagementQuickEditForm from '../summary-management-edit-form';
 
 // ----------------------------------------------------------------------
 
@@ -77,6 +78,8 @@ export default function BookingListView() {
   const confirm = useBoolean();
 
   const [quickEditRow, setQuickEditRow] = useState();
+  const [quickEditRowSummary, setQuickEditRowSummary] = useState();
+  console.log('quickEditRowSummary', quickEditRowSummary);
   console.log('quickEditRow', quickEditRow);
 
   const quickEdit = useBoolean();
@@ -164,6 +167,14 @@ export default function BookingListView() {
   const handleQuickEditRow = useCallback(
     (row) => {
       setQuickEditRow(row);
+      quickEdit.onTrue();
+    },
+    [quickEdit]
+  );
+
+  const handleQuickEditRowSummary = useCallback(
+    (row) => {
+      setQuickEditRowSummary(row);
       quickEdit.onTrue();
     },
     [quickEdit]
@@ -301,6 +312,9 @@ export default function BookingListView() {
                         handleQuickEditRow={(booking) => {
                           handleQuickEditRow(booking);
                         }}
+                        handleQuickEditRowSummary={(booking) => {
+                          handleQuickEditRowSummary(booking);
+                        }}
                         quickEdit={quickEdit}
                       />
                     ))}
@@ -355,6 +369,17 @@ export default function BookingListView() {
           open={quickEdit.value}
           onClose={() => {
             setQuickEditRow(null);
+            quickEdit.onFalse();
+          }}
+          refreshBookings={refreshBookings}
+        />
+      )}
+      {quickEdit.value && quickEditRowSummary && (
+        <SummaryManagementQuickEditForm
+          currentSummaryManagement={quickEditRowSummary}
+          open={quickEdit.value}
+          onClose={() => {
+            setQuickEditRowSummary(null);
             quickEdit.onFalse();
           }}
           refreshBookings={refreshBookings}
