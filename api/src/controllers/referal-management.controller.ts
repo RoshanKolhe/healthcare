@@ -54,13 +54,14 @@ export class ReferalManagementController {
     })
     referalManagement: Omit<ReferalManagement, 'id'>,
   ): Promise<ReferalManagement> {
-    const create = await this.referalManagementRepository.create(referalManagement);
+    const create =
+      await this.referalManagementRepository.create(referalManagement);
     const WEBHOOK_REF_URL = process.env.WEBHOOK_URL;
     try {
-      const booking : any = await this.patientBookingRepository.findById(
+      const booking: any = await this.patientBookingRepository.findById(
         referalManagement.patientBookingId,
       );
-      const doctor : any = await this.doctorRepository.findById(
+      const doctor: any = await this.doctorRepository.findById(
         booking?.doctorId,
       );
 
@@ -74,14 +75,11 @@ export class ReferalManagementController {
         patientEmail: booking?.patientFullDetail?.email,
         patientAge: booking?.patientFullDetail?.age,
       };
-      await axios.post(`${WEBHOOK_REF_URL}/referral_data`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      await axios.post(`${WEBHOOK_REF_URL}/referral_data`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
     } catch (error) {
       console.error('Webhook send failed:', error.message);
     }
@@ -139,13 +137,37 @@ export class ReferalManagementController {
     referalManagement: ReferalManagement,
   ): Promise<void> {
     await this.referalManagementRepository.updateById(id, referalManagement);
+
+    const WEBHOOK_REF_URL = process.env.WEBHOOK_URL;
+
     try {
-      await axios.post(
-        'https://super-muskrat-immortal.ngrok-free.app/webhook/b161e02e-cd1e-4849-a13e-a1862b7af10e',
-        {message: 'Your referal data is updated'},
-        {headers: {'Content-Type': 'application/json'}},
+      const updatedReferral: any =
+        await this.referalManagementRepository.findById(id);
+
+      const booking: any = await this.patientBookingRepository.findById(
+        updatedReferral.patientBookingId,
       );
-    } catch (error) {
+
+      const doctor: any = await this.doctorRepository.findById(
+        booking?.doctorId,
+      );
+      const payload = {
+        ...updatedReferral,
+        currentDoctor: `${doctor?.firstName} ${doctor?.lastName}`,
+        currentDoctorPhoneNo: doctor?.phoneNumber,
+        currentDoctorEmail: doctor?.email,
+        patientName: booking?.patientFullDetail?.patientName,
+        patientPhoneNo: booking?.patientFullDetail?.phoneNo,
+        patientEmail: booking?.patientFullDetail?.email,
+        patientAge: booking?.patientFullDetail?.age,
+      };
+
+      await axios.post(`${WEBHOOK_REF_URL}/referral_data`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (error: any) {
       console.error('Webhook send failed:', error.message);
     }
   }
