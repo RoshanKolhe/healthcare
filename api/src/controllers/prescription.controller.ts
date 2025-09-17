@@ -108,14 +108,7 @@ export class PrescriptionController {
     const checkTime = (timeVal?: string | Date) => {
       if (!timeVal) return false;
 
-      let timeStr: string;
-      if (timeVal instanceof Date) {
-        timeStr = moment(timeVal).tz('Asia/Kolkata').format('HH:mm');
-      } else {
-        timeStr = timeVal;
-      }
-
-      const scheduled = moment.tz(timeStr, 'HH:mm', 'Asia/Kolkata');
+      const scheduled = moment(timeVal).utc().tz('Asia/Kolkata');
       const diff = Math.abs(scheduled.valueOf() - now.valueOf());
       return diff <= pollingWindowMs;
     };
