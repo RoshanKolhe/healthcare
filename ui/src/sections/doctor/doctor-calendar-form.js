@@ -393,6 +393,7 @@ export default function CalendarForm({
     try {
       await axiosInstance.delete(`/doctor-availabilities/${currentEvent?.id}`);
       enqueueSnackbar('Delete success!');
+      refreshDoctorAvailabilities();
       onClose();
     } catch (error) {
       console.error(error);
