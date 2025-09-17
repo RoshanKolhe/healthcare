@@ -18,6 +18,7 @@ export class ReportSummary extends Entity {
 
   @property({
     type: 'string',
+    limit: 5000,
   })
   summary?: string;
 
