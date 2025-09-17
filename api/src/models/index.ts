@@ -19,3 +19,4 @@ export * from './log.model';
 export * from './referal-management.model';
 export * from './personal-information.model';
 export * from './report-summary.model';
+export * from './prescription.model';
