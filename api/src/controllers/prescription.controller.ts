@@ -16,6 +16,7 @@ import {
 } from '@loopback/rest';
 import {Prescription} from '../models';
 import {PrescriptionRepository} from '../repositories';
+import moment from 'moment-timezone';
 
 export class PrescriptionController {
   constructor(
@@ -83,7 +84,7 @@ export class PrescriptionController {
   async getPrescriptionReminders(
     @param.filter(Prescription) filter?: Filter<Prescription>,
   ): Promise<any[]> {
-    const now = new Date();
+    const now = moment().tz('Asia/Kolkata');
     const pollingWindowMs = 5 * 60 * 1000;
 
     const finalFilter: Filter<Prescription> = {
@@ -92,11 +93,7 @@ export class PrescriptionController {
         {
           relation: 'patientBooking',
           scope: {
-            include: [
-              {
-                relation: 'patient',
-              },
-            ],
+            include: [{relation: 'patient'}],
           },
         },
       ],
@@ -113,30 +110,23 @@ export class PrescriptionController {
 
       let timeStr: string;
       if (timeVal instanceof Date) {
-        timeStr = timeVal.toTimeString().slice(0, 5); // HH:mm
+        timeStr = moment(timeVal).tz('Asia/Kolkata').format('HH:mm');
       } else {
         timeStr = timeVal;
       }
 
-      const [hh, mm] = timeStr.split(':').map(Number);
-      if (isNaN(hh) || isNaN(mm)) return false;
-
-      const scheduled = new Date();
-      scheduled.setHours(hh, mm, 0, 0);
-
-      const diff = Math.abs(scheduled.getTime() - now.getTime());
+      const scheduled = moment.tz(timeStr, 'HH:mm', 'Asia/Kolkata');
+      const diff = Math.abs(scheduled.valueOf() - now.valueOf());
       return diff <= pollingWindowMs;
     };
 
     for (const p of prescriptions) {
       if (!p.date || !p.days) continue;
 
-      const startDate = new Date(p.date);
-      const endDate = new Date(
-        startDate.getTime() + (p.days - 1) * 24 * 60 * 60 * 1000,
-      );
+      const startDate = moment(p.date).tz('Asia/Kolkata');
+      const endDate = startDate.clone().add(p.days - 1, 'days');
 
-      if (now < startDate || now > endDate) continue;
+      if (now.isBefore(startDate) || now.isAfter(endDate)) continue;
 
       let matchedTime: string | null = null;
       if (checkTime(p.morningTime)) matchedTime = 'morning';
