@@ -31,6 +31,11 @@ export class PatientBooking extends Entity {
   status?: number; // 0 - confirmed, 1 - completed, 2 - cancelled
 
   @property({
+    type: 'object',
+  })
+  file: object;
+
+  @property({
     type: 'date',
   })
   createdAt?: Date;

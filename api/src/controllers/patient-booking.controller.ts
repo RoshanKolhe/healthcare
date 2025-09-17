@@ -230,7 +230,7 @@ export class PatientBookingController {
         },
         {
           relation: 'reportSummary',
-        }
+        },
       ],
     });
   }
@@ -280,7 +280,7 @@ export class PatientBookingController {
         },
         {
           relation: 'reportSummary',
-        }
+        },
       ],
       order: ['createdAt DESC'],
     };
@@ -367,7 +367,7 @@ export class PatientBookingController {
         },
         {
           relation: 'reportSummary',
-        }
+        },
       ],
     });
   }
@@ -575,6 +575,63 @@ export class PatientBookingController {
 
     // Return updated booking
     return this.patientBookingRepository.findById(bookingId);
+  }
+
+  @patch('/patient-bookings/{id}/soap-file')
+  @response(200, {
+    description: 'Update only the file object of a booking',
+    content: {'application/json': {schema: getModelSchemaRef(PatientBooking)}},
+  })
+  async updateBookingFile(
+    @param.path.number('id') id: number,
+    @requestBody({
+      description: 'File object to update',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              file: {type: 'object'},
+            },
+            required: ['file'],
+            additionalProperties: false,
+          },
+        },
+      },
+    })
+    body: {file: object},
+  ): Promise<PatientBooking> {
+    const txRepo = new DefaultTransactionalRepository(
+      PatientBooking,
+      this.patientBookingRepository.dataSource,
+    );
+    const tx = await txRepo.beginTransaction(IsolationLevel.READ_COMMITTED);
+
+    try {
+      const existingBooking = await this.patientBookingRepository.findById(id);
+      if (!existingBooking) {
+        throw new Error(`Booking with id ${id} not found`);
+      }
+
+      await this.patientBookingRepository.updateById(
+        id,
+        {
+          file: body.file,
+          updatedAt: new Date(),
+        },
+        {transaction: tx},
+      );
+
+      // 3️⃣ Commit
+      await tx.commit();
+
+      // 4️⃣ Return updated booking
+      return this.patientBookingRepository.findById(id);
+    } catch (error) {
+      await tx.rollback();
+      throw error;
+    }
   }
 
   @del('/patient-bookings/{id}')

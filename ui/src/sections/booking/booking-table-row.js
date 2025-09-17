@@ -26,6 +26,7 @@ export default function UserTableRow({
   onViewRow,
   handleQuickEditRow,
   handleQuickEditRowSummary,
+  handleQuickEditRowSoap,
 }) {
 
   const quickEdit = useBoolean();
@@ -105,6 +106,16 @@ export default function UserTableRow({
               <Iconify icon="solar:pen-bold" />
             </IconButton>
           </Tooltip>
+          <Tooltip title="SOAP PDF" placement="top" arrow>
+            <IconButton
+              color={quickEdit.value ? 'inherit' : 'default'}
+              onClick={() => {
+                handleQuickEditRowSoap(row);
+              }}
+            >
+              <Iconify icon="mdi:clipboard-text-outline" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Medical Report Summary" placement="top" arrow>
             <IconButton
               color={quickEdit.value ? 'inherit' : 'default'}
@@ -179,4 +190,5 @@ UserTableRow.propTypes = {
   selected: PropTypes.bool,
   handleQuickEditRow: PropTypes.func,
   handleQuickEditRowSummary: PropTypes.func,
+  handleQuickEditRowSoap: PropTypes.func,
 };
