@@ -64,84 +64,22 @@ export class PrescriptionController {
 
   @get('/prescriptions/reminder')
   @response(200, {
-    description: 'Array of Prescription model instances to remind now',
+    description: 'Array of reminder messages with phone numbers',
     content: {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Prescription, {includeRelations: true}),
+          items: {
+            type: 'object',
+            properties: {
+              phoneNo: {type: 'string'},
+              message: {type: 'string'},
+            },
+          },
         },
       },
     },
   })
-  // async getPrescriptionReminders(
-  //   @param.filter(Prescription) filter?: Filter<Prescription>,
-  // ): Promise<Prescription[]> {
-  //   const now = new Date();
-  //   const pollingWindowMs = 5 * 60 * 1000;
-
-  //   const finalFilter: Filter<Prescription> = {
-  //     ...filter,
-  //     include: [
-  //       {
-  //         relation: 'patientBooking',
-  //         scope: {
-  //           include: [
-  //             {
-  //               relation: 'patient',
-  //             },
-  //           ],
-  //         },
-  //       },
-  //     ],
-  //   };
-
-  //   // Fetch all prescriptions
-  //   const prescriptions = await this.prescriptionRepository.find(finalFilter);
-
-  //   const reminders: Prescription[] = [];
-
-  //   for (const p of prescriptions) {
-  //     if (!p.date || !p.days) continue;
-
-  //     const startDate = new Date(p.date);
-  //     const endDate = new Date(
-  //       startDate.getTime() + (p.days - 1) * 24 * 60 * 60 * 1000,
-  //     );
-
-  //     if (now < startDate || now > endDate) continue;
-
-  //     const checkTime = (timeVal?: string | Date) => {
-  //       if (!timeVal) return false;
-
-  //       let timeStr: string;
-  //       if (timeVal instanceof Date) {
-  //         timeStr = timeVal.toTimeString().slice(0, 5); // HH:mm
-  //       } else {
-  //         timeStr = timeVal;
-  //       }
-
-  //       const [hh, mm] = timeStr.split(':').map(Number);
-  //       if (isNaN(hh) || isNaN(mm)) return false;
-
-  //       const scheduled = new Date();
-  //       scheduled.setHours(hh, mm, 0, 0);
-
-  //       const diff = Math.abs(scheduled.getTime() - now.getTime());
-  //       return diff <= pollingWindowMs;
-  //     };
-
-  //     if (
-  //       checkTime(p.morningTime) ||
-  //       checkTime(p.afternoonTime) ||
-  //       checkTime(p.nightTime)
-  //     ) {
-  //       reminders.push(p);
-  //     }
-  //   }
-
-  //   return reminders;
-  // }
   async getPrescriptionReminders(
     @param.filter(Prescription) filter?: Filter<Prescription>,
   ): Promise<any[]> {
@@ -164,7 +102,9 @@ export class PrescriptionController {
       ],
     };
 
-    const prescriptions = await this.prescriptionRepository.find(finalFilter);
+    const prescriptions = (await this.prescriptionRepository.find(
+      finalFilter,
+    )) as any[];
 
     const reminders: any[] = [];
 
@@ -204,8 +144,9 @@ export class PrescriptionController {
       else if (checkTime(p.nightTime)) matchedTime = 'night';
 
       if (matchedTime) {
+        const phoneNo = p.patientBooking?.patient?.phoneNo;
         reminders.push({
-          ...p,
+          phoneNo,
           message: `It's time to take your tablet "${p.tabletName}" for the ${matchedTime} dose (${p.foodTiming}).`,
         });
       }
