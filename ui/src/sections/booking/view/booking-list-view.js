@@ -43,6 +43,7 @@ import BookingTableToolbar from '../booking-table-toolbar';
 import BookingTableFiltersResult from '../booking-table-filters-result';
 import ReferalManagementQuickEditForm from '../referal-management-edit-form';
 import SummaryManagementQuickEditForm from '../summary-management-edit-form';
+import SoapView from '../soap-view';
 
 // ----------------------------------------------------------------------
 
@@ -79,6 +80,7 @@ export default function BookingListView() {
 
   const [quickEditRow, setQuickEditRow] = useState();
   const [quickEditRowSummary, setQuickEditRowSummary] = useState();
+  const [quickEditRowSoap, setQuickEditRowSoap] = useState();
   console.log('quickEditRowSummary', quickEditRowSummary);
   console.log('quickEditRow', quickEditRow);
 
@@ -175,6 +177,13 @@ export default function BookingListView() {
   const handleQuickEditRowSummary = useCallback(
     (row) => {
       setQuickEditRowSummary(row);
+      quickEdit.onTrue();
+    },
+    [quickEdit]
+  );
+  const handleQuickEditRowSoap = useCallback(
+    (row) => {
+      setQuickEditRowSoap(row);
       quickEdit.onTrue();
     },
     [quickEdit]
@@ -315,6 +324,9 @@ export default function BookingListView() {
                         handleQuickEditRowSummary={(booking) => {
                           handleQuickEditRowSummary(booking);
                         }}
+                        handleQuickEditRowSoap={(booking) => {
+                          handleQuickEditRowSoap(booking);
+                        }}
                         quickEdit={quickEdit}
                       />
                     ))}
@@ -380,6 +392,17 @@ export default function BookingListView() {
           open={quickEdit.value}
           onClose={() => {
             setQuickEditRowSummary(null);
+            quickEdit.onFalse();
+          }}
+          refreshBookings={refreshBookings}
+        />
+      )}
+      {quickEdit.value && quickEditRowSoap && (
+        <SoapView
+          currentSummaryManagement={quickEditRowSoap}
+          open={quickEdit.value}
+          onClose={() => {
+            setQuickEditRowSoap(null);
             quickEdit.onFalse();
           }}
           refreshBookings={refreshBookings}
