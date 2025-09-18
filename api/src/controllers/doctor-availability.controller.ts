@@ -412,6 +412,103 @@ export class DoctorAvailabilityController {
     return Object.values(result);
   }
 
+  @post('/doctor-availabilities/daily-slots-by-date')
+  @response(200, {
+    description: 'Daily doctor availabilities with nested time slots',
+  })
+  async getDailySlotsByDatePost(
+    @requestBody({
+      description: 'Doctor, branch, and date info for fetching daily slots',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              doctorId: {type: 'number'},
+              branchId: {type: 'number'},
+              date: {type: 'string', format: 'date'}, // <-- NEW
+            },
+            required: ['doctorId', 'date'],
+          },
+        },
+      },
+    })
+    body: {
+      doctorId: number;
+      branchId?: number;
+      date: string; // <-- NEW
+    },
+  ): Promise<any> {
+    const {doctorId, branchId, date} = body;
+
+    const availabilities = await this.doctorAvailabilityRepository.find({
+      where: {
+        doctorId,
+        isActive: true,
+        ...(branchId ? {branchId} : {}),
+      },
+      include: [{relation: 'branch'}, {relation: 'doctorTimeSlots'}],
+    });
+
+    const targetDay = moment(date).tz('Asia/Kolkata').startOf('day');
+    const dayStart = targetDay.clone().startOf('day').toDate();
+    const dayEnd = targetDay.clone().endOf('day').toDate();
+
+    const result: any = {};
+
+    availabilities.forEach(avail => {
+      const availStart = new Date(avail.startDate);
+      const availEnd = new Date(avail.endDate);
+
+      if (availEnd < dayStart || availStart > dayEnd) return;
+
+      const bId = avail.branch?.id || 'unknown';
+      const branchName = avail.branch?.name || '';
+      const branchAddress = avail.branch?.fullAddress || '';
+
+      if (!result[bId]) {
+        result[bId] = {
+          branchId: bId,
+          branchName,
+          branchAddress,
+          availableDates: [],
+        };
+      }
+
+      const dateStr = targetDay.format('YYYY-MM-DD');
+
+      let dateEntry = result[bId].availableDates.find(
+        (d: {date: string}) => d.date === dateStr,
+      );
+      if (!dateEntry) {
+        dateEntry = {
+          date: dateStr,
+          availabilities: [],
+        };
+        result[bId].availableDates.push(dateEntry);
+      }
+
+      const slots = (avail.doctorTimeSlots || []).map(slot => ({
+        slotId: slot.id,
+        startTime: moment(slot.slotStart).tz('Asia/Kolkata').toISOString(),
+        endTime: moment(slot.slotEnd).tz('Asia/Kolkata').toISOString(),
+        isBooked: slot.isBooked,
+      }));
+
+      dateEntry.availabilities.push({
+        availabilityId: avail.id,
+        startDate: moment(avail.startDate).tz('Asia/Kolkata').toISOString(),
+        endDate: moment(avail.endDate).tz('Asia/Kolkata').toISOString(),
+        doctorId: avail.doctorId,
+        isActive: avail.isActive,
+        timeSlots: slots,
+      });
+    });
+
+    return Object.values(result);
+  }
+
   @post('/doctor-availabilities/toggle-availability')
   @response(200, {
     description: 'Toggle doctor availability for current date',
