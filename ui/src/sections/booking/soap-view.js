@@ -55,7 +55,7 @@ export default function SoapView({ currentSummaryManagement, open, onClose, refr
   const onSubmit = handleSubmit(async (formData) => {
     try {
       const inputData = {
-        file: currentSummaryManagement?.reportSummary?.file || {},
+        file: currentSummaryManagement?.file || {},
         soapSummary: formData.soapSummary,
       };
       await axiosInstance.patch(
