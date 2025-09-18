@@ -50,6 +50,7 @@ export default function SoapView({ currentSummaryManagement, open, onClose, refr
     formState: { isSubmitting, errors},
   } = methods;
   console.log('errors',errors);
+  console.log('values',methods.watch());
 
   const onSubmit = handleSubmit(async (formData) => {
     try {
