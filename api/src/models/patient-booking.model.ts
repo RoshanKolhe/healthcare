@@ -37,6 +37,12 @@ export class PatientBooking extends Entity {
   file: object;
 
   @property({
+    type: 'string',
+    limit: 5000,
+  })
+  soapSummary?: string;
+
+  @property({
     type: 'date',
   })
   createdAt?: Date;

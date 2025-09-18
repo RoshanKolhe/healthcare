@@ -127,27 +127,6 @@ export default function CalendarView() {
   console.log('check event id:', selectEventId);
   console.log('check event currentEvent:', currentEvent);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  // const isPastDate = useCallback((checkDate) => {
-  //   if (!checkDate) return false;
-
-  //   const now = new Date();
-  //   const eventDate = startOfDay(new Date(checkDate));
-  //   console.log('check eventDate:', eventDate);
-  //   const today = startOfDay(new Date());
-
-  //   if (eventDate < today) return true;
-
-  //   if (eventDate > today) return false;
-
-  //   const eventDateTime = new Date(checkDate);
-  //   console.log('check eventDateTime:', eventDateTime);
-  //   const diffMs = eventDateTime.getTime() - now.getTime();
-  //   const diffHours = diffMs / (1000 * 60 * 60);
-
-  //   return diffHours <= 2;
-  // }, []);
-
   const isPastDate = useCallback((checkDate) => {
     if (!checkDate) return false;
 
@@ -157,31 +136,18 @@ export default function CalendarView() {
     const today = startOfDay(now);
     const eventDay = startOfDay(eventDateTime);
 
-    // --- Step 1: Check if it's a past day
     if (eventDay < today) return true;
     if (eventDay > today) return false;
-
-    // --- Step 2: If it's today, handle time properly
-    // If time is missing (00:00), assume it's end of day instead of start of day
-    if (
-      eventDateTime.getHours() === 0 &&
-      eventDateTime.getMinutes() === 0 &&
-      eventDateTime.getSeconds() === 0
-    ) {
-      eventDateTime.setHours(23, 59, 59, 999);
-    }
 
     const diffMs = eventDateTime.getTime() - now.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
 
-    // If event is already passed or happening in <= 2 hours, treat as past
-    return diffHours <= 2;
+    return diffHours < 2; 
   }, []);
 
-  // inside CalendarView
   const isEventInPast = useMemo(() => {
     if (!currentEvent) return false;
-    return isPastDate(currentEvent.startDate || currentEvent.start);
+    return isPastDate(currentEvent.startTime || currentEvent.startDate || currentEvent.start);
   }, [currentEvent, isPastDate]);
 
   useEffect(() => {
@@ -245,7 +211,7 @@ export default function CalendarView() {
       console.error('Error toggling availability:', error);
     }
   };
-  
+
   useEffect(() => {
     if (!doctorAvailabilities || doctorAvailabilities.length === 0) return;
 
