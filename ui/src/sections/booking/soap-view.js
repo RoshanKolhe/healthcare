@@ -33,7 +33,7 @@ export default function SoapView({ currentSummaryManagement, open, onClose, refr
 
   const defaultValues = useMemo(
     () => ({
-      file: currentSummaryManagement?.reportSummary?.file || '',
+      file: currentSummaryManagement?.file || '',
       soapSummary: currentSummaryManagement?.soapSummary || '',
     }),
     [currentSummaryManagement]
