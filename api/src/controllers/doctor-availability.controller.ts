@@ -411,7 +411,7 @@ export class DoctorAvailabilityController {
 
     return Object.values(result);
   }
-
+  
   @post('/doctor-availabilities/daily-slots-by-date')
   @response(200, {
     description: 'Daily doctor availabilities with nested time slots',
@@ -427,7 +427,7 @@ export class DoctorAvailabilityController {
             properties: {
               doctorId: {type: 'number'},
               branchId: {type: 'number'},
-              date: {type: 'string', format: 'date'}, // <-- NEW
+              date: {type: 'string', format: 'date'}, // <-- date required
             },
             required: ['doctorId', 'date'],
           },
@@ -437,10 +437,18 @@ export class DoctorAvailabilityController {
     body: {
       doctorId: number;
       branchId?: number;
-      date: string; // <-- NEW
+      date: string;
     },
   ): Promise<any> {
     const {doctorId, branchId, date} = body;
+
+    const today = moment().tz('Asia/Kolkata').startOf('day');
+    const requestedDate = moment(date).tz('Asia/Kolkata').startOf('day');
+
+    // ✅ If requested date is before today, return empty
+    if (requestedDate.isBefore(today, 'day')) {
+      return [];
+    }
 
     const availabilities = await this.doctorAvailabilityRepository.find({
       where: {
@@ -451,9 +459,9 @@ export class DoctorAvailabilityController {
       include: [{relation: 'branch'}, {relation: 'doctorTimeSlots'}],
     });
 
-    const targetDay = moment(date).tz('Asia/Kolkata').startOf('day');
-    const dayStart = targetDay.clone().startOf('day').toDate();
-    const dayEnd = targetDay.clone().endOf('day').toDate();
+    const dayStart = requestedDate.clone().startOf('day').toDate();
+    const dayEnd = requestedDate.clone().endOf('day').toDate();
+    const nowPlus30 = moment().tz('Asia/Kolkata').add(30, 'minutes'); // ✅ +30 mins buffer
 
     const result: any = {};
 
@@ -476,7 +484,7 @@ export class DoctorAvailabilityController {
         };
       }
 
-      const dateStr = targetDay.format('YYYY-MM-DD');
+      const dateStr = requestedDate.format('YYYY-MM-DD');
 
       let dateEntry = result[bId].availableDates.find(
         (d: {date: string}) => d.date === dateStr,
@@ -489,21 +497,38 @@ export class DoctorAvailabilityController {
         result[bId].availableDates.push(dateEntry);
       }
 
-      const slots = (avail.doctorTimeSlots || []).map(slot => ({
+      let slotsWithMoment = (avail.doctorTimeSlots || []).map(slot => ({
         slotId: slot.id,
-        startTime: moment(slot.slotStart).tz('Asia/Kolkata').toISOString(),
-        endTime: moment(slot.slotEnd).tz('Asia/Kolkata').toISOString(),
+        startTime: moment(slot.slotStart).tz('Asia/Kolkata'),
+        endTime: moment(slot.slotEnd).tz('Asia/Kolkata'),
         isBooked: slot.isBooked,
       }));
 
-      dateEntry.availabilities.push({
-        availabilityId: avail.id,
-        startDate: moment(avail.startDate).tz('Asia/Kolkata').toISOString(),
-        endDate: moment(avail.endDate).tz('Asia/Kolkata').toISOString(),
-        doctorId: avail.doctorId,
-        isActive: avail.isActive,
-        timeSlots: slots,
-      });
+      // ✅ If requested date is today, only include slots after now+30min
+      if (requestedDate.isSame(today, 'day')) {
+        slotsWithMoment = slotsWithMoment.filter(slot =>
+          slot.startTime.isAfter(nowPlus30),
+        );
+      }
+
+      // ✅ Now convert back to ISO for response
+      const slots = slotsWithMoment.map(slot => ({
+        slotId: slot.slotId,
+        startTime: slot.startTime.toISOString(),
+        endTime: slot.endTime.toISOString(),
+        isBooked: slot.isBooked,
+      }));
+
+      if (slots.length > 0) {
+        dateEntry.availabilities.push({
+          availabilityId: avail.id,
+          startDate: moment(avail.startDate).tz('Asia/Kolkata').toISOString(),
+          endDate: moment(avail.endDate).tz('Asia/Kolkata').toISOString(),
+          doctorId: avail.doctorId,
+          isActive: avail.isActive,
+          timeSlots: slots,
+        });
+      }
     });
 
     return Object.values(result);
