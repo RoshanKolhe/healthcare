@@ -154,10 +154,9 @@ export class PersonalIntakeReminderCron extends CronJob {
     public patientBookingRepository: PatientBookingRepository,
   ) {
     super({
-      // cronTime: '0 12 * * *',    
-      cronTime: '* * * * *',
+      cronTime: '0 12 * * *',    
+      // cronTime: '* * * * *',
       onTick: async () => {
-        console.log('📅 Running Personal Intake Reminder Cron at 12:00 PM IST');
         await this.runJob();
       },
       start: true,
@@ -167,6 +166,7 @@ export class PersonalIntakeReminderCron extends CronJob {
 
   async runJob() {
     const WEBHOOK_INTAKE_URL = process.env.WEBHOOK_URL;
+    console.log('Webhook URL:', WEBHOOK_INTAKE_URL);
     try {
       const allBookings : any = await this.patientBookingRepository.find({
         include: [
@@ -197,8 +197,6 @@ export class PersonalIntakeReminderCron extends CronJob {
           phoneNo,
           message:"You haven't filled the personal intake detail, please fill the intake detail.",
         };
-
-        console.log('Sending reminder payload:', payload);
 
         await axios.post(`${WEBHOOK_INTAKE_URL}/intake_reminder `, payload);
       }
