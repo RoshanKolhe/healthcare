@@ -12,9 +12,10 @@ import { useSnackbar } from 'src/components/snackbar';
 import { useGetPlan } from 'src/api/plan';
 import FormProvider from 'src/components/hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import axiosInstance from 'src/utils/axios';
+import { loadRazorpayScript } from 'src/utils/constants';
 import PaymentSummary from '../payment-summary';
 import PaymentMethods from '../payment-methods';
 import PaymentBillingAddress from '../payment-billing-address';
@@ -81,7 +82,20 @@ export default function PaymentView() {
         planId: selectedPlan.id,
       };
       const response = await axiosInstance.post('/clinic-subscriptions', inputData);
-      console.log(response.data);
+      console.log(response.data.paymentObject);
+      const razorpayData = response.data.paymentObject;
+      const options = {
+        key: razorpayData.razorpayKeyId,
+        amount: razorpayData.amount, // in paise
+        currency: razorpayData.currency,
+        order_id: razorpayData.orderId,
+        // handler (response) {
+        //   console.log('Payment successful:', response);
+        // },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
       // reset();
       // enqueueSnackbar(currentUser ? 'Update success!' : 'Create success!');
       // router.push(paths.dashboard.user.list);
@@ -92,6 +106,10 @@ export default function PaymentView() {
       });
     }
   });
+
+  useEffect(() => {
+    loadRazorpayScript();
+  }, []);
 
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
