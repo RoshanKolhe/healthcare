@@ -411,53 +411,6 @@ export default function UserListView() {
 
 // ----------------------------------------------------------------------
 
-// function applyFilter({ inputData, comparator, filters }) {
-//   const { name, status, role } = filters;
-//   const roleMapping = {
-//     super_admin: 'Super Admin',
-//     clinic: 'Clinic',
-//     branch: 'Branch',
-//   };
-
-//   const stabilizedThis = inputData.map((el, index) => [el, index]);
-
-//   stabilizedThis.sort((a, b) => {
-//     const order = comparator(a[0], b[0]);
-//     if (order !== 0) return order;
-//     return a[1] - b[1];
-//   });
-
-//   inputData = stabilizedThis.map((el) => el[0]);
-
-//   if (name) {
-//     inputData = inputData.filter(
-//       (user) => user.name.toLowerCase().indexOf(name.toLowerCase()) !== -1
-//     );
-//   }
-
-//   if (status !== 'all') {
-//     inputData = inputData.filter((user) => (status === '1' ? user.isActive : !user.isActive));
-//   }
-
-//   // if (role.length) {
-//   //   inputData = inputData.filter((user) => role.includes(user.role));
-//   // }
-//   if (role.length) {
-//     inputData = inputData.filter(
-//       (user) =>
-//         user.permissions &&
-//         user.permissions.some((userRole) => {
-//           console.log(userRole);
-//           const mappedRole = roleMapping[userRole];
-//           console.log('Mapped Role:', mappedRole); // Check the mapped role
-//           return mappedRole && role.includes(mappedRole);
-//         })
-//     );
-//   }
-
-//   return inputData;
-// }
-
 function applyFilter({ inputData, comparator, filters }) {
   const { name, status, role } = filters;
   const stabilizedThis = inputData.map((el, index) => [el, index]);

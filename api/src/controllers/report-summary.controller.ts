@@ -97,7 +97,23 @@ export class ReportSummaryController {
   ): Promise<void> {
     await this.reportSummaryRepository.updateById(id, reportSummary);
 
-    const updatedSummary: any = await this.reportSummaryRepository.findById(id);
+    const updatedSummary: any = await this.reportSummaryRepository.findById(
+      id,
+      {
+        include: [
+          {
+            relation: 'patientBooking',
+            scope: {
+              include: [
+                {
+                  relation: 'patient',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    );
 
     const WEBHOOK_SUMMARY_URL = process.env.WEBHOOK_URL;
 
@@ -118,11 +134,9 @@ export class ReportSummaryController {
         summary: updatedSummary.summary,
         feedback: updatedSummary.feedback,
         fileUrl: updatedSummary.file,
+        patientPhoneNo: updatedSummary.patientBooking?.patient?.phoneNo,
         message,
       };
-      console.log('=== Webhook Debug ===');
-      console.log('Webhook URL:', `${WEBHOOK_SUMMARY_URL}/summary_flag`);
-      console.log('Payload being sent:', JSON.stringify(payload));
 
       await axios.post(`${WEBHOOK_SUMMARY_URL}/summary_flag`, payload, {
         headers: {

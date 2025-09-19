@@ -231,6 +231,9 @@ export class PatientBookingController {
         {
           relation: 'reportSummary',
         },
+        {
+          relation: 'personalInformation',
+        }
       ],
     });
   }
@@ -281,6 +284,9 @@ export class PatientBookingController {
         {
           relation: 'reportSummary',
         },
+        {
+          relation: 'personalInformation',
+        }
       ],
       order: ['createdAt DESC'],
     };
@@ -593,14 +599,15 @@ export class PatientBookingController {
             type: 'object',
             properties: {
               file: {type: 'object'},
+              soapSummary: {type: 'string'},
             },
-            required: ['file'],
+            // required: ['file' , 'soapSummary'],
             additionalProperties: false,
           },
         },
       },
     })
-    body: {file: object},
+    body: {file: object, soapSummary: string},
   ): Promise<PatientBooking> {
     const txRepo = new DefaultTransactionalRepository(
       PatientBooking,
@@ -618,6 +625,7 @@ export class PatientBookingController {
         id,
         {
           file: body.file,
+          soapSummary: body.soapSummary,
           updatedAt: new Date(),
         },
         {transaction: tx},
