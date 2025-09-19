@@ -212,8 +212,9 @@ export function AuthProvider({ children }) {
       branchLogin, // branch login
       register,
       logout,
+      initialize,
     }),
-    [login, clinicLogin, branchLogin, doctorLogin, register, logout, state.user, status]
+    [login, clinicLogin, branchLogin, doctorLogin, register, logout, state.user, status, initialize]
   );
 
   return <AuthContext.Provider value={memoizedValue}>{children}</AuthContext.Provider>;

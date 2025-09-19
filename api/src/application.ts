@@ -19,6 +19,7 @@ import { AuthenticationComponent, registerAuthenticationStrategy } from '@loopba
 import { CronComponent } from '@loopback/cron';
 import { JWTStrategy } from './authentication-strategy/jwt-strategy';
 import { MyDoctorService } from './services/doctor-service';
+import { RazorPayService } from './services/razorpay.service';
 
 export { ApplicationConfig };
 
@@ -65,6 +66,7 @@ export class ApiApplication extends BootMixin(
     this.bind('service.jwt.service').toClass(JWTService);
     this.bind('service.user.service').toClass(MyUserService);
     this.bind('service.doctor.service').toClass(MyDoctorService);
+    this.bind('service.razorpay.service').toClass(RazorPayService);
     this.bind(EmailManagerBindings.SEND_MAIL).toClass(EmailService);
   }
 

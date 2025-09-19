@@ -1,5 +1,6 @@
 module.exports = {
   trailingSlash: true,
+  swcMinify: true,
   modularizeImports: {
     '@mui/material': {
       transform: '@mui/material/{{member}}',

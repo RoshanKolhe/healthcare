@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 // @mui
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Switch from '@mui/material/Switch';
+// import Switch from '@mui/material/Switch'; // commented out
 import Divider from '@mui/material/Divider';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -12,18 +12,22 @@ import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export default function PaymentSummary({ sx, ...other }) {
+export default function PaymentSummary({ plan, sx, ...other }) {
+  if (!plan) return null;
+
+  const { name, billingCycle, priceINR, discountedPriceINR, taxPercentageINR } = plan;
+
+  // Calculate tax and total
+  const taxAmount = (discountedPriceINR * taxPercentageINR) / 100;
+  const totalBilled = discountedPriceINR + taxAmount;
+
   const renderPrice = (
-    <Stack direction="row" justifyContent="flex-end">
-      <Typography variant="h4">$</Typography>
-
-      <Typography variant="h2">9.99</Typography>
-
-      <Typography
-        component="span"
-        sx={{ alignSelf: 'center', color: 'text.disabled', ml: 1, typography: 'body2' }}
-      >
-        / mo
+    <Stack direction="row" justifyContent="flex-end" spacing={1} alignItems="baseline">
+      <Typography variant="h5" sx={{ textDecoration: 'line-through', color: 'text.disabled' }}>
+        ₹{priceINR}
+      </Typography>
+      <Typography variant="h3" color="primary">
+        ₹{discountedPriceINR}
       </Typography>
     </Stack>
   );
@@ -47,25 +51,32 @@ export default function PaymentSummary({ sx, ...other }) {
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             Subscription
           </Typography>
-
-          <Label color="error">PREMIUM</Label>
+          <Label color="error">{name}</Label>
         </Stack>
 
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Billed Monthly
+            Billing Cycle
           </Typography>
-          <Switch defaultChecked />
+          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            {billingCycle}
+          </Typography>
         </Stack>
 
         {renderPrice}
 
         <Divider sx={{ borderStyle: 'dashed' }} />
 
+        <Stack direction="row" justifyContent="space-between">
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Tax ({taxPercentageINR}%)
+          </Typography>
+          <Typography variant="body2">₹{taxAmount.toFixed(2)}</Typography>
+        </Stack>
+
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Typography variant="subtitle1">Total Billed</Typography>
-
-          <Typography variant="subtitle1">$9.99*</Typography>
+          <Typography variant="subtitle1">₹{totalBilled.toFixed(2)}</Typography>
         </Stack>
 
         <Divider sx={{ borderStyle: 'dashed' }} />
@@ -75,7 +86,7 @@ export default function PaymentSummary({ sx, ...other }) {
         * Plus applicable taxes
       </Typography>
 
-      <Button fullWidth size="large" variant="contained" sx={{ mt: 5, mb: 3 }}>
+      <Button type="submit" fullWidth size="large" variant="contained" sx={{ mt: 5, mb: 3 }}>
         Upgrade My Plan
       </Button>
 
@@ -94,5 +105,6 @@ export default function PaymentSummary({ sx, ...other }) {
 }
 
 PaymentSummary.propTypes = {
+  plan: PropTypes.object,
   sx: PropTypes.object,
 };

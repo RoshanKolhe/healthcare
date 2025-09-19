@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasMany} from '@loopback/repository';
+import {ClinicSubscription} from './clinic-subscription.model';
 
 @model()
 export class Plan extends Entity {
@@ -89,6 +90,9 @@ export class Plan extends Entity {
     default: false,
   })
   isDeleted: boolean;
+
+  @hasMany(() => ClinicSubscription)
+  clinicSubscriptions: ClinicSubscription[];
 
   constructor(data?: Partial<Plan>) {
     super(data);

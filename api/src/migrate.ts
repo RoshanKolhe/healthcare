@@ -12,6 +12,7 @@ export async function migrate(args: string[]) {
     models: [
       'User',
       'Clinic',
+      'ClinicSubscription',
       'Branch',
       'Doctor',
       'Specialization',
