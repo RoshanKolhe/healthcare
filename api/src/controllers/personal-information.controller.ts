@@ -17,7 +17,10 @@ import {
   response,
 } from '@loopback/rest';
 import {PersonalInformation} from '../models';
-import {PersonalInformationRepository} from '../repositories';
+import {PatientBookingRepository, PersonalInformationRepository} from '../repositories';
+import { CronJob, cronJob } from '@loopback/cron';
+import moment from 'moment-timezone';
+import axios from 'axios';
 
 export class PersonalInformationController {
   constructor(
@@ -141,5 +144,66 @@ export class PersonalInformationController {
   })
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.personalInformationRepository.deleteById(id);
+  }
+}
+
+@cronJob()
+export class PersonalIntakeReminderCron extends CronJob {
+  constructor(
+    @repository(PatientBookingRepository)
+    public patientBookingRepository: PatientBookingRepository,
+  ) {
+    super({
+      cronTime: '0 12 * * *',    
+      // cronTime: '* * * * *',
+      onTick: async () => {
+        await this.runJob();
+      },
+      start: true,
+      timeZone: 'Asia/Kolkata',
+    });
+  }
+
+  async runJob() {
+    const WEBHOOK_INTAKE_URL = process.env.WEBHOOK_URL;
+    console.log('Webhook URL:', WEBHOOK_INTAKE_URL);
+    try {
+      const allBookings : any = await this.patientBookingRepository.find({
+        include: [
+          {
+            relation: 'doctorTimeSlot',
+            scope: {include: [{relation: 'doctorAvailability'}]},
+          },
+          {relation: 'personalInformation'},
+        ],
+      });
+
+      const now = moment().tz('Asia/Kolkata');
+
+      for (const booking of allBookings) {
+        const slotStart = booking?.doctorTimeSlot?.slotStart
+          ? moment(booking.doctorTimeSlot.slotStart).tz('Asia/Kolkata')
+          : null;
+
+        if (!slotStart || slotStart.isBefore(now)) continue;
+
+        if (booking.personalInformation) continue;
+
+        const phoneNo = booking?.patientFullDetail?.phoneNo;
+        if (!phoneNo) continue;
+
+        const payload = {
+          patientBookingId: booking.id,
+          phoneNo,
+          message:"You haven't filled the personal intake detail, please fill the intake detail.",
+        };
+
+        await axios.post(`${WEBHOOK_INTAKE_URL}/intake_reminder `, payload);
+      }
+
+      console.log('Personal intake reminders sent successfully');
+    } catch (error) {
+      console.error('Error running Personal Intake Reminder cron:', error);
+    }
   }
 }

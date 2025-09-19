@@ -353,6 +353,9 @@ export class DoctorAvailabilityController {
       moment().tz('Asia/Kolkata').startOf('day').add(i, 'days'),
     );
 
+    const today = moment().tz('Asia/Kolkata').startOf('day');
+    const nowPlus2Hr = moment().tz('Asia/Kolkata').add(2, 'hours'); // ✅ 2 hour buffer
+
     const result: any = {};
 
     availabilities.forEach(avail => {
@@ -391,13 +394,152 @@ export class DoctorAvailabilityController {
           result[bId].availableDates.push(dateEntry);
         }
 
-        const slots = (avail.doctorTimeSlots || []).map(slot => ({
+        // Convert to moment objects
+        let slotsWithMoment = (avail.doctorTimeSlots || []).map(slot => ({
           slotId: slot.id,
-          startTime: moment(slot.slotStart).tz('Asia/Kolkata').toISOString(),
-          endTime: moment(slot.slotEnd).tz('Asia/Kolkata').toISOString(),
+          startTime: moment(slot.slotStart).tz('Asia/Kolkata'),
+          endTime: moment(slot.slotEnd).tz('Asia/Kolkata'),
           isBooked: slot.isBooked,
         }));
 
+        // ✅ If day is today, filter only slots after now+2hr
+        if (dayMoment.isSame(today, 'day')) {
+          slotsWithMoment = slotsWithMoment.filter(slot =>
+            slot.startTime.isAfter(nowPlus2Hr),
+          );
+        }
+
+        const slots = slotsWithMoment.map(slot => ({
+          slotId: slot.slotId,
+          startTime: slot.startTime.toISOString(),
+          endTime: slot.endTime.toISOString(),
+          isBooked: slot.isBooked,
+        }));
+
+        if (slots.length > 0) {
+          dateEntry.availabilities.push({
+            availabilityId: avail.id,
+            startDate: moment(avail.startDate).tz('Asia/Kolkata').toISOString(),
+            endDate: moment(avail.endDate).tz('Asia/Kolkata').toISOString(),
+            doctorId: avail.doctorId,
+            isActive: avail.isActive,
+            timeSlots: slots,
+          });
+        }
+      });
+    });
+
+    return Object.values(result);
+  }
+
+  @post('/doctor-availabilities/daily-slots-by-date')
+  @response(200, {
+    description: 'Daily doctor availabilities with nested time slots',
+  })
+  async getDailySlotsByDatePost(
+    @requestBody({
+      description: 'Doctor, branch, and date info for fetching daily slots',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              doctorId: {type: 'number'},
+              branchId: {type: 'number'},
+              date: {type: 'string', format: 'date'}, // <-- date required
+            },
+            required: ['doctorId', 'date'],
+          },
+        },
+      },
+    })
+    body: {
+      doctorId: number;
+      branchId?: number;
+      date: string;
+    },
+  ): Promise<any> {
+    const {doctorId, branchId, date} = body;
+
+    const today = moment().tz('Asia/Kolkata').startOf('day');
+    const requestedDate = moment(date).tz('Asia/Kolkata').startOf('day');
+
+    // ✅ If requested date is before today, return empty
+    if (requestedDate.isBefore(today, 'day')) {
+      return [];
+    }
+
+    const availabilities = await this.doctorAvailabilityRepository.find({
+      where: {
+        doctorId,
+        isActive: true,
+        ...(branchId ? {branchId} : {}),
+      },
+      include: [{relation: 'branch'}, {relation: 'doctorTimeSlots'}],
+    });
+
+    const dayStart = requestedDate.clone().startOf('day').toDate();
+    const dayEnd = requestedDate.clone().endOf('day').toDate();
+    const nowPlus2Hr = moment().tz('Asia/Kolkata').add(2, 'hours');
+
+    const result: any = {};
+
+    availabilities.forEach(avail => {
+      const availStart = new Date(avail.startDate);
+      const availEnd = new Date(avail.endDate);
+
+      if (availEnd < dayStart || availStart > dayEnd) return;
+
+      const bId = avail.branch?.id || 'unknown';
+      const branchName = avail.branch?.name || '';
+      const branchAddress = avail.branch?.fullAddress || '';
+
+      if (!result[bId]) {
+        result[bId] = {
+          branchId: bId,
+          branchName,
+          branchAddress,
+          availableDates: [],
+        };
+      }
+
+      const dateStr = requestedDate.format('YYYY-MM-DD');
+
+      let dateEntry = result[bId].availableDates.find(
+        (d: {date: string}) => d.date === dateStr,
+      );
+      if (!dateEntry) {
+        dateEntry = {
+          date: dateStr,
+          availabilities: [],
+        };
+        result[bId].availableDates.push(dateEntry);
+      }
+
+      let slotsWithMoment = (avail.doctorTimeSlots || []).map(slot => ({
+        slotId: slot.id,
+        startTime: moment(slot.slotStart).tz('Asia/Kolkata'),
+        endTime: moment(slot.slotEnd).tz('Asia/Kolkata'),
+        isBooked: slot.isBooked,
+      }));
+
+      // ✅ If requested date is today, only include slots after now+30min
+      if (requestedDate.isSame(today, 'day')) {
+        slotsWithMoment = slotsWithMoment.filter(slot =>
+          slot.startTime.isAfter(nowPlus2Hr),
+        );
+      }
+
+      // ✅ Now convert back to ISO for response
+      const slots = slotsWithMoment.map(slot => ({
+        slotId: slot.slotId,
+        startTime: slot.startTime.toISOString(),
+        endTime: slot.endTime.toISOString(),
+        isBooked: slot.isBooked,
+      }));
+
+      if (slots.length > 0) {
         dateEntry.availabilities.push({
           availabilityId: avail.id,
           startDate: moment(avail.startDate).tz('Asia/Kolkata').toISOString(),
@@ -406,10 +548,90 @@ export class DoctorAvailabilityController {
           isActive: avail.isActive,
           timeSlots: slots,
         });
-      });
+      }
     });
 
     return Object.values(result);
+  }
+
+  @post('/doctor-availabilities/available-dates')
+  @response(200, {
+    description: 'First 10 upcoming dates having at least one available slot',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: {type: 'string', format: 'date'},
+        },
+      },
+    },
+  })
+  async getAvailableDates(
+    @requestBody({
+      description: 'Doctor and branch info to check availability',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              doctorId: {type: 'number'},
+              branchId: {type: 'number'},
+            },
+            required: ['doctorId'],
+          },
+        },
+      },
+    })
+    body: {
+      doctorId: number;
+      branchId?: number;
+    },
+  ): Promise<string[]> {
+    const {doctorId, branchId} = body;
+
+    const today = moment().tz('Asia/Kolkata').startOf('day');
+
+    const availabilities = await this.doctorAvailabilityRepository.find({
+      where: {
+        doctorId,
+        isActive: true,
+        ...(branchId ? {branchId} : {}),
+      },
+      include: [{relation: 'doctorTimeSlots'}],
+    });
+
+    const allDatesWithSlots = new Set<string>();
+
+    for (const avail of availabilities) {
+      const availStart = moment(avail.startDate)
+        .tz('Asia/Kolkata')
+        .startOf('day');
+      const availEnd = moment(avail.endDate).tz('Asia/Kolkata').startOf('day');
+
+      // Ignore past availability ranges completely
+      if (availEnd.isBefore(today)) continue;
+
+      const hasFreeSlot = (avail.doctorTimeSlots || []).some(
+        slot => slot.isBooked === 0,
+      );
+      if (!hasFreeSlot) continue;
+
+      // Loop from start to end date of this availability and collect dates
+      let current = availStart.clone();
+      while (!current.isAfter(availEnd)) {
+        if (!current.isBefore(today)) {
+          allDatesWithSlots.add(current.format('YYYY-MM-DD'));
+        }
+        current.add(1, 'day');
+      }
+    }
+
+    const sortedDates = Array.from(allDatesWithSlots)
+      .sort((a, b) => moment(a).valueOf() - moment(b).valueOf())
+      .slice(0, 10); // only first 10 future dates
+
+    return sortedDates;
   }
 
   @post('/doctor-availabilities/toggle-availability')
