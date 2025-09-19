@@ -15,33 +15,99 @@ import {
   response,
 } from '@loopback/rest';
 import {Patient} from '../models';
-import {PatientRepository} from '../repositories';
+import {
+  PatientBookingRepository,
+  PatientRepository,
+} from '../repositories';
+import moment from 'moment-timezone';
 
 export class PatientController {
   constructor(
     @repository(PatientRepository)
-    public patientRepository : PatientRepository,
+    public patientRepository: PatientRepository,
+
+    @repository('PatientBookingRepository')
+    public patientBookingRepository: PatientBookingRepository,
   ) {}
 
-  @post('/patients')
+  @post('/patient-bookings/by-phone')
   @response(200, {
-    description: 'Patient model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Patient)}},
+    description: 'Get upcoming bookings by phone number',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              patientBookingId: {type: 'number'},
+              startDate: {type: 'string'},
+              startTime: {type: 'string'},
+            },
+          },
+        },
+      },
+    },
   })
-  async create(
+  async getUpcomingBookingsByPhone(
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Patient, {
-            title: 'NewPatient',
-            exclude: ['id'],
-          }),
+          schema: {
+            type: 'object',
+            required: ['phoneNo'],
+            properties: {
+              phoneNo: {type: 'string'},
+            },
+          },
         },
       },
     })
-    patient: Omit<Patient, 'id'>,
-  ): Promise<Patient> {
-    return this.patientRepository.create(patient);
+    body: {
+      phoneNo: string;
+    },
+  ): Promise<any[]> {
+    const {phoneNo} = body;
+
+    // 1️⃣ Find patient by phoneNo
+    const patient = await this.patientRepository.findOne({
+      where: {phoneNo},
+    });
+
+    if (!patient) return [];
+
+    const now = new Date();
+
+    // 2️⃣ Get all bookings of this patient including doctorTimeSlot
+    const bookings = await this.patientBookingRepository.find({
+      where: {patientId: patient.id},
+      include: [
+        {
+          relation: 'doctorTimeSlot', 
+        },
+      ],
+    });
+
+    const upcoming = bookings.filter((b: any) => {
+      const slot = b.doctorTimeSlot;
+      if (!slot?.slotStart) return false;
+
+      const bookingDateTime = new Date(slot.slotStart);
+      return bookingDateTime >= now;
+    });
+
+    // 4️⃣ Return simplified data
+    return upcoming.map((b: any) => {
+      const slotStart = b.doctorTimeSlot?.slotStart
+        ? moment(b.doctorTimeSlot.slotStart).tz('Asia/Kolkata')
+        : null;
+
+      return {
+        patientBookingId: b.id,
+        startDate: slotStart ? slotStart.format('YYYY-MM-DD') : null,
+        startTime: slotStart ? slotStart.format('HH:mm') : null, 
+      };
+    });
   }
 
   @get('/patients')
@@ -73,7 +139,8 @@ export class PatientController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Patient, {exclude: 'where'}) filter?: FilterExcludingWhere<Patient>
+    @param.filter(Patient, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Patient>,
   ): Promise<Patient> {
     return this.patientRepository.findById(id, filter);
   }

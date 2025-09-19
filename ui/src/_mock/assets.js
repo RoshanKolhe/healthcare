@@ -239,7 +239,7 @@ export const _phoneNumbers = [
 // ----------------------------------------------------------------------
 
 export const _roles = [
-  'Super Admin',
+  // 'Super Admin',
   'Clinic',
   'Branch',
 ];
