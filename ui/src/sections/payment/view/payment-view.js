@@ -84,14 +84,19 @@ export default function PaymentView() {
       const response = await axiosInstance.post('/clinic-subscriptions', inputData);
       console.log(response.data.paymentObject);
       const razorpayData = response.data.paymentObject;
+      console.log('razorpayData',razorpayData);
+      const subscriptionId = razorpayData.subscriptionId;
+      console.log('subscriptionId',subscriptionId);
+
       const options = {
         key: razorpayData.razorpayKeyId,
         amount: razorpayData.amount, // in paise
         currency: razorpayData.currency,
         order_id: razorpayData.orderId,
-        // handler (response) {
-        //   console.log('Payment successful:', response);
-        // },
+        handler () {
+          console.log('Payment successful:', response);
+          window.location.href = `/dashboard/payment/success?subscriptionId=${subscriptionId}`;
+        },
       };
 
       const rzp = new window.Razorpay(options);
