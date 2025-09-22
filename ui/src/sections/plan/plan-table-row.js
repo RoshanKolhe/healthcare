@@ -52,11 +52,7 @@ export default function UserTableRow({
   return (
     <>
       <TableRow hover selected={selected}>
-        <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
-          {/* <Avatar alt={name} src={thumbnail?.fileUrl} sx={{ mr: 2 }} /> */}
-
-          <ListItemText primary={`${name}`} primaryTypographyProps={{ typography: 'body2' }} />
-        </TableCell>
+        <TableCell>{name}</TableCell>
 
         <TableCell>{tier}</TableCell>
 
@@ -68,7 +64,6 @@ export default function UserTableRow({
         <TableCell>₹{discountedPriceINR.toLocaleString()}</TableCell>
         <TableCell>${priceUSD.toFixed(2)}</TableCell>
         <TableCell>${discountedPriceUSD.toFixed(2)}</TableCell>
-
 
         {/* Booking Limit */}
         <TableCell>{bookingLimit}</TableCell>

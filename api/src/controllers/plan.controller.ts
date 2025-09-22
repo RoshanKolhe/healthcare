@@ -58,7 +58,7 @@ export class PlanController {
   @authenticate({
     strategy: 'jwt',
     options: {
-      required: [PermissionKeys.SUPER_ADMIN],
+      required: [PermissionKeys.SUPER_ADMIN, PermissionKeys.CLINIC],
     },
   })
   @get('/plans')
@@ -80,7 +80,7 @@ export class PlanController {
   @authenticate({
     strategy: 'jwt',
     options: {
-      required: [PermissionKeys.SUPER_ADMIN],
+      required: [PermissionKeys.SUPER_ADMIN, PermissionKeys.CLINIC],
     },
   })
   @get('/plans/{id}')

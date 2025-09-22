@@ -21,36 +21,19 @@ import PaymentNewCardDialog from './payment-new-card-dialog';
 
 const PAYMENT_OPTIONS = [
   {
-    value: 'paypal',
-    label: 'Paypal',
-  },
-  {
-    value: 'credit',
-    label: 'Credit / Debit Card',
+    value: 'razorpay',
+    label: 'Razorpay',
   },
 ];
 
-const CARD_OPTIONS = [
-  {
-    value: 'visa1',
-    label: '**** **** **** 1212 - Jimmy Holland',
-  },
-  {
-    value: 'visa2',
-    label: '**** **** **** 2424 - Shawn Stokes',
-  },
-  {
-    value: 'mastercard',
-    label: '**** **** **** 4545 - Cole Armstrong',
-  },
-];
+
 
 // ----------------------------------------------------------------------
 
 export default function PaymentMethods() {
   const newCard = useBoolean();
 
-  const [method, setMethod] = useState('paypal');
+  const [method, setMethod] = useState('razorpay');
 
   const handleChangeMethod = useCallback((newValue) => {
     setMethod(newValue);
@@ -125,33 +108,6 @@ function OptionItem({ option, selected, isCredit, onOpen, ...other }) {
         }
         primaryTypographyProps={{ typography: 'subtitle2' }}
       />
-
-      {isCredit && (
-        <Stack
-          spacing={2.5}
-          alignItems="flex-end"
-          sx={{
-            pt: 2.5,
-          }}
-        >
-          <TextField select fullWidth label="Cards" SelectProps={{ native: true }}>
-            {CARD_OPTIONS.map((card) => (
-              <option key={card.value} value={card.value}>
-                {card.label}
-              </option>
-            ))}
-          </TextField>
-
-          <Button
-            size="small"
-            color="primary"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-            onClick={onOpen}
-          >
-            Add New Card
-          </Button>
-        </Stack>
-      )}
     </Paper>
   );
 }

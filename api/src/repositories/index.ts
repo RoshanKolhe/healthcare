@@ -18,4 +18,5 @@ export * from './log.repository';
 export * from './referal-management.repository';
 export * from './personal-information.repository';
 export * from './report-summary.repository';
+export * from './clinic-subscription.repository';
 export * from './prescription.repository';

@@ -3,6 +3,7 @@ import {Branch} from './branch.model';
 import {Category} from './category.model';
 import {ClinicService} from './clinic-service.model';
 import {ClinicType} from './clinic-type.model';
+import {ClinicSubscription} from './clinic-subscription.model';
 
 @model()
 export class Clinic extends Entity {
@@ -81,6 +82,9 @@ export class Clinic extends Entity {
 
   @belongsTo(() => ClinicType)
   clinicTypeId: number;
+
+  @hasMany(() => ClinicSubscription)
+  clinicSubscriptions: ClinicSubscription[];
 
   constructor(data?: Partial<Clinic>) {
     super(data);

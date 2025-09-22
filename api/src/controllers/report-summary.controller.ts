@@ -118,31 +118,34 @@ export class ReportSummaryController {
     const WEBHOOK_SUMMARY_URL = process.env.WEBHOOK_URL;
 
     try {
-      let message = '';
+      if (updatedSummary.status !== 0) {
+        let message = '';
 
-      if (updatedSummary.status === 1) {
-        message = 'Your summary is approved';
-      } else if (updatedSummary.status === 2) {
-        message = `Your summary is rejected. Feedback: ${updatedSummary.feedback || 'No feedback provided'}`;
+        if (updatedSummary.status === 1) {
+          message = 'Your summary is approved';
+        } else if (updatedSummary.status === 2) {
+          message = `Your summary is rejected. Feedback: ${
+            updatedSummary.feedback || 'No feedback provided'
+          }`;
+        }
+
+        const payload = {
+          summaryId: updatedSummary.id,
+          status: updatedSummary.status,
+          summary: updatedSummary.summary,
+          feedback: updatedSummary.feedback,
+          fileUrl: updatedSummary.file,
+          patientPhoneNo: updatedSummary.patientBooking?.patient?.phoneNo,
+          message,
+        };
+
+        await axios.post(`${WEBHOOK_SUMMARY_URL}/summary_flag`, payload, {
+          headers: {'Content-Type': 'application/json'},
+        });
       } else {
-        message = 'Your summary is under review';
+        // ✅ status = 0 → skip webhook, no payload
+        console.log(`Skipping webhook for status ${updatedSummary.status}`);
       }
-
-      const payload = {
-        summaryId: updatedSummary.id,
-        status: updatedSummary.status,
-        summary: updatedSummary.summary,
-        feedback: updatedSummary.feedback,
-        fileUrl: updatedSummary.file,
-        patientPhoneNo: updatedSummary.patientBooking?.patient?.phoneNo,
-        message,
-      };
-
-      await axios.post(`${WEBHOOK_SUMMARY_URL}/summary_flag`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
     } catch (error: any) {
       console.error('Webhook send failed:', error.message);
     }

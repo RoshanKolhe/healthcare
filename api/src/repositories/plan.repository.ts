@@ -1,8 +1,9 @@
-import {Constructor, inject} from '@loopback/core';
-import {DefaultCrudRepository} from '@loopback/repository';
+import {Constructor, inject, Getter} from '@loopback/core';
+import {DefaultCrudRepository, repository, HasManyRepositoryFactory} from '@loopback/repository';
 import {HealthcareDataSource} from '../datasources';
-import {Plan, PlanRelations} from '../models';
+import {Plan, PlanRelations, ClinicSubscription} from '../models';
 import {TimeStampRepositoryMixin} from '../mixins/timestamp-repository-mixin';
+import {ClinicSubscriptionRepository} from './clinic-subscription.repository';
 
 export class PlanRepository extends TimeStampRepositoryMixin<
   Plan,
@@ -11,9 +12,14 @@ export class PlanRepository extends TimeStampRepositoryMixin<
     DefaultCrudRepository<Plan, typeof Plan.prototype.id, PlanRelations>
   >
 >(DefaultCrudRepository) {
+
+  public readonly clinicSubscriptions: HasManyRepositoryFactory<ClinicSubscription, typeof Plan.prototype.id>;
+
   constructor(
-    @inject('datasources.healthcare') dataSource: HealthcareDataSource,
+    @inject('datasources.healthcare') dataSource: HealthcareDataSource, @repository.getter('ClinicSubscriptionRepository') protected clinicSubscriptionRepositoryGetter: Getter<ClinicSubscriptionRepository>,
   ) {
     super(Plan, dataSource);
+    this.clinicSubscriptions = this.createHasManyRepositoryFactoryFor('clinicSubscriptions', clinicSubscriptionRepositoryGetter,);
+    this.registerInclusionResolver('clinicSubscriptions', this.clinicSubscriptions.inclusionResolver);
   }
 }

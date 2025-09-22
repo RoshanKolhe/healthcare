@@ -4,7 +4,7 @@ import MarketplacePricingView from 'src/sections/marketplace/marketplace-prising
 // ----------------------------------------------------------------------
 
 export const metadata = {
-  title: 'Dashboard: Create a new marketplace prising',
+  title: 'Dashboard: Plans',
 };
 
 export default function MarketplacePrisingPage() {

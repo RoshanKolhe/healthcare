@@ -142,6 +142,9 @@ export class UserController {
               {
                 relation: 'branches',
               },
+              {
+                relation: 'clinicSubscriptions',
+              },
             ],
           },
         },
@@ -163,7 +166,21 @@ export class UserController {
       where: {
         id: currnetUser.id,
       },
-      include: [{relation: 'clinic'}],
+      include: [
+        {
+          relation: 'clinic',
+          scope: {
+            include: [
+              {
+                relation: 'branches',
+              },
+              {
+                relation: 'clinicSubscriptions',
+              },
+            ],
+          },
+        },
+      ],
     });
     const userData = _.omit(user, 'password');
     return Promise.resolve({

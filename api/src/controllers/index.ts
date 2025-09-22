@@ -20,4 +20,5 @@ export * from './plan.controller';
 export * from './referal-management.controller';
 export * from './personal-information.controller';
 export * from './report-summary.controller';
+export * from './clinic-subscription.controller';
 export * from './prescription.controller';

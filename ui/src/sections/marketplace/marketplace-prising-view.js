@@ -6,9 +6,9 @@ import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-// _mock
-import { _pricingPlans } from 'src/_mock';
 //
+import { useGetPlans } from 'src/api/plan';
+import { useEffect, useState } from 'react';
 import MarketplacePricingCard from './marketplace-pricing-card';
 
 // ----------------------------------------------------------------------
@@ -29,10 +29,28 @@ const arrow = (
 );
 
 export default function MarketplacePricingView() {
+  const [monthlyPlans, setMonthlyPlans] = useState([]);
+  const [yearlyPlans, setYearlyPlans] = useState([]);
+  const [showYearly, setShowYearly] = useState(false);
+
+  const { plans, plansLoading, plansEmpty, refreshPlans } = useGetPlans();
+
+  console.log(plans);
+
+  const activePlans = showYearly ? yearlyPlans : monthlyPlans;
+
+  useEffect(() => {
+    if (plans && plans.length) {
+      const monthly = plans.filter((p) => p.billingCycle === 'monthly');
+      const yearly = plans.filter((p) => p.billingCycle === 'yearly');
+      setMonthlyPlans(monthly);
+      setYearlyPlans(yearly);
+    }
+  }, [plans]);
+
   return (
     <Container
       sx={{
-        pt: 15,
         pb: 10,
         minHeight: 1,
       }}
@@ -50,9 +68,13 @@ export default function MarketplacePricingView() {
         <Stack direction="row" alignItems="center" justifyContent="center">
           <Typography variant="overline">MONTHLY</Typography>
 
-          <Switch sx={{ mx: 1 }} />
-
-          <Box sx={{ position: 'relative' }}>
+          <Switch
+            sx={{ mx: 1 }}
+            checked={showYearly}
+            onChange={(e) => setShowYearly(e.target.checked)}
+          />
+          <Typography variant="overline">YEARLY</Typography>
+          {/* <Box sx={{ position: 'relative' }}>
             <Stack direction="row" sx={{ position: 'absolute', left: 12, bottom: 12 }}>
               {arrow}
               <Box
@@ -66,9 +88,7 @@ export default function MarketplacePricingView() {
                 save 10%
               </Box>
             </Stack>
-
-            <Typography variant="overline">YEARLY</Typography>
-          </Box>
+          </Box> */}
         </Stack>
       </Box>
 
@@ -78,8 +98,8 @@ export default function MarketplacePricingView() {
         alignItems={{ md: 'center' }}
         gridTemplateColumns={{ md: 'repeat(3, 1fr)' }}
       >
-        {_pricingPlans.map((card, index) => (
-          <MarketplacePricingCard key={card.subscription} card={card} index={index} />
+        {activePlans.map((card, index) => (
+          <MarketplacePricingCard key={card.id} card={card} index={index} />
         ))}
       </Box>
     </Container>

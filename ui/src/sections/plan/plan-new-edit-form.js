@@ -68,12 +68,13 @@ export default function PlanNewEditForm({ currentPlan }) {
       .max(Yup.ref('priceUSD'), 'Discounted Price cannot be greater than Actual Price'),
     taxPercentageINR: Yup.number()
       .typeError('Tax Percent must be a number')
-      .positive('Tax Percent must be a positive number')
-      .required(),
+      .min(0, 'Tax Percent cannot be negative')
+      .required('Tax Percent is required'),
+
     taxPercentageUSD: Yup.number()
       .typeError('Tax Percent must be a number')
-      .positive('Tax Percent must be a positive number')
-      .required(),
+      .min(0, 'Tax Percent cannot be negative')
+      .required('Tax Percent is required'),
     bookingLimit: Yup.number()
       .typeError('Booking Limit must be a number')
       .positive('Booking Limit must be a positive number')

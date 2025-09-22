@@ -4,7 +4,7 @@ import MarketplaceListView from 'src/sections/marketplace/view/marketplace-list-
 // ----------------------------------------------------------------------
 
 export const metadata = {
-  title: 'Dashboard: Create a new marketplace',
+  title: 'Dashboard: marketplace',
 };
 
 export default function MarketplaceListPage() {

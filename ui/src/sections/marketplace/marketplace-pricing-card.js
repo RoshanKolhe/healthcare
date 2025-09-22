@@ -12,17 +12,24 @@ import { PlanFreeIcon, PlanStarterIcon, PlanPremiumIcon } from 'src/assets/icons
 // components
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
+import { useRouter } from 'src/routes/hook';
+import { paths } from 'src/routes/paths';
 
 // ----------------------------------------------------------------------
 
 export default function MarketplacePricingCard({ card, sx, ...other }) {
-  const { subscription, price, caption, lists, labelAction } = card;
+  console.log(card);
 
-  const basic = subscription === 'basic';
+  const router = useRouter();
+  const { id, name, tier, priceINR, discountedPriceINR, bookingLimit, features } = card;
 
-  const starter = subscription === 'starter';
+  const basic = tier === 'basic';
+  const starter = tier === 'starter';
+  const premium = tier === 'premium';
 
-  const premium = subscription === 'premium';
+  const handleSelectPlanClick = (planId) => {
+    router.push(paths.dashboard.marketplace.payment(planId));
+  };
 
   const renderIcon = (
     <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -39,28 +46,47 @@ export default function MarketplacePricingCard({ card, sx, ...other }) {
   const renderSubscription = (
     <Stack spacing={1}>
       <Typography variant="h4" sx={{ textTransform: 'capitalize' }}>
-        {subscription}
-      </Typography>
-      <Typography variant="subtitle2">{caption}</Typography>
-    </Stack>
-  );
-
-  const renderPrice = basic ? (
-    <Typography variant="h2">Free</Typography>
-  ) : (
-    <Stack direction="row">
-      <Typography variant="h4">$</Typography>
-
-      <Typography variant="h2">{price}</Typography>
-
-      <Typography
-        component="span"
-        sx={{ alignSelf: 'center', color: 'text.disabled', ml: 1, typography: 'body2' }}
-      >
-        / mo
+        {name}
       </Typography>
     </Stack>
   );
+
+  const renderPrice =
+    priceINR === 0 ? (
+      <Typography variant="h2">Free</Typography>
+    ) : (
+      <Stack direction="row" alignItems="baseline" spacing={1}>
+        <Typography variant="h4">₹</Typography>
+
+        {discountedPriceINR && discountedPriceINR < priceINR ? (
+          <Stack direction="row" spacing={1} alignItems="baseline">
+            <Typography
+              variant="h3"
+              sx={{
+                textDecoration: 'line-through',
+                color: 'text.disabled',
+              }}
+            >
+              {priceINR}
+            </Typography>
+            <Typography variant="h2">{discountedPriceINR}</Typography>
+          </Stack>
+        ) : (
+          <Typography variant="h2">{priceINR}</Typography>
+        )}
+
+        <Typography
+          component="span"
+          sx={{
+            alignSelf: 'center',
+            color: 'text.disabled',
+            typography: 'body2',
+          }}
+        >
+          / mo
+        </Typography>
+      </Stack>
+    );
 
   const renderList = (
     <Stack spacing={2}>
@@ -73,20 +99,14 @@ export default function MarketplacePricingCard({ card, sx, ...other }) {
         </Link>
       </Stack>
 
-      {lists.map((item) => (
-        <Stack
-          key={item}
-          spacing={1}
-          direction="row"
-          alignItems="center"
-          sx={{
-            typography: 'body2',
-          }}
-        >
-          <Iconify icon="eva:checkmark-fill" width={16} sx={{ mr: 1 }} />
-          {item}
-        </Stack>
-      ))}
+      {/* Booking limit displayed above the feature list */}
+      <Stack spacing={1} direction="row" alignItems="center" sx={{ typography: 'body2' }}>
+        <Iconify icon="eva:checkmark-fill" width={16} sx={{ mr: 1 }} />
+        Booking Limit {bookingLimit}
+      </Stack>
+
+      {/* Render the HTML features safely */}
+      <Box sx={{ typography: 'body2' }} dangerouslySetInnerHTML={{ __html: features }} />
     </Stack>
   );
 
@@ -96,8 +116,8 @@ export default function MarketplacePricingCard({ card, sx, ...other }) {
       sx={{
         p: 5,
         borderRadius: 2,
-        boxShadow: (theme) => ({
-          xs: theme.customShadows.card,
+        boxShadow: (t) => ({
+          xs: t.customShadows.card,
           md: 'none',
         }),
         ...(starter && {
@@ -105,10 +125,10 @@ export default function MarketplacePricingCard({ card, sx, ...other }) {
           borderBottomRightRadius: { md: 0 },
         }),
         ...((starter || premium) && {
-          boxShadow: (theme) => ({
-            xs: theme.customShadows.card,
+          boxShadow: (t) => ({
+            xs: t.customShadows.card,
             md: `-40px 40px 80px 0px ${alpha(
-              theme.palette.mode === 'light' ? theme.palette.grey[500] : theme.palette.common.black,
+              t.palette.mode === 'light' ? t.palette.grey[500] : t.palette.common.black,
               0.16
             )}`,
           }),
@@ -131,10 +151,13 @@ export default function MarketplacePricingCard({ card, sx, ...other }) {
         fullWidth
         size="large"
         variant="contained"
-        disabled={basic}
+        disabled={priceINR === 0}
         color={starter ? 'primary' : 'inherit'}
+        onClick={() => {
+          handleSelectPlanClick(id);
+        }}
       >
-        {labelAction}
+        Select Plan
       </Button>
     </Stack>
   );
