@@ -91,6 +91,9 @@ export const endpoints = {
     filterList: (filter) => `/clinics?${filter}`,
     search: '/api/clinics/search',
   },
+  whastappDetail: {
+    details: (id) => `/branch-whatsapps/${id}`,
+  },
   agent: {
     list: '/agents',
     details: (id) => `/agents/${id}`,

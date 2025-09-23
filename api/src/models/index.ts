@@ -21,3 +21,4 @@ export * from './personal-information.model';
 export * from './report-summary.model';
 export * from './clinic-subscription.model';
 export * from './prescription.model';
+export * from './branch-whatsapp.model';

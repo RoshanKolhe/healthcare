@@ -20,3 +20,4 @@ export * from './personal-information.repository';
 export * from './report-summary.repository';
 export * from './clinic-subscription.repository';
 export * from './prescription.repository';
+export * from './branch-whatsapp.repository';

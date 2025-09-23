@@ -159,28 +159,37 @@ export class UserController {
   @get('/me')
   @authenticate('jwt')
   async whoAmI(
-    @inject(AuthenticationBindings.CURRENT_USER) currnetUser: UserProfile,
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
   ): Promise<{}> {
-    console.log(currnetUser);
-    const user = await this.userRepository.findOne({
-      where: {
-        id: currnetUser.id,
-      },
-      include: [
+    console.log('currentUser1', currentUser);
+    let includeRelations: any[] = [];
+    if (currentUser.permissions?.includes('clinic')) {
+      includeRelations = [
         {
           relation: 'clinic',
           scope: {
             include: [
-              {
-                relation: 'branches',
-              },
-              {
-                relation: 'clinicSubscriptions',
-              },
+              {relation: 'branches'},
+              {relation: 'clinicSubscriptions'},
             ],
           },
         },
-      ],
+      ];
+    } else if (currentUser.permissions?.includes('branch')) {
+      includeRelations = [
+        {
+          relation: 'branch',
+          scope: {
+            include: [{relation: 'branchWhatsapp'}],
+          },
+        },
+      ];
+    }
+    const user = await this.userRepository.findOne({
+      where: {
+        id: currentUser.id,
+      },
+      include: includeRelations,
     });
     const userData = _.omit(user, 'password');
     return Promise.resolve({

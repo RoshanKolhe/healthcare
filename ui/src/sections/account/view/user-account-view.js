@@ -15,18 +15,21 @@ import { useSettingsContext } from 'src/components/settings';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 //
 import { useAuthContext } from 'src/auth/hooks';
+import { useGetWhatsappDetail } from 'src/api/whatsapp-detail';
 import AccountGeneral from '../account-general';
 import AccountBilling from '../account-billing';
 import AccountSocialLinks from '../account-social-links';
 import AccountNotifications from '../account-notifications';
 import AccountChangePassword from '../account-change-password';
-
+import BranchWhatsappEditForm from '../branch-account-whatsapp-detail';
 
 // ----------------------------------------------------------------------
 
 export default function AccountView() {
   const settings = useSettingsContext();
-  const { user } = useAuthContext(); 
+  const { user } = useAuthContext();
+
+  const id = user?.branch?.branchWhatsapp?.id;
   const userRole = user?.permissions?.[0];
 
   const [currentTab, setCurrentTab] = useState('general');
@@ -35,7 +38,10 @@ export default function AccountView() {
     setCurrentTab(newValue);
   }, []);
 
-   const TABS = [
+  const { whatsappDetail: currentWhatsappDetail, refreshWhatsappDetails } =
+    useGetWhatsappDetail(id);
+
+  const TABS = [
     {
       value: 'general',
       label: 'General',
@@ -55,6 +61,15 @@ export default function AccountView() {
       label: 'Security',
       icon: <Iconify icon="ic:round-vpn-key" width={24} />,
     },
+    ...(userRole === 'branch'
+      ? [
+          {
+            value: 'whatsapp',
+            label: 'Whatsapp detail',
+            icon: <Iconify icon="logos:whatsapp-icon" width={24} />,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -86,7 +101,6 @@ export default function AccountView() {
       {currentTab === 'general' && <AccountGeneral />}
 
       {currentTab === 'billing' && userRole === 'clinic' && (
-        
         <AccountBilling
           plans={_userPlans}
           cards={_userPayment}
@@ -100,6 +114,13 @@ export default function AccountView() {
       {currentTab === 'social' && <AccountSocialLinks socialLinks={_userAbout.socialLinks} />} */}
 
       {currentTab === 'security' && <AccountChangePassword />}
+
+      {currentTab === 'whatsapp' && userRole === 'branch' && (
+        <BranchWhatsappEditForm
+          currentWhatsappDetail={currentWhatsappDetail}
+          refreshWhatsappDetails={refreshWhatsappDetails}
+        />
+      )}
     </Container>
   );
 }
