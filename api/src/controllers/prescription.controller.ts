@@ -26,23 +26,36 @@ export class PrescriptionController {
 
   @post('/prescriptions')
   @response(200, {
-    description: 'Prescription model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Prescription)}},
-  })
-  async create(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Prescription, {
+    description: 'Create multiple prescriptions',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Prescription, {
             title: 'NewPrescription',
             exclude: ['id'],
           }),
         },
       },
+    },
+  })
+  async create(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'array',
+            items: getModelSchemaRef(Prescription, {
+              title: 'NewPrescription',
+              exclude: ['id'],
+            }),
+          },
+        },
+      },
     })
-    prescription: Omit<Prescription, 'id'>,
-  ): Promise<Prescription> {
-    return this.prescriptionRepository.create(prescription);
+    prescriptions: Omit<Prescription, 'id'>[],
+  ): Promise<Prescription[]> {
+    return this.prescriptionRepository.createAll(prescriptions);
   }
 
   @get('/prescriptions')

@@ -175,6 +175,9 @@ export const paths = {
       edit: (id) => `${ROOTS.DASHBOARD}/branches/${id}/edit`,
       view: (id) => `${ROOTS.DASHBOARD}/branches/${id}/view`,
     },
+    whastappDetail: {
+      edit: (id) => `${ROOTS.DASHBOARD}/branch-whatsapps/${id}`,
+    },
     product: {
       root: `${ROOTS.DASHBOARD}/product`,
       new: `${ROOTS.DASHBOARD}/product/new`,
