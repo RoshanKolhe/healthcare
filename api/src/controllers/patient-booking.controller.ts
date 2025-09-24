@@ -650,63 +650,6 @@ export class PatientBookingController {
     await this.patientBookingRepository.deleteById(id);
   }
 
-  // @get('/patient-bookings/reminders')
-  // @response(200, {
-  //   description: 'Get bookings for reminders',
-  //   content: {
-  //     'application/json': {
-  //       schema: {
-  //         type: 'array',
-  //         items: getModelSchemaRef(PatientBooking, {includeRelations: true}),
-  //       },
-  //     },
-  //   },
-  // })
-  // async getUpcomingBookingsForReminders(): Promise<PatientBooking[]> {
-  //   const now = new Date().getTime();
-  //   const pollingWindowMs = 5 * 60 * 1000;
-
-  //   // Fetch bookings with related slot + availability
-  //   const bookings = await this.patientBookingRepository.find({
-  //     where: {status: 0}, // pending bookings only
-  //     include: [
-  //       {
-  //         relation: 'doctorTimeSlot',
-  //         scope: {include: ['doctorAvailability']},
-  //       },
-  //     ],
-  //   });
-
-  //   const filtered = bookings.filter((booking: any) => {
-  //     const slot = booking.doctorTimeSlot;
-  //     if (!slot || !slot.slotStart) return false;
-
-  //     const startTime = new Date(slot.slotStart).getTime();
-  //     const endTime = new Date(slot.slotEnd || startTime).getTime();
-
-  //     const diffToStart = startTime - now;
-  //     const diffToEnd = now - endTime;
-
-  //     // Strict 1-hour before start (exact window: 1h ±10min)
-  //     const is1HrBefore =
-  //       diffToStart >=  60 * 60 * 1000 - pollingWindowMs &&
-  //       diffToStart <=  60 * 60 * 1000 + pollingWindowMs;
-
-  //     // Strict 1-day before start (exact window: 24h ±10min)
-  //     const is1DayBefore =
-  //       diffToStart >= 24 * 60 * 60 * 1000 - pollingWindowMs &&
-  //       diffToStart <= 24 * 60 * 60 * 1000 + pollingWindowMs;
-
-  //     // Strict 1-hour after end (exact window: 1h ±10min)
-  //     const is1HrAfterEnd =
-  //       diffToEnd >= 60 * 60 * 1000 - pollingWindowMs &&
-  //       diffToEnd <= 60 * 60 * 1000 + pollingWindowMs;
-
-  //     return is1HrBefore || is1DayBefore || is1HrAfterEnd;
-  //   });
-
-  //   return filtered;
-  // }
   @get('/patient-bookings/reminders')
   @response(200, {
     description: 'Get bookings for reminders',
@@ -722,7 +665,7 @@ export class PatientBookingController {
   async getUpcomingBookingsForReminders(
     @param.filter(PatientBooking) filter?: Filter<PatientBooking>,
     @param.query.string('reminderType')
-    reminderType?: '1hrBefore' | '1dayBefore' | '1hrAfter',
+    reminderType?: '1hrBefore' | '1dayBefore' | '1hrAfter' | '7dayBefore',
   ): Promise<PatientBooking[]> {
     const now = new Date();
     const pollingWindowMs = 5 * 60 * 1000;
@@ -742,6 +685,11 @@ export class PatientBookingController {
         min: new Date(now.getTime() - 60 * 60 * 1000 - pollingWindowMs),
         max: new Date(now.getTime() - 60 * 60 * 1000 + pollingWindowMs),
         field: 'slotEnd',
+      },
+      '7dayBefore': {
+        min: new Date(now.getTime() + 24*7 * 60 * 60 * 1000 - pollingWindowMs),
+        max: new Date(now.getTime() + 24*7 * 60 * 60 * 1000 + pollingWindowMs),
+        field: 'slotStart',
       },
     };
 
@@ -785,7 +733,11 @@ export class PatientBookingController {
             slotEnd >= windows['1hrAfter'].min.getTime() &&
             slotEnd <= windows['1hrAfter'].max.getTime();
 
-          return is1HrBefore || is1DayBefore || is1HrAfterEnd;
+          const is7DayBefore =
+            slotStart >= windows['7dayBefore'].min.getTime() &&
+            slotStart <= windows['7dayBefore'].max.getTime();
+
+          return is1HrBefore || is1DayBefore || is1HrAfterEnd || is7DayBefore;
         }
 
         // If param passed, filter only for that type
