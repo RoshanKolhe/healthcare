@@ -103,4 +103,41 @@ export class BranchWhatsappController {
   async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.branchWhatsappRepository.deleteById(id);
   }
+
+  @post('/branch-whatsapps/find-by-phone')
+  @response(200, {
+    description: 'Find BranchWhatsapp by phone number',
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(BranchWhatsapp, {includeRelations: true}),
+      },
+    },
+  })
+  async findByPhone(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              phoneNo: {type: 'string'},
+            },
+            required: ['phoneNo'],
+          },
+        },
+      },
+    })
+    body: {phoneNo: string},
+  ): Promise<BranchWhatsapp | null> {
+    const branchWhatsapp = await this.branchWhatsappRepository.findOne({
+      where: {phoneNo: body.phoneNo},
+      include: [{relation: 'branch'}], 
+    });
+
+    if (!branchWhatsapp) {
+      return null; 
+    }
+
+    return branchWhatsapp;
+  }
 }
