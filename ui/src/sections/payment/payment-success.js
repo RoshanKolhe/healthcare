@@ -17,16 +17,10 @@ import {
   Fade,
   Zoom,
 } from '@mui/material';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import {
-  CheckCircle,
-  Dashboard,
-  Download,
-  ContentCopy,
-} from '@mui/icons-material';
 import { styled, keyframes } from '@mui/material/styles';
 import { useSearchParams } from 'next/navigation';
 import axiosInstance from 'src/utils/axios';
+import Iconify from 'src/components/iconify'; // ✅ Use Iconify
 
 // Styled components with animations
 const pulseAnimation = keyframes`
@@ -141,7 +135,6 @@ const PaymentSuccessPage = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
-  
   const subscriptionId = searchParams.get('subscriptionId');
 
   useEffect(() => {
@@ -166,7 +159,6 @@ const PaymentSuccessPage = () => {
 
   const handleCopyTransactionId = async () => {
     if (!subscription?.transactionId) return;
-    
     try {
       await navigator.clipboard.writeText(subscription.transactionId);
       setCopied(true);
@@ -181,7 +173,6 @@ const PaymentSuccessPage = () => {
   };
 
   const handleDownloadReceipt = () => {
-    // Implement receipt download logic
     console.log('Downloading receipt...');
   };
 
@@ -222,7 +213,6 @@ const PaymentSuccessPage = () => {
     );
   }
 
-  // Format the subscription data for display
   const paymentData = {
     plan: subscription.planName || `Plan ${subscription.planId}`,
     status: subscription.status === 'active' ? 'Confirmed' : subscription.status,
@@ -243,27 +233,19 @@ const PaymentSuccessPage = () => {
           <CardContent sx={{ p: 5, textAlign: 'center' }}>
             <Fade in={mounted} timeout={1000}>
               <SuccessIcon>
-                <CheckCircle sx={{ fontSize: 50, color: 'white' }} />
+                <Iconify icon="mdi:check-circle" width={50} color="white" />
               </SuccessIcon>
             </Fade>
 
             <Typography
               variant="h4"
               component="h1"
-              sx={{
-                color: 'text.primary',
-                fontWeight: 700,
-                mb: 1,
-              }}
+              sx={{ color: 'text.primary', fontWeight: 700, mb: 1 }}
             >
               Payment Successful!
             </Typography>
 
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ mb: 4 }}
-            >
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
               Your payment has been processed successfully. Thank you for your purchase!
             </Typography>
 
@@ -280,9 +262,7 @@ const PaymentSuccessPage = () => {
                 <Typography variant="body1" fontWeight={600}>
                   Plan
                 </Typography>
-                <Typography variant="body1">
-                  {paymentData.plan}
-                </Typography>
+                <Typography variant="body1">{paymentData.plan}</Typography>
               </DetailRow>
 
               <DetailRow>
@@ -305,18 +285,14 @@ const PaymentSuccessPage = () => {
                 <Typography variant="body1" fontWeight={600}>
                   Expiry Date
                 </Typography>
-                <Typography variant="body1">
-                  {paymentData.expiryDate}
-                </Typography>
+                <Typography variant="body1">{paymentData.expiryDate}</Typography>
               </DetailRow>
 
               <DetailRow>
                 <Typography variant="body1" fontWeight={600}>
                   Booking Limit
                 </Typography>
-                <Typography variant="body1">
-                  {paymentData.bookingLimit}
-                </Typography>
+                <Typography variant="body1">{paymentData.bookingLimit}</Typography>
               </DetailRow>
 
               <DetailRow>
@@ -325,10 +301,7 @@ const PaymentSuccessPage = () => {
                 </Typography>
                 <Typography
                   variant="h6"
-                  sx={{
-                    color: 'success.main',
-                    fontWeight: 700,
-                  }}
+                  sx={{ color: 'success.main', fontWeight: 700 }}
                 >
                   {paymentData.amountPaid}
                 </Typography>
@@ -352,12 +325,8 @@ const PaymentSuccessPage = () => {
                 </Typography>
               </Box>
               {subscription?.transactionId && (
-                <IconButton
-                  size="small"
-                  onClick={handleCopyTransactionId}
-                  sx={{ ml: 1 }}
-                >
-                  <ContentCopy fontSize="small" />
+                <IconButton size="small" onClick={handleCopyTransactionId} sx={{ ml: 1 }}>
+                  <Iconify icon="mdi:content-copy" width={18} />
                 </IconButton>
               )}
             </TransactionBox>
@@ -377,7 +346,7 @@ const PaymentSuccessPage = () => {
                 <GradientButton
                   fullWidth
                   variant="contained"
-                  startIcon={<Dashboard />}
+                  startIcon={<Iconify icon="mdi:view-dashboard" />}
                   onClick={handleGoToDashboard}
                 >
                   Go to Dashboard
@@ -387,7 +356,7 @@ const PaymentSuccessPage = () => {
                 <Button
                   fullWidth
                   variant="outlined"
-                  startIcon={<Download />}
+                  startIcon={<Iconify icon="mdi:download" />}
                   onClick={handleDownloadReceipt}
                   sx={{
                     borderRadius: 3,
@@ -395,9 +364,7 @@ const PaymentSuccessPage = () => {
                     textTransform: 'none',
                     fontWeight: 600,
                     borderWidth: 2,
-                    '&:hover': {
-                      borderWidth: 2,
-                    },
+                    '&:hover': { borderWidth: 2 },
                   }}
                 >
                   Download Receipt
