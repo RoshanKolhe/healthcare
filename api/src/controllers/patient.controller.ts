@@ -43,6 +43,7 @@ export class PatientController {
               patientBookingId: {type: 'number'},
               startDate: {type: 'string'},
               startTime: {type: 'string'},
+              status: { type: 'number'},
             },
           },
         },
@@ -106,6 +107,7 @@ export class PatientController {
         patientBookingId: b.id,
         startDate: slotStart ? slotStart.format('YYYY-MM-DD') : null,
         startTime: slotStart ? slotStart.format('HH:mm') : null, 
+        status: b.status,
       };
     });
   }
