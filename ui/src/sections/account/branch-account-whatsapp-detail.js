@@ -18,11 +18,13 @@ import { useSnackbar } from 'src/components/snackbar';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import axiosInstance from 'src/utils/axios';
 import { useAuthContext } from 'src/auth/hooks';
+import { useGetWhatsappDetail } from 'src/api/whatsapp-detail';
 
 // ----------------------------------------------------------------------
 
-export default function BranchWhatsappEditForm({ currentWhatsappDetail, refreshWhatsappDetails }) {
-  console.log('currentWhatsappDetail2',currentWhatsappDetail);
+export default function BranchWhatsappEditForm({ id, setId }) {
+  const { whatsappDetail: currentWhatsappDetail, refreshWhatsappDetails } =
+    useGetWhatsappDetail(id);
   const router = useRouter();
 
   const { user } = useAuthContext();
@@ -52,36 +54,41 @@ export default function BranchWhatsappEditForm({ currentWhatsappDetail, refreshW
     resolver: yupResolver(NewClinicSchema),
     defaultValues,
   });
+  console.log('defaultValues', defaultValues);
 
   const {
     reset,
-    watch,
-    setValue,
     handleSubmit,
     formState: { isSubmitting, errors },
   } = methods;
 
-  console.log('errors', errors);
-  const values = watch();
-
   const onSubmit = handleSubmit(async (formData) => {
-    console.log('Submitting data:', formData);
     try {
       const Payload = {
         phoneNo: formData.phoneNo,
         clientId: formData.clientId,
-        clientSecret: formData.clientSecret,        
-        accessToken: formData.accessToken,        
-        businessAccountId: formData.businessAccountId, 
-        branchId: user?.branch?.id,       
+        clientSecret: formData.clientSecret,
+        accessToken: formData.accessToken,
+        businessAccountId: formData.businessAccountId,
+        branchId: user?.branch?.id,
       };
       if (!currentWhatsappDetail) {
-        await axiosInstance.post('/branch-whatsapps', Payload);
+        const response = await axiosInstance.post('/branch-whatsapps', Payload);
+        if (response?.data) {
+          setId(response?.data?.id);
+          refreshWhatsappDetails(response?.data?.id);
+        }
       } else {
         await axiosInstance.patch(`/branch-whatsapps/${currentWhatsappDetail.id}`, Payload);
       }
-      reset();
       refreshWhatsappDetails();
+      reset({
+        phoneNo: currentWhatsappDetail?.phoneNo || Payload.phoneNo,
+        clientId: currentWhatsappDetail?.clientId || Payload.clientId,
+        clientSecret: currentWhatsappDetail?.clientSecret || Payload.clientSecret,
+        accessToken: currentWhatsappDetail?.accessToken || Payload.accessToken,
+        businessAccountId: currentWhatsappDetail?.businessAccountId || Payload.businessAccountId,
+      });
       enqueueSnackbar(currentWhatsappDetail ? 'Update success!' : 'Create success!');
       router.push(paths.dashboard.whastappDetail.edit);
     } catch (error) {
@@ -91,32 +98,6 @@ export default function BranchWhatsappEditForm({ currentWhatsappDetail, refreshW
       });
     }
   });
-
-  const handleRemoveFile = useCallback(() => {
-    setValue('imageUpload', null);
-  }, [setValue]);
-
-  const handleDrop = useCallback(
-    async (acceptedFiles) => {
-      const file = acceptedFiles[0];
-      if (file) {
-        const formData = new FormData();
-        formData.append('imageUpload', file);
-        const response = await axiosInstance.post('/files', formData);
-        const { data } = response;
-        const fileUrl = data?.files?.[0]?.fileUrl;
-        setValue(
-          'imageUpload',
-          {
-            fileUrl, // for backend submission
-            preview: fileUrl, // ✅ use backend URL for UI preview
-          },
-          { shouldValidate: true }
-        );
-      }
-    },
-    [setValue]
-  );
 
   useEffect(() => {
     if (currentWhatsappDetail) {
@@ -165,6 +146,6 @@ export default function BranchWhatsappEditForm({ currentWhatsappDetail, refreshW
 }
 
 BranchWhatsappEditForm.propTypes = {
-  currentWhatsappDetail: PropTypes.object,
-  refreshWhatsappDetails: PropTypes.object,
+  id: PropTypes.number,
+  setId: PropTypes.func,
 };

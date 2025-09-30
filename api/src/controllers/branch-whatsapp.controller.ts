@@ -13,6 +13,7 @@ import {
   del,
   requestBody,
   response,
+  HttpErrors,
 } from '@loopback/rest';
 import {BranchWhatsapp} from '../models';
 import {BranchWhatsappRepository} from '../repositories';
@@ -20,7 +21,7 @@ import {BranchWhatsappRepository} from '../repositories';
 export class BranchWhatsappController {
   constructor(
     @repository(BranchWhatsappRepository)
-    public branchWhatsappRepository : BranchWhatsappRepository,
+    public branchWhatsappRepository: BranchWhatsappRepository,
   ) {}
 
   @post('/branch-whatsapps')
@@ -41,6 +42,15 @@ export class BranchWhatsappController {
     })
     branchWhatsapp: Omit<BranchWhatsapp, 'id'>,
   ): Promise<BranchWhatsapp> {
+    const existingRecord = await this.branchWhatsappRepository.findOne({
+      where: {phoneNo: branchWhatsapp.phoneNo},
+    });
+
+    if (existingRecord) {
+      throw new HttpErrors.BadRequest(
+        `Phone number ${branchWhatsapp.phoneNo} already exists`,
+      );
+    }
     return this.branchWhatsappRepository.create(branchWhatsapp);
   }
 
@@ -73,7 +83,8 @@ export class BranchWhatsappController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(BranchWhatsapp, {exclude: 'where'}) filter?: FilterExcludingWhere<BranchWhatsapp>
+    @param.filter(BranchWhatsapp, {exclude: 'where'})
+    filter?: FilterExcludingWhere<BranchWhatsapp>,
   ): Promise<BranchWhatsapp> {
     return this.branchWhatsappRepository.findById(id, filter);
   }
@@ -127,15 +138,17 @@ export class BranchWhatsappController {
         },
       },
     })
-    body: {phoneNo: string},
+    body: {
+      phoneNo: string;
+    },
   ): Promise<BranchWhatsapp | null> {
     const branchWhatsapp = await this.branchWhatsappRepository.findOne({
       where: {phoneNo: body.phoneNo},
-      include: [{relation: 'branch'}], 
+      include: [{relation: 'branch'}],
     });
 
     if (!branchWhatsapp) {
-      return null; 
+      return null;
     }
 
     return branchWhatsapp;

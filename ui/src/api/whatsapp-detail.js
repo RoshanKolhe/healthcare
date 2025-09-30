@@ -5,18 +5,19 @@ import { fetcher, endpoints } from 'src/utils/axios';
 export function useGetWhatsappDetail(whatsappDetailId) {
   const URL = whatsappDetailId ? [endpoints.whastappDetail.details(whatsappDetailId)] : null;
 
-  const { data, isLoading, error, isValidating , mutate} = useSWR(URL, fetcher);
+  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
 
-  const refreshWhatsappDetails = () => {
-    // Use the `mutate` function to trigger a revalidation
-    mutate();
+  const refreshWhatsappDetails = (id = whatsappDetailId) => {
+    const newURL = id ? endpoints.whastappDetail.details(id) : null;
+    if (!newURL) return;
+    mutate(newURL);
   };
 
-  return{
-      whatsappDetail: data,
-      whatsappDetailLoading: isLoading,
-      whatsappDetailError: error,
-      whatsappDetailValidating: isValidating,
-      refreshWhatsappDetails,
-    };
+  return {
+    whatsappDetail: data,
+    whatsappDetailLoading: isLoading,
+    whatsappDetailError: error,
+    whatsappDetailValidating: isValidating,
+    refreshWhatsappDetails,
+  };
 }

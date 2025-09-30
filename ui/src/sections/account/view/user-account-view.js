@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 // @mui
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
@@ -8,18 +8,16 @@ import Container from '@mui/material/Container';
 // routes
 import { paths } from 'src/routes/paths';
 // _mock
-import { _userAbout, _userPlans, _userPayment, _userInvoices, _userAddressBook } from 'src/_mock';
+import { _userPlans, _userPayment, _userInvoices, _userAddressBook } from 'src/_mock';
 // components
 import Iconify from 'src/components/iconify';
 import { useSettingsContext } from 'src/components/settings';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 //
 import { useAuthContext } from 'src/auth/hooks';
-import { useGetWhatsappDetail } from 'src/api/whatsapp-detail';
+import axiosInstance from 'src/utils/axios';
 import AccountGeneral from '../account-general';
 import AccountBilling from '../account-billing';
-import AccountSocialLinks from '../account-social-links';
-import AccountNotifications from '../account-notifications';
 import AccountChangePassword from '../account-change-password';
 import BranchWhatsappEditForm from '../branch-account-whatsapp-detail';
 
@@ -27,9 +25,10 @@ import BranchWhatsappEditForm from '../branch-account-whatsapp-detail';
 
 export default function AccountView() {
   const settings = useSettingsContext();
-  const { user } = useAuthContext();
 
-  const id = user?.branch?.branchWhatsapp?.id;
+  const [ user , setUser ] = useState(null);
+
+  const [id, setId] = useState(null);
   const userRole = user?.permissions?.[0];
 
   const [currentTab, setCurrentTab] = useState('general');
@@ -38,8 +37,18 @@ export default function AccountView() {
     setCurrentTab(newValue);
   }, []);
 
-  const { whatsappDetail: currentWhatsappDetail, refreshWhatsappDetails } =
-    useGetWhatsappDetail(id);
+  const handleMe = async()=>{
+    try{
+      const response = await axiosInstance.get('/me');
+      if(response.data){
+        setUser(response.data);
+        setId(response.data?.branch?.branchWhatsapp?.id);
+      }
+    }
+    catch(error){
+      console.error(error);
+    }
+  }
 
   const TABS = [
     {
@@ -71,6 +80,10 @@ export default function AccountView() {
         ]
       : []),
   ];
+
+  useEffect(()=>{
+    handleMe();
+  },[]);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
@@ -117,8 +130,8 @@ export default function AccountView() {
 
       {currentTab === 'whatsapp' && userRole === 'branch' && (
         <BranchWhatsappEditForm
-          currentWhatsappDetail={currentWhatsappDetail}
-          refreshWhatsappDetails={refreshWhatsappDetails}
+          id={id}
+          setId={setId}
         />
       )}
     </Container>
