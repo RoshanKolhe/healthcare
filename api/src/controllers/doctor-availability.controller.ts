@@ -124,7 +124,7 @@ export class DoctorAvailabilityController {
         startB: Date,
         endB: Date,
       ) => startA < endB && startB < endA;
-
+      
       for (const date of datesToCreate) {
         for (const slot of doctorTimeSlots) {
           const slotStart = new Date(
@@ -135,6 +135,23 @@ export class DoctorAvailabilityController {
           const slotEnd = new Date(
             date.toDateString() + ' ' + new Date(slot.slotEnd!).toTimeString(),
           );
+
+          // -------------------------------
+          // 🚨 NEW VALIDATION: Block slots within 2 hrs from now
+          const now = moment.tz('Asia/Kolkata');
+          const minAllowed = now.clone().add(2, 'hours');
+
+          if (
+            moment(slotStart).isBefore(minAllowed) &&
+            moment(slotStart).isSame(now, 'day')
+          ) {
+            throw new HttpErrors.BadRequest(
+              `Doctor availability cannot be created within 2 hours from now. Earliest allowed time is ${minAllowed.format(
+                'HH:mm',
+              )} today.`,
+            );
+          }
+          // -------------------------------
 
           const formatTimeOnly = (date: Date): string => {
             const hours = date.getHours().toString().padStart(2, '0');
