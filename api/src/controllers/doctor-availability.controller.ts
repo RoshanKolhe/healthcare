@@ -144,11 +144,10 @@ export class DoctorAvailabilityController {
           const now = moment.tz('Asia/Kolkata');
           const minAllowed = now.clone().add(2, 'hours');
 
-          if (slotStart.isBefore(minAllowed) && slotStart.isSame(now, 'day')) {
+          if (slotStart.isBefore(minAllowed)) {
             throw new HttpErrors.BadRequest(
-              `Doctor availability cannot be created within 2 hours from now. Earliest allowed time is ${minAllowed.format(
-                'HH:mm',
-              )} today.`,
+              `Doctor availability cannot be created within 2 hours from now. 
+     Earliest allowed time is ${minAllowed.format('YYYY-MM-DD HH:mm')}.`,
             );
           }
           // -------------------------------
@@ -164,24 +163,29 @@ export class DoctorAvailabilityController {
               const existDate = new Date(existing.startDate);
               if (existDate.toDateString() !== date.toDateString()) continue;
 
-              const existSlotStart = new Date(
-                existDate.toDateString() +
-                  ' ' +
-                  new Date(existingSlot.slotStart).toTimeString(),
-              );
-              const existSlotEnd = new Date(
-                existDate.toDateString() +
-                  ' ' +
-                  new Date(existingSlot.slotEnd).toTimeString(),
+              const existSlotStart = moment.tz(
+                `${moment(existDate).format('YYYY-MM-DD')} ${moment(existingSlot.slotStart).format('HH:mm')}`,
+                'YYYY-MM-DD HH:mm',
+                'Asia/Kolkata',
               );
 
+              const existSlotEnd = moment.tz(
+                `${moment(existDate).format('YYYY-MM-DD')} ${moment(existingSlot.slotEnd).format('HH:mm')}`,
+                'YYYY-MM-DD HH:mm',
+                'Asia/Kolkata',
+              );
+              const isOverlapping = (
+                startA: moment.Moment,
+                endA: moment.Moment,
+                startB: moment.Moment,
+                endB: moment.Moment,
+              ) => startA.isBefore(endB) && startB.isBefore(endA);
+
               if (
-                isOverlapping(slotStart.toDate(), slotEnd.toDate(), existSlotStart, existSlotEnd)
+                isOverlapping(slotStart, slotEnd, existSlotStart, existSlotEnd)
               ) {
                 throw new HttpErrors.BadRequest(
-                  `Doctor already has a slot overlapping on ${date.toDateString()} from ${formatTimeOnly(
-                    existSlotStart,
-                  )} to ${formatTimeOnly(existSlotEnd)}`,
+                  `Doctor already has a slot overlapping on ${date.toDateString()} from ${existSlotStart.format('HH:mm')} to ${existSlotEnd.format('HH:mm')}`,
                 );
               }
             }
