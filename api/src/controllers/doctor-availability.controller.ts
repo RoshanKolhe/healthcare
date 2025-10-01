@@ -119,28 +119,18 @@ export class DoctorAvailabilityController {
         });
 
       const isOverlapping = (
-        startA: Date,
-        endA: Date,
-        startB: Date,
-        endB: Date,
-      ) => startA < endB && startB < endA;
+        startA: moment.Moment,
+        endA: moment.Moment,
+        startB: moment.Moment,
+        endB: moment.Moment,
+      ) => startA.isBefore(endB) && startB.isBefore(endA);
 
       for (const date of datesToCreate) {
         for (const slot of doctorTimeSlots) {
-          const slotStart = moment.tz(
-            `${moment(date).format('YYYY-MM-DD')} ${moment(slot.slotStart).format('HH:mm')}`,
-            'YYYY-MM-DD HH:mm',
-            'Asia/Kolkata',
-          );
+          const slotStart = moment.tz(slot.slotStart, 'Asia/Kolkata');
+          const slotEnd = moment.tz(slot.slotEnd, 'Asia/Kolkata');
 
-          const slotEnd = moment.tz(
-            `${moment(date).format('YYYY-MM-DD')} ${moment(slot.slotEnd).format('HH:mm')}`,
-            'YYYY-MM-DD HH:mm',
-            'Asia/Kolkata',
-          );
-
-          // -------------------------------
-          // 🚨 NEW VALIDATION: Block slots within 2 hrs from now
+          // Validation: must be at least 2 hours from now
           const now = moment.tz('Asia/Kolkata');
           const minAllowed = now.clone().add(2, 'hours');
 
@@ -164,23 +154,13 @@ export class DoctorAvailabilityController {
               if (existDate.toDateString() !== date.toDateString()) continue;
 
               const existSlotStart = moment.tz(
-                `${moment(existDate).format('YYYY-MM-DD')} ${moment(existingSlot.slotStart).format('HH:mm')}`,
-                'YYYY-MM-DD HH:mm',
+                existingSlot.slotStart,
                 'Asia/Kolkata',
               );
-
               const existSlotEnd = moment.tz(
-                `${moment(existDate).format('YYYY-MM-DD')} ${moment(existingSlot.slotEnd).format('HH:mm')}`,
-                'YYYY-MM-DD HH:mm',
+                existingSlot.slotEnd,
                 'Asia/Kolkata',
               );
-              const isOverlapping = (
-                startA: moment.Moment,
-                endA: moment.Moment,
-                startB: moment.Moment,
-                endB: moment.Moment,
-              ) => startA.isBefore(endB) && startB.isBefore(endA);
-
               if (
                 isOverlapping(slotStart, slotEnd, existSlotStart, existSlotEnd)
               ) {
