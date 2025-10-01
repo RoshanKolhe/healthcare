@@ -124,16 +124,19 @@ export class DoctorAvailabilityController {
         startB: Date,
         endB: Date,
       ) => startA < endB && startB < endA;
-      
+
       for (const date of datesToCreate) {
         for (const slot of doctorTimeSlots) {
-          const slotStart = new Date(
-            date.toDateString() +
-              ' ' +
-              new Date(slot.slotStart!).toTimeString(),
+          const slotStart = moment.tz(
+            `${moment(date).format('YYYY-MM-DD')} ${moment(slot.slotStart).format('HH:mm')}`,
+            'YYYY-MM-DD HH:mm',
+            'Asia/Kolkata',
           );
-          const slotEnd = new Date(
-            date.toDateString() + ' ' + new Date(slot.slotEnd!).toTimeString(),
+
+          const slotEnd = moment.tz(
+            `${moment(date).format('YYYY-MM-DD')} ${moment(slot.slotEnd).format('HH:mm')}`,
+            'YYYY-MM-DD HH:mm',
+            'Asia/Kolkata',
           );
 
           // -------------------------------
@@ -141,10 +144,7 @@ export class DoctorAvailabilityController {
           const now = moment.tz('Asia/Kolkata');
           const minAllowed = now.clone().add(2, 'hours');
 
-          if (
-            moment(slotStart).isBefore(minAllowed) &&
-            moment(slotStart).isSame(now, 'day')
-          ) {
+          if (slotStart.isBefore(minAllowed) && slotStart.isSame(now, 'day')) {
             throw new HttpErrors.BadRequest(
               `Doctor availability cannot be created within 2 hours from now. Earliest allowed time is ${minAllowed.format(
                 'HH:mm',
@@ -176,7 +176,7 @@ export class DoctorAvailabilityController {
               );
 
               if (
-                isOverlapping(slotStart, slotEnd, existSlotStart, existSlotEnd)
+                isOverlapping(slotStart.toDate(), slotEnd.toDate(), existSlotStart, existSlotEnd)
               ) {
                 throw new HttpErrors.BadRequest(
                   `Doctor already has a slot overlapping on ${date.toDateString()} from ${formatTimeOnly(
