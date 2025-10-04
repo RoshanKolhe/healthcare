@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
 import { useCallback, useEffect, useMemo } from 'react';
@@ -6,22 +7,21 @@ import { yupResolver } from '@hookform/resolvers/yup';
 // @mui
 import LoadingButton from '@mui/lab/LoadingButton';
 import Box from '@mui/material/Box';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import MenuItem from '@mui/material/MenuItem';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 // components
 import { useSnackbar } from 'src/components/snackbar';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
-// import { COMMON_STATUS_OPTIONS } from 'src/utils/constants';
 import axiosInstance from 'src/utils/axios';
 import { useParams, useRouter } from 'src/routes/hook';
 import { paths } from 'src/routes/paths';
-import { useGetBooking } from 'src/api/booking';
+import { FormControl, FormHelperText } from '@mui/material';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/material.css';
+import { useTheme } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
@@ -40,10 +40,13 @@ export default function ReferalManagementQuickEditForm({
 
   const { enqueueSnackbar } = useSnackbar();
 
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   const params = useParams();
 
   const router = useRouter();
-  console.log('currentReferalManagement',currentReferalManagement);
+  console.log('currentReferalManagement', currentReferalManagement);
 
   const NewReferalManagementSchema = Yup.object().shape({
     referalReason: Yup.string().required('Referal Reason is required'),
@@ -84,6 +87,7 @@ export default function ReferalManagementQuickEditForm({
     reset,
     handleSubmit,
     watch,
+    control,
     setValue,
     formState: { isSubmitting },
   } = methods;
@@ -105,7 +109,10 @@ export default function ReferalManagementQuickEditForm({
       if (!currentReferalManagement?.referalManagement?.id) {
         await axiosInstance.post('/referal-managements', inputData);
       } else {
-        await axiosInstance.patch(`/referal-managements/${currentReferalManagement?.referalManagement?.id}`, inputData);
+        await axiosInstance.patch(
+          `/referal-managements/${currentReferalManagement?.referalManagement?.id}`,
+          inputData
+        );
       }
       refreshBookings();
       reset();
@@ -179,7 +186,53 @@ export default function ReferalManagementQuickEditForm({
             <RHFTextField name="referalReason" label="Referal Reason" />
             <RHFTextField name="clinicNote" label="Clinic Note" />
             <RHFTextField name="doctorName" label="Doctor Name" />
-            <RHFTextField name="doctorPhone" label="Doctor Phone" />
+            <Controller
+              name="doctorPhone"
+              control={control}
+              defaultValue=""
+              rules={{ required: 'Phone number is required' }}
+              render={({ field, fieldState: { error } }) => (
+                <FormControl fullWidth error={!!error}>
+                  <PhoneInput
+                    {...field}
+                    value={field.value}
+                    country="ae"
+                    enableSearch
+                    specialLabel={
+                      <span
+                        style={{
+                          backgroundColor: 'transparent',
+                          color: error ? '#f44336' : isDark ? '#fff' : theme.palette.text.secondary,
+                          fontSize: 12,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Doctor Phone
+                      </span>
+                    }
+                    inputStyle={{
+                      width: '100%',
+                      height: '56px',
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      borderColor: error ? '#f44336' : '#c4c4c4',
+                      borderRadius: '8px',
+                      color: isDark ? '#fff' : undefined,
+                      paddingLeft: '48px',
+                      paddingRight: '40px',
+                    }}
+                    containerStyle={{ width: '100%' }}
+                    onChange={(value) => field.onChange(value)}
+                    inputProps={{
+                      name: field.name,
+                      required: true,
+                    }}
+                  />
+
+                  {error && <FormHelperText>{error.message}</FormHelperText>}
+                </FormControl>
+              )}
+            />
             <RHFTextField name="doctorEmail" label="Doctor Email" />
             <RHFTextField name="clinicName" label="Clinic Name" />
             <RHFTextField name="clinicAddress" label="Clinic Address" />
