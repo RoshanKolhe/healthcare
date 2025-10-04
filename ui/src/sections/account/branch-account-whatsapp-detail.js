@@ -3,7 +3,7 @@
 import PropTypes from 'prop-types';
 import * as Yup from 'yup';
 import { useCallback, useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 // @mui
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -19,10 +19,17 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import axiosInstance from 'src/utils/axios';
 import { useAuthContext } from 'src/auth/hooks';
 import { useGetWhatsappDetail } from 'src/api/whatsapp-detail';
+import { FormControl, FormHelperText } from '@mui/material';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/material.css';
+import { useTheme } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
 export default function BranchWhatsappEditForm({ id, setId }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   const { whatsappDetail: currentWhatsappDetail, refreshWhatsappDetails } =
     useGetWhatsappDetail(id);
   const router = useRouter();
@@ -59,6 +66,7 @@ export default function BranchWhatsappEditForm({ id, setId }) {
   const {
     reset,
     handleSubmit,
+    control,
     formState: { isSubmitting, errors },
   } = methods;
 
@@ -111,7 +119,57 @@ export default function BranchWhatsappEditForm({ id, setId }) {
         <Stack spacing={3} sx={{ p: 3 }}>
           <Grid container spacing={2} xs={12} md={12}>
             <Grid xs={12} md={6}>
-              <RHFTextField name="phoneNo" label="Whatsapp Number" />
+              <Controller
+                name="phoneNo"
+                control={control}
+                defaultValue=""
+                rules={{ required: 'Phone number is required' }}
+                render={({ field, fieldState: { error } }) => (
+                  <FormControl fullWidth error={!!error}>
+                    <PhoneInput
+                      {...field}
+                      value={field.value}
+                      country="ae"
+                      enableSearch
+                      specialLabel={
+                        <span
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: error
+                              ? '#f44336'
+                              : isDark
+                              ? '#fff'
+                              : theme.palette.text.secondary,
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Phone Number
+                        </span>
+                      }
+                      inputStyle={{
+                        width: '100%',
+                        height: '56px',
+                        fontSize: '16px',
+                        backgroundColor: 'transparent',
+                        borderColor: error ? '#f44336' : '#c4c4c4',
+                        borderRadius: '8px',
+                        color: isDark ? '#fff' : undefined,
+                        paddingLeft: '48px',
+                        paddingRight: '40px',
+                      }}
+                      containerStyle={{ width: '100%' }}
+                      onChange={(value) => field.onChange(value)}
+                      inputProps={{
+                        name: field.name,
+                        required: true,
+                      }}
+                    />
+
+                    {error && <FormHelperText>{error.message}</FormHelperText>}
+                  </FormControl>
+                )}
+              />
             </Grid>
             <Grid xs={12} md={6}>
               <RHFTextField name="clientId" label="Client Id" />

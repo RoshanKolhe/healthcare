@@ -133,27 +133,38 @@ export class UserController {
     const userProfile = this.userService.convertToUserProfile(user);
     const userData = _.omit(user, 'password');
     const token = await this.jwtService.generateToken(userProfile);
-    const allUserData = await this.userRepository.findById(userData.id, {
-      include: [
+    let includeRelations: any[] = [];
+    if (user.permissions?.includes('clinic')) {
+      includeRelations = [
         {
           relation: 'clinic',
           scope: {
             include: [
-              {
-                relation: 'branches',
-              },
-              {
-                relation: 'clinicSubscriptions',
-              },
+              {relation: 'branches'},
+              {relation: 'clinicSubscriptions'},
             ],
           },
         },
-      ],
+      ];
+    } else if (user.permissions?.includes('branch')) {
+      includeRelations = [
+        {
+          relation: 'branch',
+          scope: {
+            include: [{relation: 'branchWhatsapp'}],
+          },
+        },
+      ];
+    }
+
+    const allUserData = await this.userRepository.findById(userData.id, {
+      include: includeRelations,
     });
-    return Promise.resolve({
+
+    return {
       accessToken: token,
       user: allUserData,
-    });
+    };
   }
 
   @get('/me')
