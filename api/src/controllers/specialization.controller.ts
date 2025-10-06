@@ -23,7 +23,7 @@ import {SpecializationRepository} from '../repositories';
 export class SpecializationController {
   constructor(
     @repository(SpecializationRepository)
-    public specializationRepository : SpecializationRepository,
+    public specializationRepository: SpecializationRepository,
   ) {}
 
   @post('/specializations')
@@ -54,15 +54,37 @@ export class SpecializationController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Specialization, {includeRelations: true}),
+          items: {
+            type: 'object',
+            properties: {
+              specializationId: {type: 'number'},
+              specializationName: {type: 'string'},
+            },
+          },
         },
       },
     },
   })
   async find(
     @param.filter(Specialization) filter?: Filter<Specialization>,
-  ): Promise<Specialization[]> {
-    return this.specializationRepository.find(filter);
+  ): Promise<{specializationId: number; specializationName: string}[]> {
+    const mergedFilter = {
+      ...filter,
+      fields: {
+        id: true,
+        specialization: true,
+      },
+    };
+
+    const specializations =
+      await this.specializationRepository.find(mergedFilter);
+
+    return specializations
+      .filter(spec => spec.id !== undefined) // Filter out any without id
+      .map(spec => ({
+        specializationId: spec.id as number, // Type assertion
+        specializationName: spec.specialization,
+      }));
   }
 
   @get('/specializations/{id}')
@@ -76,7 +98,8 @@ export class SpecializationController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Specialization, {exclude: 'where'}) filter?: FilterExcludingWhere<Specialization>
+    @param.filter(Specialization, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Specialization>,
   ): Promise<Specialization> {
     return this.specializationRepository.findById(id, filter);
   }

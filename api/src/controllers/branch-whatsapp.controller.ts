@@ -141,8 +141,8 @@ export class BranchWhatsappController {
     body: {
       phoneNo: string;
     },
-  ): Promise<BranchWhatsapp | null> {
-    const branchWhatsapp = await this.branchWhatsappRepository.findOne({
+  ): Promise<any> {
+    const branchWhatsapp: any = await this.branchWhatsappRepository.findOne({
       where: {phoneNo: body.phoneNo},
       include: [{relation: 'branch'}],
     });
@@ -151,6 +151,9 @@ export class BranchWhatsappController {
       return null;
     }
 
-    return branchWhatsapp;
+    return {
+      branchId: branchWhatsapp.branchId,
+      branchName: branchWhatsapp.branch?.name,
+    };
   }
 }
