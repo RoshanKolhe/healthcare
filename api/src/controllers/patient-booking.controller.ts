@@ -99,7 +99,7 @@ export class PatientBookingController {
         gender?: string;
       };
     },
-  ): Promise<PatientBooking> {
+  ): Promise<any> {
     const repo = new DefaultTransactionalRepository(
       PatientBooking,
       this.dataSource,
@@ -194,7 +194,11 @@ export class PatientBookingController {
       // 8️⃣ Commit transaction
       await tx.commit();
 
-      return booking;
+      // return booking;
+      return {
+        success: true,
+        message: `Your booking created successfully`,
+      };
     } catch (err) {
       await tx.rollback();
       throw err;
@@ -233,7 +237,7 @@ export class PatientBookingController {
         },
         {
           relation: 'personalInformation',
-        }
+        },
       ],
     });
   }
@@ -286,7 +290,7 @@ export class PatientBookingController {
         },
         {
           relation: 'personalInformation',
-        }
+        },
       ],
       order: ['createdAt DESC'],
     };
@@ -376,6 +380,47 @@ export class PatientBookingController {
         },
       ],
     });
+  }
+
+  @get('/patient-bookings/{id}/show-doctor-branch')
+  @response(200, {
+    description: 'Get doctorId and branchId for a patient booking',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            doctorId: {type: 'number'},
+            branchId: {type: 'number'},
+          },
+        },
+      },
+    },
+  })
+  async getDoctorAndBranchByBookingId(
+    @param.path.number('id') id: number,
+  ): Promise<{doctorId: number; branchId: number}> {
+    const booking: any = await this.patientBookingRepository.findById(id, {
+      include: [
+        {
+          relation: 'doctorTimeSlot',
+          scope: {
+            include: [{relation: 'doctorAvailability'}],
+          },
+        },
+      ],
+    });
+
+    // branchId can be directly from booking or from doctorAvailability
+    const branchId =
+      booking.branchId ||
+      booking.doctorTimeSlot?.doctorAvailability?.branchId ||
+      null;
+
+    return {
+      doctorId: booking.doctorId,
+      branchId: branchId,
+    };
   }
 
   @patch('/patient-bookings/{id}/personal-info')
@@ -476,7 +521,7 @@ export class PatientBookingController {
       doctorId: number;
       doctorTimeSlotId: number;
     },
-  ): Promise<PatientBooking> {
+  ): Promise<any> {
     const repo = new DefaultTransactionalRepository(
       PatientBooking,
       this.dataSource,
@@ -536,7 +581,11 @@ export class PatientBookingController {
       await tx.commit();
 
       // 9️⃣ Return updated booking
-      return this.patientBookingRepository.findById(id);
+      // return this.patientBookingRepository.findById(id);
+      return {
+        success: true,
+        message: `Your appointment reschedule successfully`,
+      };
     } catch (err) {
       await tx.rollback();
       throw err;
@@ -550,7 +599,7 @@ export class PatientBookingController {
   })
   async cancelBooking(
     @param.path.number('id') bookingId: number,
-  ): Promise<PatientBooking> {
+  ): Promise<any> {
     // Find booking
     const booking = await this.patientBookingRepository.findById(bookingId);
     if (!booking) {
@@ -580,7 +629,11 @@ export class PatientBookingController {
     });
 
     // Return updated booking
-    return this.patientBookingRepository.findById(bookingId);
+    // return this.patientBookingRepository.findById(bookingId);
+    return {
+      success: true,
+      message: `Your appointment cancel successfully`,
+    };
   }
 
   @patch('/patient-bookings/{id}/soap-file')
@@ -607,7 +660,7 @@ export class PatientBookingController {
         },
       },
     })
-    body: {file: object, soapSummary: string},
+    body: {file: object; soapSummary: string},
   ): Promise<PatientBooking> {
     const txRepo = new DefaultTransactionalRepository(
       PatientBooking,
@@ -687,8 +740,12 @@ export class PatientBookingController {
         field: 'slotEnd',
       },
       '7dayBefore': {
-        min: new Date(now.getTime() + 24*7 * 60 * 60 * 1000 - pollingWindowMs),
-        max: new Date(now.getTime() + 24*7 * 60 * 60 * 1000 + pollingWindowMs),
+        min: new Date(
+          now.getTime() + 24 * 7 * 60 * 60 * 1000 - pollingWindowMs,
+        ),
+        max: new Date(
+          now.getTime() + 24 * 7 * 60 * 60 * 1000 + pollingWindowMs,
+        ),
         field: 'slotStart',
       },
     };
