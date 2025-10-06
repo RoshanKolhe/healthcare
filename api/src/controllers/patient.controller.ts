@@ -15,10 +15,7 @@ import {
   response,
 } from '@loopback/rest';
 import {Patient} from '../models';
-import {
-  PatientBookingRepository,
-  PatientRepository,
-} from '../repositories';
+import {PatientBookingRepository, PatientRepository} from '../repositories';
 import moment from 'moment-timezone';
 
 export class PatientController {
@@ -43,7 +40,7 @@ export class PatientController {
               patientBookingId: {type: 'number'},
               startDate: {type: 'string'},
               startTime: {type: 'string'},
-              status: { type: 'number'},
+              status: {type: 'number'},
             },
           },
         },
@@ -59,6 +56,7 @@ export class PatientController {
             required: ['phoneNo'],
             properties: {
               phoneNo: {type: 'string'},
+              status: {type: 'number'},
             },
           },
         },
@@ -66,9 +64,10 @@ export class PatientController {
     })
     body: {
       phoneNo: string;
+      status?: number;
     },
   ): Promise<any[]> {
-    const {phoneNo} = body;
+    const {phoneNo, status} = body;
 
     // 1️⃣ Find patient by phoneNo
     const patient = await this.patientRepository.findOne({
@@ -84,18 +83,22 @@ export class PatientController {
       where: {patientId: patient.id},
       include: [
         {
-          relation: 'doctorTimeSlot', 
+          relation: 'doctorTimeSlot',
         },
       ],
     });
 
-    const upcoming = bookings.filter((b: any) => {
+    let upcoming = bookings.filter((b: any) => {
       const slot = b.doctorTimeSlot;
       if (!slot?.slotStart) return false;
 
       const bookingDateTime = new Date(slot.slotStart);
       return bookingDateTime >= now;
     });
+
+    if (typeof status !== 'undefined') {
+      upcoming = upcoming.filter((b: any) => b.status === status);
+    }
 
     // 4️⃣ Return simplified data
     return upcoming.map((b: any) => {
@@ -106,8 +109,7 @@ export class PatientController {
       return {
         patientBookingId: b.id,
         startDate: slotStart ? slotStart.format('YYYY-MM-DD') : null,
-        startTime: slotStart ? slotStart.format('HH:mm') : null, 
-        status: b.status,
+        startTime: slotStart ? slotStart.format('HH:mm') : null,
       };
     });
   }

@@ -361,14 +361,9 @@ export class DoctorAvailabilityController {
 
     availabilities.forEach(avail => {
       const bId = avail.branch?.id || 'unknown';
-      const branchName = avail.branch?.name || '';
-      const branchAddress = avail.branch?.fullAddress || '';
 
       if (!result[bId]) {
         result[bId] = {
-          branchId: bId,
-          branchName,
-          branchAddress,
           availableDates: [],
         };
       }
@@ -396,12 +391,14 @@ export class DoctorAvailabilityController {
         }
 
         // Convert to moment objects
-        let slotsWithMoment = (avail.doctorTimeSlots || []).map(slot => ({
-          slotId: slot.id,
-          startTime: moment(slot.slotStart).tz('Asia/Kolkata'),
-          endTime: moment(slot.slotEnd).tz('Asia/Kolkata'),
-          isBooked: slot.isBooked,
-        }));
+        let slotsWithMoment = (avail.doctorTimeSlots || [])
+          .filter(slot => slot.isBooked === 0)
+          .map(slot => ({
+            slotId: slot.id,
+            startTime: moment(slot.slotStart).tz('Asia/Kolkata'),
+            endTime: moment(slot.slotEnd).tz('Asia/Kolkata'),
+            isBooked: slot.isBooked,
+          }));
 
         // ✅ If day is today, filter only slots after now+2hr
         if (dayMoment.isSame(today, 'day')) {
@@ -414,16 +411,10 @@ export class DoctorAvailabilityController {
           slotId: slot.slotId,
           startTime: slot.startTime.toISOString(),
           endTime: slot.endTime.toISOString(),
-          isBooked: slot.isBooked,
         }));
 
         if (slots.length > 0) {
           dateEntry.availabilities.push({
-            availabilityId: avail.id,
-            startDate: moment(avail.startDate).tz('Asia/Kolkata').toISOString(),
-            endDate: moment(avail.endDate).tz('Asia/Kolkata').toISOString(),
-            doctorId: avail.doctorId,
-            isActive: avail.isActive,
             timeSlots: slots,
           });
         }
@@ -493,14 +484,9 @@ export class DoctorAvailabilityController {
       if (availEnd < dayStart || availStart > dayEnd) return;
 
       const bId = avail.branch?.id || 'unknown';
-      const branchName = avail.branch?.name || '';
-      const branchAddress = avail.branch?.fullAddress || '';
 
       if (!result[bId]) {
         result[bId] = {
-          branchId: bId,
-          branchName,
-          branchAddress,
           availableDates: [],
         };
       }
@@ -518,12 +504,14 @@ export class DoctorAvailabilityController {
         result[bId].availableDates.push(dateEntry);
       }
 
-      let slotsWithMoment = (avail.doctorTimeSlots || []).map(slot => ({
-        slotId: slot.id,
-        startTime: moment(slot.slotStart).tz('Asia/Kolkata'),
-        endTime: moment(slot.slotEnd).tz('Asia/Kolkata'),
-        isBooked: slot.isBooked,
-      }));
+      let slotsWithMoment = (avail.doctorTimeSlots || [])
+        .filter(slot => slot.isBooked === 0)
+        .map(slot => ({
+          slotId: slot.id,
+          startTime: moment(slot.slotStart).tz('Asia/Kolkata'),
+          endTime: moment(slot.slotEnd).tz('Asia/Kolkata'),
+          isBooked: slot.isBooked,
+        }));
 
       // ✅ If requested date is today, only include slots after now+30min
       if (requestedDate.isSame(today, 'day')) {
@@ -537,16 +525,10 @@ export class DoctorAvailabilityController {
         slotId: slot.slotId,
         startTime: slot.startTime.toISOString(),
         endTime: slot.endTime.toISOString(),
-        isBooked: slot.isBooked,
       }));
 
       if (slots.length > 0) {
         dateEntry.availabilities.push({
-          availabilityId: avail.id,
-          startDate: moment(avail.startDate).tz('Asia/Kolkata').toISOString(),
-          endDate: moment(avail.endDate).tz('Asia/Kolkata').toISOString(),
-          doctorId: avail.doctorId,
-          isActive: avail.isActive,
           timeSlots: slots,
         });
       }

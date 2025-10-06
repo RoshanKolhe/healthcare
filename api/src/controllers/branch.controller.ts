@@ -150,7 +150,13 @@ export class BranchController {
               oneOf: [
                 {
                   type: 'array',
-                  items: getModelSchemaRef(Doctor, {includeRelations: true}),
+                  items: {
+                    type: 'object',
+                    properties: {
+                      doctorId: {type: 'number'},
+                      doctorName: {type: 'string'},
+                    },
+                  },
                 },
                 {type: 'object', properties: {message: {type: 'string'}}},
               ],
@@ -163,12 +169,13 @@ export class BranchController {
   async getDoctorsBySpecializationAndBranch(
     @param.query.number('specializationId') specializationId: number,
     @param.query.number('branchId') branchId: number,
-  ): Promise<Doctor[] | {message: string}> {
+  ): Promise<{doctorId: number; doctorName: string}[] | {message: string}> {
     // Step 1: Get doctors matching the specialization
     const doctorsWithSpecialization = await this.doctorRepository.find({
       where: {specializationId},
       fields: ['id'],
     });
+
     if (!doctorsWithSpecialization.length) {
       return {
         message: `No doctors found for specialization ${specializationId}`,
@@ -182,6 +189,7 @@ export class BranchController {
       where: {branchId, doctorId: {inq: doctorIds}},
       fields: ['doctorId'],
     });
+
     if (!branchDoctorLinks.length) {
       return {message: `No doctors found for this branch`};
     }
@@ -190,21 +198,35 @@ export class BranchController {
       ...new Set(branchDoctorLinks.map(link => link.doctorId!).filter(Boolean)),
     ];
 
-    // Step 3: Get full doctor details
+    // Step 3: Get only firstName and lastName
     const doctors = await this.doctorRepository.find({
       where: {id: {inq: matchedDoctorIds}},
-      // include: [{relation: 'branches'}], // optional if you want branch info
+      fields: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
     });
 
-    return doctors.length
-      ? doctors
-      : {message: `No doctors found for given criteria`};
+    if (!doctors.length) {
+      return {message: `No doctors found for given criteria`};
+    }
+
+    // Transform to return doctorId and doctorName
+    return doctors.map(doctor => ({
+      doctorId: doctor.id!,
+      doctorName: `${doctor.firstName} ${doctor.lastName}`,
+    }));
   }
 
   @authenticate({
     strategy: 'jwt',
     options: {
-      required: [PermissionKeys.SUPER_ADMIN, PermissionKeys.CLINIC, PermissionKeys.BRANCH],
+      required: [
+        PermissionKeys.SUPER_ADMIN,
+        PermissionKeys.CLINIC,
+        PermissionKeys.BRANCH,
+      ],
     },
   })
   @get('/branches')
