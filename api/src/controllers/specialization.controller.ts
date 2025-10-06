@@ -54,6 +54,24 @@ export class SpecializationController {
       'application/json': {
         schema: {
           type: 'array',
+          items: getModelSchemaRef(Specialization, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async find(
+    @param.filter(Specialization) filter?: Filter<Specialization>,
+  ): Promise<Specialization[]> {
+    return this.specializationRepository.find(filter);
+  }
+
+  @get('/specializations-n8n')
+  @response(200, {
+    description: 'Array of Specialization model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
           items: {
             type: 'object',
             properties: {
@@ -65,7 +83,7 @@ export class SpecializationController {
       },
     },
   })
-  async find(
+  async findspecializations(
     @param.filter(Specialization) filter?: Filter<Specialization>,
   ): Promise<{specializationId: number; specializationName: string}[]> {
     const mergedFilter = {
