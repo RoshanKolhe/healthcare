@@ -17,15 +17,20 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import {Plan} from '../models';
-import {PlanRepository} from '../repositories';
+import {ClinicSubscription, Plan} from '../models';
+import {ClinicSubscriptionRepository, PlanRepository} from '../repositories';
 import {PermissionKeys} from '../authorization/permission-keys';
-import {authenticate} from '@loopback/authentication';
+import {authenticate, AuthenticationBindings} from '@loopback/authentication';
+import {CurrentUser} from '../types';
+import {inject} from '@loopback/core';
+import {UserProfile} from '@loopback/security';
 
 export class PlanController {
   constructor(
     @repository(PlanRepository)
     public planRepository: PlanRepository,
+    @repository('ClinicSubscriptionRepository')
+    public clinicSubscriptionRepository: ClinicSubscriptionRepository,
   ) {}
 
   @authenticate({
@@ -63,18 +68,53 @@ export class PlanController {
   })
   @get('/plans')
   @response(200, {
-    description: 'Array of Plan model instances',
+    description: 'Array of plans with clinic subscription detail',
     content: {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Plan, {includeRelations: true}),
+          items: {
+            allOf: [
+              getModelSchemaRef(Plan, {includeRelations: true}),
+              {
+                type: 'object',
+                properties: {
+                  clinicSubscriptionDetail: getModelSchemaRef(
+                    ClinicSubscription,
+                    {
+                      includeRelations: true,
+                    },
+                  ),
+                },
+              },
+            ],
+          },
         },
       },
     },
   })
-  async find(@param.filter(Plan) filter?: Filter<Plan>): Promise<Plan[]> {
-    return this.planRepository.find(filter);
+  async find(
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
+    @param.filter(Plan) filter?: Filter<Plan>,
+  ): Promise<
+    ({[key: string]: any} & {
+      clinicSubscriptionDetail: ClinicSubscription | null;
+    })[]
+  > {
+    const userData = currentUser.id;
+
+    const clinicSubscriptionDetail =
+      await this.clinicSubscriptionRepository.findOne({
+        where: {clinicId: userData.clinicId},
+        order: ['createdAt DESC'],
+      });
+
+    const plans = await this.planRepository.find(filter);
+
+    return plans.map(plan => ({
+      ...plan.toJSON(), // 👈 convert to plain object
+      clinicSubscriptionDetail,
+    }));
   }
 
   @authenticate({
