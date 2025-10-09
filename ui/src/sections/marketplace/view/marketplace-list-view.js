@@ -44,7 +44,7 @@ export default function MarketplaceListView() {
         }
       } catch (err) {
         console.error('Free trial error:', err);
-        enqueueSnackbar(typeof error === 'string' ? err : err.err.message, {
+        enqueueSnackbar(typeof err === 'string' ? err : err.err.message, {
           variant: 'error',
         });
       }

@@ -7,8 +7,6 @@ import Tabs from '@mui/material/Tabs';
 import Container from '@mui/material/Container';
 // routes
 import { paths } from 'src/routes/paths';
-// _mock
-import { _userPlans, _userPayment, _userInvoices, _userAddressBook } from 'src/_mock';
 // components
 import Iconify from 'src/components/iconify';
 import { useSettingsContext } from 'src/components/settings';
@@ -114,12 +112,7 @@ export default function AccountView() {
       {currentTab === 'general' && <AccountGeneral />}
 
       {currentTab === 'billing' && userRole === 'clinic' && (
-        <AccountBilling
-          plans={_userPlans}
-          cards={_userPayment}
-          invoices={_userInvoices}
-          addressBook={_userAddressBook}
-        />
+        <AccountBilling />
       )}
 
       {/* {currentTab === 'notifications' && <AccountNotifications />}

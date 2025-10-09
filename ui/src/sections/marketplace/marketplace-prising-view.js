@@ -48,6 +48,50 @@ export default function MarketplacePricingView() {
     }
   }, [plans]);
 
+  useEffect(() => {
+    if (plans && plans.length) {
+      const monthly = plans.filter((p) => p.billingCycle === 'monthly');
+      const yearly = plans.filter((p) => p.billingCycle === 'yearly');
+
+      // Find current subscription details (should exist in every plan object)
+      const currentSub = plans.find((p) => p.clinicSubscriptionDetail);
+
+      if (currentSub?.clinicSubscriptionDetail) {
+        const { remainingBookingLimit, planData } = currentSub.clinicSubscriptionDetail;
+        const currentPlanId = planData?.id;
+        const currentPlanBookingLimit = planData?.bookingLimit || 0;
+
+        const applyDisableLogic = (planList) =>
+          planList.map((plan) => {
+            // Case 1: remainingBookingLimit === 0 => enable all plans
+            if (remainingBookingLimit === 0) return { ...plan, isDisabled: false };
+
+            // Case 2: remainingBookingLimit > 0
+            if (remainingBookingLimit > 0) {
+              // Disable current plan or smaller/equal ones
+              if (plan.id === currentPlanId || plan.bookingLimit <= currentPlanBookingLimit) {
+                return { ...plan, isDisabled: true };
+              }
+              // Enable only higher bookingLimit plans
+              return { ...plan, isDisabled: false };
+            }
+
+            return plan;
+          });
+
+        const updatedMonthly = applyDisableLogic(monthly);
+        const updatedYearly = applyDisableLogic(yearly);
+
+        setMonthlyPlans(updatedMonthly);
+        setYearlyPlans(updatedYearly);
+      } else {
+        // No active subscription — enable all
+        setMonthlyPlans(monthly.map((p) => ({ ...p, isDisabled: false })));
+        setYearlyPlans(yearly.map((p) => ({ ...p, isDisabled: false })));
+      }
+    }
+  }, [plans]);
+
   return (
     <Container
       sx={{

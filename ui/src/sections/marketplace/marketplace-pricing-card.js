@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 // @mui
 import { alpha } from '@mui/material/styles';
@@ -151,13 +152,21 @@ export default function MarketplacePricingCard({ card, sx, ...other }) {
         fullWidth
         size="large"
         variant="contained"
-        disabled={priceINR === 0}
+        disabled={card.isDisabled || priceINR === 0}
         color={starter ? 'primary' : 'inherit'}
         onClick={() => {
-          handleSelectPlanClick(id);
+          if (!card.isDisabled) handleSelectPlanClick(id);
+        }}
+        sx={{
+          ...(card.isDisabled && {
+            backgroundColor: 'grey.400',
+            color: 'text.disabled',
+            cursor: 'not-allowed',
+            '&:hover': { backgroundColor: 'grey.400' },
+          }),
         }}
       >
-        Select Plan
+        {card.isDisabled ? 'Upgrade not available' : priceINR === 0 ? 'Free' : 'Select Plan'}
       </Button>
     </Stack>
   );
