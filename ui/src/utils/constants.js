@@ -371,7 +371,7 @@ export const USER_STATUS_OPTIONS = [
 ];
 
 export const BOOKING_STATUS_OPTIONS = [
-  { value: '0', label: 'Confirm' },
+  { value: '0', label: 'Confirmed' },
   { value: '1', label: 'Completed' },
   { value: '2', label: 'Cancelled' },
 ];
