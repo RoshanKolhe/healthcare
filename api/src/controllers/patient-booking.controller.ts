@@ -205,6 +205,32 @@ export class PatientBookingController {
     }
   }
 
+  @patch('/patient-bookings/{id}')
+  @response(200, {
+    description: 'Update booking status',
+    content: {'application/json': {schema: getModelSchemaRef(PatientBooking)}},
+  })
+  async updateStatus(
+    @param.path.number('id') id: number,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              status: {type: 'number'},
+            },
+          },
+        },
+      },
+    })
+    data: {status: number},
+  ): Promise<object> {
+    await this.patientBookingRepository.updateById(id, data);
+    console.log('Updating booking id:', id, 'with data:', data);
+    return {success: true, message: 'Booking status updated successfully'};
+  }
+
   @get('/patient-bookings/all')
   @response(200, {
     description: 'Array of PatientBooking model instances',

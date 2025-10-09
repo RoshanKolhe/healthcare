@@ -13,6 +13,8 @@ import { useSettingsContext } from 'src/components/settings';
 //
 import { BOOKING_STATUS_OPTIONS } from 'src/utils/constants';
 import { useGetBooking } from 'src/api/booking';
+import { enqueueSnackbar } from 'notistack';
+import axiosInstance from 'src/utils/axios';
 import BookingDetailsInfo from '../booking-details-info';
 import BookingDetailsToolbar from '../booking-details-toolbar';
 import BookingDetailsHistory from '../booking-details-history';
@@ -31,9 +33,31 @@ export default function BookingDetailsView() {
   const [currentBooking, setCurrentBooking] = useState();
   const [status, setStatus] = useState();
 
-  const handleChangeStatus = useCallback((newValue) => {
-    setStatus(newValue);
-  }, []);
+  const handleChangeStatus = useCallback(
+    async (newValue) => {
+      try {
+        setStatus(newValue);
+
+        const bookingId = currentBooking?.id;
+        if (!bookingId) return;
+
+        const apiUrl = `/patient-bookings/${bookingId}`;
+
+        const response = await axiosInstance.patch(apiUrl, { status: Number(newValue) });
+
+        if (response.status === 200 || response.status === 204) {
+          enqueueSnackbar('Booking status updated successfully!', { variant: 'success' });
+          refreshBooking();
+        } else {
+          enqueueSnackbar('Failed to update booking status.', { variant: 'error' });
+        }
+      } catch (error) {
+        console.error('❌ Error updating booking status:', error);
+        enqueueSnackbar('Something went wrong while updating status.', { variant: 'error' });
+      }
+    },
+    [currentBooking, refreshBooking]
+  );
 
   useEffect(() => {
     if (booking) {
@@ -59,7 +83,10 @@ export default function BookingDetailsView() {
       <Grid container spacing={3}>
         <Grid xs={12} md={8}>
           <Stack spacing={3} direction={{ xs: 'column-reverse', md: 'column' }}>
-            <BookingDetailsHistory history={currentBooking?.patientBookingHistories} booking={currentBooking} />
+            <BookingDetailsHistory
+              history={currentBooking?.patientBookingHistories}
+              booking={currentBooking}
+            />
           </Stack>
         </Grid>
 

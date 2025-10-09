@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 // @mui
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -12,8 +11,7 @@ import { fDateTime } from 'src/utils/format-time';
 // components
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
-import CustomPopover, { usePopover } from 'src/components/custom-popover';
-import { useSnackbar } from 'notistack';
+import { Select } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
@@ -27,19 +25,13 @@ export default function BookingDetailsToolbar({
   onChangeStatus,
   refreshBooking,
 }) {
-  const popover = usePopover();
-  const { enqueueSnackbar } = useSnackbar();
 
   const getStatusLabel = (currentStatus) => {
-  const foundStatus = statusOptions.find((res) => Number(res.value) === Number(currentStatus));
-  return foundStatus ? foundStatus.label : 'Unknown Status';
-};
-  console.log('statusOptions in toolbar', statusOptions);
-  console.log('getStatusLabel in toolbar', getStatusLabel(status));
-
+    const foundStatus = statusOptions.find((res) => Number(res.value) === Number(currentStatus));
+    return foundStatus ? foundStatus.label : 'Unknown Status';
+  };
 
   return (
-    <>
       <Stack
         spacing={3}
         direction={{ xs: 'column', md: 'row' }}
@@ -83,39 +75,21 @@ export default function BookingDetailsToolbar({
           alignItems="center"
           justifyContent="flex-end"
         >
-          <Button
-            color="inherit"
-            variant="outlined"
-            endIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
-            onClick={popover.onOpen}
-            sx={{ textTransform: 'capitalize' }}
-            disabled
+          <Select
+            value={Number(status)}
+            onChange={(e) => onChangeStatus(Number(e.target.value))}
+            size="small"
+            sx={{ minWidth: 160, textTransform: 'capitalize' }}
           >
-            {getStatusLabel(status)}
-          </Button>
+            {statusOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
         </Stack>
       </Stack>
 
-      <CustomPopover
-        open={popover.open}
-        onClose={popover.onClose}
-        arrow="top-right"
-        sx={{ width: 140 }}
-      >
-        {statusOptions.map((option) => (
-          <MenuItem
-            key={option.value}
-            selected={option.value === status}
-            onClick={() => {
-              popover.onClose();
-              onChangeStatus(option.value);
-            }}
-          >
-            {option.label}
-          </MenuItem>
-        ))}
-      </CustomPopover>
-    </>
   );
 }
 
