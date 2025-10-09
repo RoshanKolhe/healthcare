@@ -72,6 +72,120 @@ export default function PaymentView() {
 
   const values = watch();
 
+  // const onSubmit = handleSubmit(async (formData) => {
+  //   try {
+  //     console.log(formData);
+  //     const inputData = {
+  //       paymentDetails: {
+  //         ...formData,
+  //       },
+  //       planId: selectedPlan.id,
+  //     };
+  //     const response = await axiosInstance.post('/clinic-subscriptions', inputData);
+  //     console.log(response.data.paymentObject);
+  //     const razorpayData = response.data.paymentObject;
+  //     console.log('razorpayData', razorpayData);
+  //     const subscriptionId = razorpayData.subscriptionId;
+  //     console.log('subscriptionId', subscriptionId);
+
+  //     const options = {
+  //       key: razorpayData.razorpayKeyId,
+  //       amount: razorpayData.amount, // in paise
+  //       currency: razorpayData.currency,
+  //       order_id: razorpayData.orderId,
+  //       handler: async (razorpayResponse) => {
+  //         console.log('Razorpay Success:', razorpayResponse);
+  //         try {
+  //           const inputRazorpayData = {
+  //             subscription_id: razorpayData.subscriptionId,
+  //             razorpay_order_id: razorpayResponse.razorpay_order_id,
+  //             razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+  //             razorpay_signature: razorpayResponse.razorpay_signature,
+  //           };
+
+  //           console.log('Verifying payment with data:', inputRazorpayData);
+
+  //           const verifyRes = await axiosInstance.post(
+  //             '/subscriptions/callback/verify',
+  //             inputRazorpayData
+  //           );
+
+  //           console.log('Verification response:', verifyRes.data);
+
+  //           if (verifyRes.data.success) {
+  //             sessionStorage.setItem('subscriptionId', razorpayData.subscriptionId);
+  //             // window.location.href = `/dashboard/payment/success?subscriptionId=${razorpayData.subscriptionId}`;
+  //           } else {
+  //             // window.location.href = '/marketplace/pricing';
+  //           }
+  //         } catch (err) {
+  //           console.error('Verification failed:', err);
+  //           alert('Server error verifying payment.');
+  //           window.location.href = '/marketplace/pricing';
+  //         }
+  //       },
+  //     };
+
+  //     const rzp = new window.Razorpay(options);
+  //     rzp.open();
+  //     // reset();
+  //     // enqueueSnackbar(currentUser ? 'Update success!' : 'Create success!');
+  //     // router.push(paths.dashboard.user.list);
+  //   } catch (error) {
+  //     console.error(error);
+  //     enqueueSnackbar(typeof error === 'string' ? error : error.error.message, {
+  //       variant: 'error',
+  //     });
+  //   }
+  // });
+  // helper function to verify payment
+  async function verifyPayment(subscriptionId, razorpayResponse) {
+    try {
+      const inputRazorpayData = {
+        subscription_id: subscriptionId,
+        razorpay_order_id: razorpayResponse?.razorpay_order_id || null,
+        razorpay_payment_id: razorpayResponse?.razorpay_payment_id || null,
+        razorpay_signature: razorpayResponse?.razorpay_signature || null,
+      };
+
+      console.log('Verifying payment with data:', inputRazorpayData);
+
+      const verifyRes = await axiosInstance.post(
+        '/subscriptions/callback/verify',
+        inputRazorpayData
+      );
+
+      console.log('Verification response:', verifyRes.data);
+
+      if (verifyRes.data.success) {
+        sessionStorage.setItem('subscriptionId', subscriptionId);
+        window.location.href = `/dashboard/payment/success?subscriptionId=${subscriptionId}`;
+      } else {
+        window.location.href = '/marketplace/pricing';
+      }
+    } catch (err) {
+      console.error('Verification failed:', err);
+      alert('Server error verifying payment.');
+      window.location.href = '/marketplace/pricing';
+    }
+  }
+
+  // helper function to cancel payment
+  async function cancelPayment(subscriptionId) {
+    try {
+      console.log('Cancelling subscription:', subscriptionId);
+
+      await axiosInstance.post('/subscriptions/callback/cancel', {
+        subscription_id: subscriptionId,
+      });
+
+      // window.location.href = '/marketplace/pricing';
+    } catch (err) {
+      console.error('Cancel failed:', err);
+      // window.location.href = '/marketplace/pricing';
+    }
+  }
+
   const onSubmit = handleSubmit(async (formData) => {
     try {
       console.log(formData);
@@ -83,27 +197,31 @@ export default function PaymentView() {
       };
       const response = await axiosInstance.post('/clinic-subscriptions', inputData);
       console.log(response.data.paymentObject);
+
       const razorpayData = response.data.paymentObject;
-      console.log('razorpayData',razorpayData);
       const subscriptionId = razorpayData.subscriptionId;
-      console.log('subscriptionId',subscriptionId);
+      console.log('razorpayData', razorpayData);
+      console.log('subscriptionId', subscriptionId);
 
       const options = {
         key: razorpayData.razorpayKeyId,
         amount: razorpayData.amount, // in paise
         currency: razorpayData.currency,
         order_id: razorpayData.orderId,
-        handler () {
-          console.log('Payment successful:', response);
-          window.location.href = `/dashboard/payment/success?subscriptionId=${subscriptionId}`;
+        handler: async (razorpayResponse) => {
+          console.log('Razorpay Success:', razorpayResponse);
+          await verifyPayment(subscriptionId, razorpayResponse);
+        },
+        modal: {
+          ondismiss: async () => {
+            console.log('Payment modal closed by user. Cancelling...');
+            await cancelPayment(subscriptionId);
+          },
         },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.open();
-      // reset();
-      // enqueueSnackbar(currentUser ? 'Update success!' : 'Create success!');
-      // router.push(paths.dashboard.user.list);
     } catch (error) {
       console.error(error);
       enqueueSnackbar(typeof error === 'string' ? error : error.error.message, {

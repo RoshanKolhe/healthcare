@@ -68,6 +68,10 @@ export const endpoints = {
     filterList: (filter) => `/users/list?${filter}`,
     details: (id) => `/users/${id}`,
   },
+  subscription: {
+    list: '/clinic-subscriptions',
+    details: (id) => `/clinic-subscriptions/${id}`,
+  },
   doctor: {
     list: '/doctors/list',
     filterList: (filter) => `/doctors/list?${filter}`,

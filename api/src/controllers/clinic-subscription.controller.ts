@@ -127,16 +127,15 @@ export class ClinicSubscriptionController {
             type: 'object',
             required: ['planId', 'paymentDetails'],
             properties: {
-              planId: {type: 'number', example: 1},
+              planId: {type: 'number'},
               paymentDetails: {
                 type: 'object',
                 properties: {
-                  personName: {type: 'string', example: 'Test'},
-                  phoneNumber: {type: 'string', example: '9822768049'},
-                  email: {type: 'string', example: 'admin@kisan4u.com'},
+                  personName: {type: 'string'},
+                  phoneNumber: {type: 'string'},
+                  email: {type: 'string'},
                   address: {
                     type: 'string',
-                    example: 'Plot no 49 Gat No 499 near Siddh hanuman mandir',
                   },
                 },
               },
@@ -148,83 +147,76 @@ export class ClinicSubscriptionController {
     clinicSubscription: {planId: number; paymentDetails: object},
   ): Promise<{success: boolean; paymentObject: object}> {
     try {
-      // 1. Fetch current user
+      // 1️⃣ Current user
       const user = await this.userRepository.findById(currentUser.id);
-      if (!user) {
-        throw new HttpErrors.Unauthorized('Access denied');
-      }
+      if (!user) throw new HttpErrors.Unauthorized('Access denied');
 
-      // 2. Ensure planId is provided
-      if (!clinicSubscription.planId) {
-        throw new HttpErrors.BadRequest(
-          'Plan details not found in request body',
-        );
-      }
+      // 2️⃣ Plan check
+      if (!clinicSubscription.planId)
+        throw new HttpErrors.BadRequest('Plan ID is required');
 
-      // 3. Fetch plan
       const plan = await this.planRepository.findById(
         clinicSubscription.planId,
       );
-      if (!plan) {
-        throw new HttpErrors.NotFound(
-          `Plan with planId ${clinicSubscription.planId} not found`,
-        );
-      }
+      if (!plan) throw new HttpErrors.NotFound('Plan not found');
 
-      // 4. Calculate tax and total
+      // 3️⃣ Tax + Total
       const taxPercentage = plan.taxPercentageINR ?? 0;
       const taxAmount = (plan.discountedPriceINR * taxPercentage) / 100;
       const totalAmount = plan.discountedPriceINR + taxAmount;
 
-      // 5. Check last subscription for this clinic
+      // 4️⃣ Get the latest successful subscription
       const lastSubscription = await this.clinicSubscriptionRepository.findOne({
-        where: {
-          clinicId: user.clinicId,
-          status: {inq: ['pending', 'success']},
-          isDeleted: false,
-        },
-        order: ['expiryDate DESC'],
+        where: {clinicId: user.clinicId, status: 'success', isDeleted: false},
+        order: ['createdAt DESC'],
       });
+      console.log('Last subscription:', lastSubscription);
 
-      // 6. Calculate remaining days from last subscription
+      // 5️⃣ Initialize base values
       const now = new Date();
-      let remainingDays = 0;
-      if (lastSubscription && lastSubscription.expiryDate > now) {
-        remainingDays = Math.ceil(
-          (lastSubscription.expiryDate.getTime() - now.getTime()) /
-            (1000 * 60 * 60 * 24),
-        );
-      }
-
-      // 7. Calculate new plan duration in days
-      let planDays = 0;
-      if (plan.billingCycle === 'monthly') planDays = 30;
-      if (plan.billingCycle === 'yearly') planDays = 365;
-
-      const totalDays = remainingDays + planDays;
-      const newExpiryDate = new Date();
-      newExpiryDate.setDate(newExpiryDate.getDate() + totalDays);
-
-      // 8. Calculate new booking limit
       let newBookingLimit = plan.bookingLimit;
-      if (lastSubscription && lastSubscription.status === 'success') {
-        // Example logic: take max of old and new
-        newBookingLimit = Math.max(
-          lastSubscription.bookingLimit,
-          plan.bookingLimit,
-        );
+      let newRemainingBookingLimit = plan.bookingLimit;
+      let newExpiryDate: Date;
+
+      // 6️⃣ If the clinic already has a valid subscription
+      if (lastSubscription) {
+        const lastExpiry = new Date(lastSubscription.expiryDate);
+        console.log('Last expiry:', lastExpiry);
+        const isStillActive = lastExpiry > now;
+
+        // If previous plan still active
+        if (isStillActive) {
+          const lastRemaining = lastSubscription.remainingBookingLimit ?? 0;
+          newBookingLimit = lastRemaining + plan.bookingLimit;
+          newRemainingBookingLimit = lastRemaining + plan.bookingLimit;
+
+          // ✅ Extend expiry from last expiry date (not from today)
+          newExpiryDate = new Date(lastExpiry);
+        } else {
+          newExpiryDate = new Date(now);
+          console.log('newExpiryDate1', newExpiryDate);
+        }
+      } else {
+        newExpiryDate = new Date(now);
+        console.log('newExpiryDate2', newExpiryDate);
       }
 
-      const isFreeTrial = lastSubscription?.isFreeTrial ?? false;
+      // 7️⃣ Add plan duration (from either now or last expiry)
+      const planDays = plan.billingCycle === 'monthly' ? 30 : 365;
+      newExpiryDate.setDate(newExpiryDate.getDate() + planDays);
+      console.log('newExpiryDate3', newExpiryDate);
 
-      // 10. Create subscription
+      // 8️⃣ Create subscription
       const newSubscriptionData: Partial<ClinicSubscription> = {
         planId: clinicSubscription.planId,
+        planData: plan,
         clinicId: user.clinicId,
         purchasedByUserId: user.id,
-        paymentDetails: clinicSubscription.paymentDetails, // user info
-        isFreeTrial,
+        paymentDetails: clinicSubscription.paymentDetails,
+        isFreeTrial: false,
         bookingLimit: newBookingLimit,
+        remainingBookingLimit: newRemainingBookingLimit,
+        clinicBookingUsage: 0,
         expiryDate: newExpiryDate,
         status: 'pending',
         amount: plan.discountedPriceINR,
@@ -232,13 +224,24 @@ export class ClinicSubscriptionController {
         totalAmount,
         paymentProvider: 'razorpay',
       };
+      console.log('newExpiryDate4', newSubscriptionData.expiryDate);
+      console.log('newSubscriptionData', newSubscriptionData);
 
       const newSubscription =
         await this.clinicSubscriptionRepository.create(newSubscriptionData);
+      console.log('newSubscription', newSubscription);
 
-      // 11. Create Razorpay order
+      const formattedInvoiceId = `INV${newSubscription.id!.toString().padStart(5, '0')}`;
+      await this.clinicSubscriptionRepository.updateById(newSubscription.id!, {
+        invoiceId: formattedInvoiceId,
+      });
+
+      newSubscription.invoiceId = formattedInvoiceId;
+      console.log('Invoice ID:', formattedInvoiceId);
+
+      // 9️⃣ Create Razorpay order
       const checkOutData = {
-        amount: totalAmount * 100, // in paise
+        amount: totalAmount * 100, // convert to paise
         currency: 'INR',
         receipt: `sub_${newSubscription.id}`,
         notes: {
@@ -246,14 +249,10 @@ export class ClinicSubscriptionController {
           userId: user.id,
         },
       };
-      console.log(checkOutData);
       const razorpayOrder =
         await this.razorpayService.createOrder(checkOutData);
 
-      return {
-        success: true,
-        paymentObject: razorpayOrder,
-      };
+      return {success: true, paymentObject: razorpayOrder};
     } catch (error) {
       throw error;
     }
@@ -337,6 +336,7 @@ export class ClinicSubscriptionController {
         const updateData: Partial<typeof subscription> = {
           paymentDetails,
           status: 'success',
+          paymentId: payment.id,
         };
 
         if (plan) {
@@ -384,6 +384,52 @@ export class ClinicSubscriptionController {
     }
   }
 
+  @post('/subscriptions/callback/cancel')
+  async cancelRazorpayPayment(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              subscription_id: {type: 'number'},
+            },
+            required: ['subscription_id'],
+          },
+        },
+      },
+    })
+    body: {
+      subscription_id: number;
+    },
+    @inject(RestBindings.Http.RESPONSE) res: Response,
+  ): Promise<{success: boolean; message: string}> {
+    const {subscription_id} = body;
+
+    const subscription =
+      await this.clinicSubscriptionRepository.findById(subscription_id);
+
+    if (!subscription) {
+      throw new HttpErrors.NotFound('Subscription not found');
+    }
+
+    // Update status to cancelled
+    await this.clinicSubscriptionRepository.updateById(subscription_id, {
+      status: 'cancelled',
+    });
+
+    return {
+      success: true,
+      message: `Subscription ${subscription_id} cancelled by user.`,
+    };
+  }
+
+  @authenticate({
+    strategy: 'jwt',
+    options: {
+      required: [PermissionKeys.SUPER_ADMIN, PermissionKeys.CLINIC],
+    },
+  })
   @get('/clinic-subscriptions')
   @response(200, {
     description: 'Array of ClinicSubscription model instances',
@@ -399,9 +445,54 @@ export class ClinicSubscriptionController {
     },
   })
   async find(
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
     @param.filter(ClinicSubscription) filter?: Filter<ClinicSubscription>,
   ): Promise<ClinicSubscription[]> {
-    return this.clinicSubscriptionRepository.find(filter);
+    filter = {
+      ...filter,
+      where: {
+        ...filter?.where,
+        isDeleted: false,
+      },
+      include: [
+        {relation: 'clinic'},
+        {relation: 'plan'},
+        {relation: 'purchasedByUser'},
+      ],
+    };
+
+    const currentUserPermission = currentUser.permissions;
+
+    const userDetails: any = await this.userRepository.findById(
+      currentUser.id,
+      {
+        include: ['clinic', 'branch'],
+      },
+    );
+    console.log('userDetails', userDetails);
+
+    // SUPER ADMIN → see all subscriptions
+    if (currentUserPermission.includes(PermissionKeys.SUPER_ADMIN)) {
+      return this.clinicSubscriptionRepository.find(filter);
+    }
+
+    // CLINIC → show subscriptions of that clinic
+    if (currentUserPermission.includes(PermissionKeys.CLINIC)) {
+      if (!userDetails.clinicId) {
+        throw new HttpErrors.BadRequest('Clinic ID not found for current user');
+      }
+
+      return this.clinicSubscriptionRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          clinicId: userDetails.clinicId,
+          status: 'success',
+        },
+      });
+    }
+
+    return [];
   }
 
   @get('/clinic-subscriptions/{id}')

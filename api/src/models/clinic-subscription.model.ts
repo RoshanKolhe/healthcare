@@ -25,6 +25,24 @@ export class ClinicSubscription extends Entity {
   bookingLimit: number;
 
   @property({
+    type: 'number',
+    required: true,
+  })
+  clinicBookingUsage: number;
+
+  @property({
+    type: 'number',
+    required: true,
+  })
+  remainingBookingLimit: number;
+
+  @property({
+    type: 'string',
+    required: false,
+  })
+  invoiceId: string;
+
+  @property({
     type: 'date',
     required: true,
   })
@@ -47,16 +65,28 @@ export class ClinicSubscription extends Entity {
 
   @property({
     type: 'number',
+    default: 0.0,
+    dataType: 'decimal',
+    precision: 30,
+    scale: 2,
   })
   amount?: number; // base amount
 
   @property({
     type: 'number',
+    default: 0.0,
+    dataType: 'decimal',
+    precision: 30,
+    scale: 2,
   })
   taxAmount?: number;
 
   @property({
     type: 'number',
+    default: 0.0,
+    dataType: 'decimal',
+    precision: 30,
+    scale: 2,
   })
   totalAmount?: number;
 
