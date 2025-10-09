@@ -9,28 +9,25 @@ import { fDate } from 'src/utils/format-time';
 
 // ----------------------------------------------------------------------
 
-export default function InvoiceTableRow({
-  row,
-  selected,
-}) {
-  const { totalAmount, createdAt, invoiceId } = row;
+export default function InvoiceTableRow({ row, selected }) {
+  const { totalAmount, createdAt, invoiceId, isFreeTrial } = row;
+  console.log(row);
 
   return (
-      <TableRow hover selected={selected}>
+    <TableRow hover selected={selected}>
+      <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
+        <ListItemText
+          primary={isFreeTrial === true ? 'Free Trial' : invoiceId}
+          secondary={fDate(createdAt)}
+          primaryTypographyProps={{ typography: 'body2' }}
+          secondaryTypographyProps={{ component: 'span', color: 'text.disabled' }}
+        />
+      </TableCell>
 
-        <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
+      <TableCell sx={{ whiteSpace: 'nowrap' }}>{totalAmount}</TableCell>
 
-          <ListItemText
-            primary={invoiceId}
-            secondary={fDate(createdAt)}
-            primaryTypographyProps={{ typography: 'body2' }}
-            secondaryTypographyProps={{ component: 'span', color: 'text.disabled' }}
-          />
-        </TableCell>
-
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{totalAmount}</TableCell>
-
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+        {isFreeTrial === false ? (
           <Link
             component={NextLink}
             href={`/dashboard/clinic-invoice/${invoiceId}`}
@@ -40,8 +37,11 @@ export default function InvoiceTableRow({
           >
             PDF
           </Link>
-        </TableCell>
-      </TableRow>
+        ) : (
+          'NA' // Empty for free trial
+        )}
+      </TableCell>
+    </TableRow>
   );
 }
 

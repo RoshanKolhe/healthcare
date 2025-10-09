@@ -98,6 +98,8 @@ export class ClinicSubscriptionController {
       purchasedByUserId: user.id,
       isFreeTrial: true,
       bookingLimit: 10,
+      remainingBookingLimit:10,
+      clinicBookingUsage: 0,
       expiryDate,
       status: 'success',
     });
