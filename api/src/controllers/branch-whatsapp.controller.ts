@@ -16,12 +16,18 @@ import {
   HttpErrors,
 } from '@loopback/rest';
 import {BranchWhatsapp} from '../models';
-import {BranchWhatsappRepository} from '../repositories';
+import {
+  BranchWhatsappRepository,
+  ClinicSubscriptionRepository,
+} from '../repositories';
 
 export class BranchWhatsappController {
   constructor(
     @repository(BranchWhatsappRepository)
     public branchWhatsappRepository: BranchWhatsappRepository,
+
+    @repository('ClinicSubscriptionRepository')
+    public clinicSubscriptionRepository: ClinicSubscriptionRepository,
   ) {}
 
   @post('/branch-whatsapps')
@@ -151,9 +157,20 @@ export class BranchWhatsappController {
       return null;
     }
 
+    const clinicId = branchWhatsapp.branch?.clinicId;
+    if (!clinicId) {
+      return {success: false, message: 'Clinic ID not found for this branch'};
+    }
+
+    const latestSubscription = await this.clinicSubscriptionRepository.findOne({
+      where: {clinicId},
+      order: ['createdAt DESC'],
+    });
+
     return {
       branchId: branchWhatsapp.branchId,
       branchName: branchWhatsapp.branch?.name,
+      remainingBookingLimit: latestSubscription?.remainingBookingLimit ?? 0,
     };
   }
 }
