@@ -20,6 +20,7 @@ import {
 } from '@loopback/rest';
 import {DoctorTimeSlot, PatientBooking} from '../models';
 import {
+  ClinicSubscriptionRepository,
   DoctorRepository,
   DoctorTimeSlotRepository,
   PatientBookingHistoryRepository,
@@ -55,6 +56,9 @@ export class PatientBookingController {
 
     @repository(DoctorRepository)
     public doctorRepository: DoctorRepository,
+
+    @repository('ClinicSubscriptionRepository')
+    public clinicSubscriptionRepository: ClinicSubscriptionRepository,
   ) {}
 
   @post('/patient-bookings')
@@ -166,6 +170,27 @@ export class PatientBookingController {
         },
         status: 0,
       };
+
+      const latestSubscription =
+        await this.clinicSubscriptionRepository.findOne({
+          where: {clinicId},
+          order: ['createdAt DESC'], // get latest subscription
+        });
+
+      if (latestSubscription) {
+        const updatedUsage = (latestSubscription.clinicBookingUsage || 0) + 1;
+        const updatedRemaining =
+          (latestSubscription.bookingLimit || 0) - updatedUsage;
+
+        await this.clinicSubscriptionRepository.updateById(
+          latestSubscription.id!,
+          {
+            clinicBookingUsage: updatedUsage,
+            remainingBookingLimit: updatedRemaining >= 0 ? updatedRemaining : 0,
+          },
+          {transaction: tx},
+        );
+      }
 
       // 5️⃣ Create booking
       const booking = await this.patientBookingRepository.create(
