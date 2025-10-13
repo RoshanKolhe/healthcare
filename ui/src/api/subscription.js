@@ -40,3 +40,23 @@ export function useGetSubscription(subscriptionId) {
 
   return memoizedValue;
 }
+
+export function useGetLatestSubscription() {
+  const URL = endpoints.subscription.filterList;
+
+  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
+
+  const refreshSubscriptions = () => {
+    // Use the `mutate` function to trigger a revalidation
+    mutate();
+  };
+
+  return {
+    subscriptions: data,
+    subscriptionsLoading: isLoading,
+    subscriptionsError: error,
+    subscriptionsValidating: isValidating,
+    subscriptionsEmpty: !isLoading && !data?.length,
+    refreshSubscriptions, // Include the refresh function separately
+  };
+}

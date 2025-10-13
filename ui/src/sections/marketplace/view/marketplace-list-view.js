@@ -8,10 +8,13 @@ import { useRouter } from 'src/routes/hook';
 import { useAuthContext } from 'src/auth/hooks';
 import axiosInstance from 'src/utils/axios';
 import { useSnackbar } from 'notistack';
+import { useGetLatestSubscription } from 'src/api/subscription';
 import MarketplaceCard from '../marketplace-card';
 
 export default function MarketplaceListView() {
   const { user, initialize } = useAuthContext();
+  const { subscriptions } = useGetLatestSubscription();
+  console.log('Latest subscriptions:', subscriptions);
   const { agents, agentsLoading, agentsError } = useGetAgents();
 
   const { enqueueSnackbar } = useSnackbar();
@@ -62,9 +65,9 @@ export default function MarketplaceListView() {
     buttonLabel = 'Start Free Trial';
   } else {
     const remainingDays = Math.ceil(
-      (new Date(activeSub.expiryDate) - new Date()) / (1000 * 60 * 60 * 24)
+      (new Date(subscriptions?.expiryDate) - new Date()) / (1000 * 60 * 60 * 24)
     );
-    message = `Your current plan expires in ${remainingDays} day(s). Please buy a new plan to continue.`;
+    message = `Your current plan expires in ${remainingDays} day(s), and you have ${subscriptions?.remainingBookingLimit} remaining bookings. Please purchase a new plan to increase your booking limit.`;
     buttonLabel = 'Buy Plan';
   }
 
@@ -99,12 +102,23 @@ export default function MarketplaceListView() {
         px={3}
         py={2}
         mb={3}
+        gap={1}
       >
         <Typography variant="body1" color="text.primary">
           {message}
         </Typography>
 
-        <Button variant="contained" color="primary" onClick={handleActionClick}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleActionClick}
+          sx={{
+            whiteSpace: 'nowrap', // ❌ Prevent text wrap
+            flexShrink: 0, // 🚫 Don't shrink when space is tight
+            height: 40, // (optional) Keep consistent height
+            px: 3, // (optional) Add padding for balance
+          }}
+        >
           {buttonLabel}
         </Button>
       </Box>
