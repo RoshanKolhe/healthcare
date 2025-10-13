@@ -98,7 +98,7 @@ export class ClinicSubscriptionController {
       purchasedByUserId: user.id,
       isFreeTrial: true,
       bookingLimit: 10,
-      remainingBookingLimit:10,
+      remainingBookingLimit: 10,
       clinicBookingUsage: 0,
       expiryDate,
       status: 'success',
@@ -172,7 +172,6 @@ export class ClinicSubscriptionController {
         where: {clinicId: user.clinicId, status: 'success', isDeleted: false},
         order: ['createdAt DESC'],
       });
-      console.log('Last subscription:', lastSubscription);
 
       // 5️⃣ Initialize base values
       const now = new Date();
@@ -183,7 +182,6 @@ export class ClinicSubscriptionController {
       // 6️⃣ If the clinic already has a valid subscription
       if (lastSubscription) {
         const lastExpiry = new Date(lastSubscription.expiryDate);
-        console.log('Last expiry:', lastExpiry);
         const isStillActive = lastExpiry > now;
 
         // If previous plan still active
@@ -196,17 +194,16 @@ export class ClinicSubscriptionController {
           newExpiryDate = new Date(lastExpiry);
         } else {
           newExpiryDate = new Date(now);
-          console.log('newExpiryDate1', newExpiryDate);
         }
       } else {
         newExpiryDate = new Date(now);
-        console.log('newExpiryDate2', newExpiryDate);
       }
 
       // 7️⃣ Add plan duration (from either now or last expiry)
       const planDays = plan.billingCycle === 'monthly' ? 30 : 365;
-      newExpiryDate.setDate(newExpiryDate.getDate() + planDays);
-      console.log('newExpiryDate3', newExpiryDate);
+      const newExpiry = newExpiryDate.setDate(
+        newExpiryDate.getDate() + planDays,
+      );
 
       // 8️⃣ Create subscription
       const newSubscriptionData: Partial<ClinicSubscription> = {
@@ -219,27 +216,22 @@ export class ClinicSubscriptionController {
         bookingLimit: newBookingLimit,
         remainingBookingLimit: newRemainingBookingLimit,
         clinicBookingUsage: 0,
-        expiryDate: newExpiryDate,
+        expiryDate: new Date(newExpiry),
         status: 'pending',
         amount: plan.discountedPriceINR,
         taxAmount,
         totalAmount,
         paymentProvider: 'razorpay',
       };
-      console.log('newExpiryDate4', newSubscriptionData.expiryDate);
-      console.log('newSubscriptionData', newSubscriptionData);
 
-      const newSubscription =
-        await this.clinicSubscriptionRepository.create(newSubscriptionData);
-      console.log('newSubscription', newSubscription);
+      const newSubscription = await this.clinicSubscriptionRepository.create(newSubscriptionData);
 
       const formattedInvoiceId = `INV${newSubscription.id!.toString().padStart(5, '0')}`;
-      await this.clinicSubscriptionRepository.updateById(newSubscription.id!, {
+      await this.clinicSubscriptionRepository.updateById(newSubscription.id, {
         invoiceId: formattedInvoiceId,
       });
 
       newSubscription.invoiceId = formattedInvoiceId;
-      console.log('Invoice ID:', formattedInvoiceId);
 
       // 9️⃣ Create Razorpay order
       const checkOutData = {
@@ -341,23 +333,10 @@ export class ClinicSubscriptionController {
           paymentId: payment.id,
         };
 
-        if (plan) {
-          const expiryDate = new Date();
-
-          if (plan.billingCycle === 'monthly') {
-            expiryDate.setDate(expiryDate.getDate() + 30);
-          } else if (plan.billingCycle === 'yearly') {
-            expiryDate.setDate(expiryDate.getDate() + 365);
-          }
-
-          updateData.expiryDate = expiryDate;
-        }
-
         await this.clinicSubscriptionRepository.updateById(
           subscription.id,
           updateData,
         );
-
         return {
           success: true,
           endpoint: `payment/success?subscriptionId=${subscription.id}`,
@@ -495,6 +474,55 @@ export class ClinicSubscriptionController {
     }
 
     return [];
+  }
+
+  @authenticate({
+    strategy: 'jwt',
+    options: {
+      required: [PermissionKeys.CLINIC],
+    },
+  })
+  @get('/clinic-subscriptions/latest')
+  @response(200, {
+    description: 'Latest ClinicSubscription for the logged-in clinic',
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(ClinicSubscription, {includeRelations: true}),
+      },
+    },
+  })
+  async getLatestClinicSubscription(
+    @inject(AuthenticationBindings.CURRENT_USER)
+    currentUser: UserProfile,
+  ): Promise<ClinicSubscription | null> {
+    // Fetch user with clinic details
+    const userDetails: any = await this.userRepository.findById(
+      currentUser.id,
+      {
+        include: ['clinic'],
+      },
+    );
+
+    if (!userDetails.clinicId) {
+      throw new HttpErrors.BadRequest('Clinic ID not found for current user');
+    }
+
+    // Fetch the latest subscription for this clinic
+    const latestSubscription = await this.clinicSubscriptionRepository.findOne({
+      where: {
+        clinicId: userDetails.clinicId,
+        isDeleted: false,
+        status: 'success',
+      },
+      include: [
+        {relation: 'clinic'},
+        {relation: 'plan'},
+        {relation: 'purchasedByUser'},
+      ],
+      order: ['createdAt DESC'], // Sort by most recent
+    });
+
+    return latestSubscription;
   }
 
   @get('/clinic-subscriptions/{id}')
