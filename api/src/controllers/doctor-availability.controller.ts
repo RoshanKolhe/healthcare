@@ -573,7 +573,7 @@ export class DoctorAvailabilityController {
   ): Promise<string[]> {
     const {doctorId, branchId} = body;
 
-    const today = moment().tz('Asia/Kolkata').startOf('day');
+    const today = moment().tz('Asia/Kolkata').add(3, 'days').startOf('day');
 
     const availabilities = await this.doctorAvailabilityRepository.find({
       where: {
